@@ -38,6 +38,18 @@ npm run lint       # oxlint
 npm run preview    # serve o build de produção localmente
 ```
 
+### Acessando por subdomínio
+
+O app resolve plataforma/tenant pelo subdomínio (ver ARCHITECTURE.md). O Chrome resolve
+`*.localhost` para `127.0.0.1` nativamente, sem precisar mexer no hosts file:
+
+- `http://app.localhost:5173` — console da plataforma (login de `super_admin`).
+- `http://{slug}.localhost:5173` — site/painel de um tenant (ex: `http://casah.localhost:5173`).
+- `http://localhost:5173` (sem subdomínio) — redireciona para a plataforma.
+
+O SSO entre subdomínios (cookie compartilhado) não funciona via `*.localhost` puro — só em
+produção, com um domínio real. Ver ARCHITECTURE.md para o porquê.
+
 ### Supabase local (opcional)
 
 Com o [Supabase CLI](https://supabase.com/docs/guides/cli) e Docker instalados:
