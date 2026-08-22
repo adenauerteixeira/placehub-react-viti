@@ -8,8 +8,9 @@ import { PlatformLayout } from '@/features/platform/platform-layout'
 import { TenantsListPage } from '@/features/platform/tenants-list-page'
 import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
-import { TenantLayout } from '@/features/tenant/tenant-layout'
+import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useTenant } from '@/features/tenants/api'
+import { TenantUsersPage } from '@/features/tenant-users/tenant-users-page'
 import { platformUrl, resolveSubdomainContext, tenantUrl } from '@/lib/subdomain'
 import { useRedirectOnce } from '@/lib/use-redirect-once'
 
@@ -45,10 +46,24 @@ function TenantApp({ slug }: { slug: string }) {
       />
       <Route element={<TenantProtectedShell slug={slug} />}>
         <Route path="/dashboard" element={<TenantDashboardPage />} />
+        <Route path="/users" element={<RequireTenantAdmin />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
+}
+
+function RequireTenantAdmin() {
+  const { profile } = useTenantOutletContext()
+  if (profile.role !== 'tenant_admin') {
+    return (
+      <FullscreenMessage
+        title="Sem permissão"
+        description="Essa área é restrita ao administrador da imobiliária."
+      />
+    )
+  }
+  return <TenantUsersPage />
 }
 
 function TenantProtectedShell({ slug }: { slug: string }) {

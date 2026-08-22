@@ -33,7 +33,9 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
       chamando a Admin API — substituiu o fluxo manual de SQL. Aplicada e testada ponta a ponta.
 - [ ] Dashboard do tenant (vazio/placeholder até a Fase 4 trazer indicadores reais) — feito um
       placeholder mínimo; falta revisar quando a Fase 2+ trouxer conteúdo real.
-- [ ] Gestão de usuários do tenant (convite, papéis, permissões por módulo).
+- [x] Gestão de usuários do tenant (convite, papéis, permissões por módulo) — restrita a
+      `tenant_admin`. Convite via Edge Function (`invite-tenant-user`); editar/ativar-desativar
+      direto no client via RLS. Testado ponta a ponta.
 - [ ] Identidade visual do tenant (logo, cores) com upload no bucket `tenant-branding`.
 
 ## Fase 2 — Catálogo

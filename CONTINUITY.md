@@ -10,10 +10,12 @@
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260822120251_allow_manual_profile_creation.sql` aplicadas com sucesso via SQL Editor (CLI
-  ainda não autenticado neste ambiente — ver nota abaixo).
+  `20260822160905_add_email_to_profiles.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
+  autenticado neste ambiente — ver nota abaixo). Duas Edge Functions no ar: `create-tenant-admin`
+  e `invite-tenant-user`.
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah**
-  (slug `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`).
+  (slug `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`) e um `broker`
+  (`corretor.qa@example.com` — criado testando o convite de usuários, pode remover ou manter).
 - **Funcional e testado ponta a ponta** (navegador headless, contra o Supabase real):
   - Login único (`/login`), redirecionamento pós-login por role/tenant.
   - Home pública do tenant (placeholder "anúncios em breve") e da plataforma (vai direto pro
@@ -24,6 +26,9 @@
     certo com role `tenant_admin`.
   - Dashboard do tenant (placeholder), com `TenantProtectedShell` resolvendo tenant/role.
   - Rotas protegidas redirecionam para `/login` quando não há sessão (não é mais um gate global).
+  - Gestão de usuários do tenant (`/users`, só `tenant_admin`): convidar (Edge Function
+    `invite-tenant-user`, `tenant_id` sempre do profile de quem chama, nunca do body), editar
+    papel/dados/permissões, ativar/desativar (não dá pra desativar a si mesmo).
 - **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
   de design), tema claro. Aplicado em `src/index.css`: fonte Plus Jakarta Sans, `--radius` maior,
   cores de categoria em `--chart-1`..`--chart-4`. Testado nos dois temas (claro/escuro) via
@@ -32,10 +37,10 @@
 
 ## Próximos passos imediatos
 
-1. Limpar dados de teste no Supabase (ver "Notas técnicas" abaixo — tenant `imob-teste-qa` e o
-   usuário `edgefn.qa3@example.com` criados durante os testes da Edge Function).
-2. Gestão de usuários do tenant e identidade visual (resto da Fase 1 — ver
-   [ROADMAP.md](./ROADMAP.md)).
+1. **Identidade visual do tenant** (logo, cores) com upload no bucket `tenant-branding` — último
+   item da Fase 1 (ver [ROADMAP.md](./ROADMAP.md)).
+2. Limpar dados de teste no Supabase quando conveniente (ver "Notas técnicas" abaixo — não é
+   urgente, nenhum é destrutivo deixar).
 
 ## Notas técnicas para retomar
 
@@ -67,11 +72,10 @@
   dentro (como `create-tenant-admin`). Também: o editor da function no painel abre com um
   código de exemplo ("Hello World") que precisa ser **substituído por inteiro**, não colado
   junto — já aconteceu de o deploy "funcionar" mas ainda rodar o código de exemplo antigo.
-- Dados de teste pendentes de limpeza no Supabase real: tenant `imob-teste-qa` (slug) e o
-  usuário de auth `edgefn.qa3@example.com`, criados testando o CRUD de tenants e a Edge
-  Function. `delete from public.tenants where slug = 'imob-teste-qa';` remove o tenant (cascade
-  no profile); o usuário de auth pode ser removido em Authentication → Users no painel, se
-  quiser (não é destrutivo deixá-lo, só sobra sem uso).
+- Dados de teste pendentes de limpeza no Supabase real (nenhum urgente): tenant `imob-teste-qa`
+  (`delete from public.tenants where slug = 'imob-teste-qa';`, cascade no profile) e os usuários
+  de auth `edgefn.qa3@example.com` e `corretor.qa@example.com` (remover em Authentication →
+  Users no painel, se quiser — não é destrutivo deixá-los, só sobram sem uso).
 
 ## Decisões em aberto / para revisitar
 

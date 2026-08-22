@@ -9,6 +9,7 @@ export type Profile = {
   tenant_id: string | null
   role: ProfileRole
   full_name: string | null
+  email: string
   phone: string | null
   creci: string | null
   is_active: boolean
@@ -23,7 +24,7 @@ export function useProfile() {
     queryFn: async (): Promise<Profile> => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, tenant_id, role, full_name, phone, creci, is_active')
+        .select('id, tenant_id, role, full_name, email, phone, creci, is_active')
         .eq('id', user!.id)
         .single()
 

@@ -17,6 +17,18 @@ formato AAAA-MM-DD.
 
 ### Adicionado
 
+- Gestão de usuários do tenant (`/users`, restrita a `tenant_admin`, com link no menu do
+  `TenantLayout`): listar, convidar (nome/e-mail/senha/papel/permissões), editar (dados/papel/
+  permissões/ativo), ativar/desativar — não é mais possível desativar a si mesmo.
+  - Coluna `profiles.email` (denormalizada de `auth.users`, mantida em sincronia por trigger em
+    `UPDATE OF email`) — o client não consegue ler `auth.users` diretamente, e a tela precisa
+    listar e-mail. Migration `20260822160905_add_email_to_profiles.sql`.
+  - Edge Function `invite-tenant-user`: cria o usuário no tenant de quem chama — `tenant_id`
+    nunca vem do corpo da requisição, sempre do profile de quem está autenticado (não dá pra um
+    tenant_admin criar usuário em outro tenant manipulando a chamada). Só `tenant_admin` pode
+    chamar (mesmo limite da policy `profiles_update`, de propósito — RLS é a fonte de verdade).
+  - Testado ponta a ponta: convidar → aparece na lista → papel e permissões salvos → editar
+    carrega os dados certos → e-mail duplicado dá erro amigável.
 - Edge Function `create-tenant-admin` (`supabase/functions/create-tenant-admin/index.ts`):
   cria o `tenant_admin` de um tenant via Admin API (`auth.admin.createUser` com
   `user_metadata.tenant_id`/`role`, que o trigger `handle_new_user` já sabe interpretar).
