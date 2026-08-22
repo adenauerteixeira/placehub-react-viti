@@ -29,11 +29,9 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
       (`/login`) em vez de gate global — mesmo comportamento do sistema anterior.
 - [x] CRUD de tenants (criar/editar/ativar-desativar) no console da plataforma — direto no
       client, protegido por RLS (`tenants_insert`/`tenants_update`, super_admin only).
-- [ ] Criação do primeiro `tenant_admin` de cada tenant automatizada via Edge Function + Admin
-      API. Por enquanto é manual: o diálogo "Vincular administrador" gera o SQL pronto (usuário
-      criado no painel do Supabase → SQL liga `profiles.tenant_id`) — ver
-      `src/features/tenants/link-admin-dialog.tsx`. Trocar esse SQL manual pela Edge Function é
-      o próximo passo natural aqui.
+- [x] Criação do primeiro `tenant_admin` de cada tenant via Edge Function (`create-tenant-admin`)
+      chamando a Admin API — substituiu o fluxo manual de SQL. Falta o usuário aplicar a função
+      no projeto Supabase real (colar no painel — CLI não autenticado neste ambiente).
 - [ ] Dashboard do tenant (vazio/placeholder até a Fase 4 trazer indicadores reais) — feito um
       placeholder mínimo; falta revisar quando a Fase 2+ trouxer conteúdo real.
 - [ ] Gestão de usuários do tenant (convite, papéis, permissões por módulo).

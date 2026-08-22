@@ -19,8 +19,8 @@
   - Home pública do tenant (placeholder "anúncios em breve") e da plataforma (vai direto pro
     login — nunca teve conteúdo público).
   - Console da plataforma: CRUD de tenants (criar/editar/ativar-desativar), tudo direto no
-    client via RLS — sem Edge Function. Vínculo do primeiro `tenant_admin` ainda é manual (ver
-    "Próximos passos").
+    client via RLS. Vínculo do primeiro `tenant_admin` via Edge Function `create-tenant-admin`
+    (código pronto, **ainda não aplicada no projeto Supabase real** — ver "Próximos passos").
   - Dashboard do tenant (placeholder), com `TenantProtectedShell` resolvendo tenant/role.
   - Rotas protegidas redirecionam para `/login` quando não há sessão (não é mais um gate global).
 - **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
@@ -31,9 +31,11 @@
 
 ## Próximos passos imediatos
 
-1. Trocar o fluxo manual de "Vincular administrador" (usuário criado no painel + SQL colado) por
-   uma Edge Function com service role chamando a Admin API — precisa do CLI do Supabase
-   autenticado (ou aplicar a função manualmente pelo painel) quando chegar nessa parte.
+1. **Aguardando o usuário aplicar a Edge Function `create-tenant-admin`** no painel do Supabase
+   (Edge Functions → nova função → colar `supabase/functions/create-tenant-admin/index.ts` →
+   Deploy). Sem variável de ambiente nenhuma pra configurar (SUPABASE_URL/ANON_KEY/
+   SERVICE_ROLE_KEY são injetadas automaticamente pela plataforma). Depois de aplicada, testar
+   "Vincular administrador" ponta a ponta no console da plataforma.
 2. Gestão de usuários do tenant e identidade visual (resto da Fase 1 — ver
    [ROADMAP.md](./ROADMAP.md)).
 

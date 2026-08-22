@@ -17,6 +17,11 @@ formato AAAA-MM-DD.
 
 ### Adicionado
 
+- Edge Function `create-tenant-admin` (`supabase/functions/create-tenant-admin/index.ts`):
+  cria o `tenant_admin` de um tenant via Admin API (`auth.admin.createUser` com
+  `user_metadata.tenant_id`/`role`, que o trigger `handle_new_user` já sabe interpretar).
+  Verifica dentro da própria função que quem chama é `super_admin` (não confia no client).
+  Substitui o fluxo manual de SQL colado — `LinkAdminDialog` agora chama a função direto.
 - CRUD de tenants no console da plataforma: criar (`TenantFormDialog`, com slug auto-gerado do
   nome e validado contra a mesma regra do banco), editar (nome/e-mail/telefone; subdomínio é
   fixo após criado), ativar/desativar (`Switch` na listagem). Tudo direto no client, sem

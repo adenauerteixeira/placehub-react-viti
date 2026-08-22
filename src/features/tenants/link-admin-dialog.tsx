@@ -1,5 +1,8 @@
-import { useState } from 'react'
-import { Copy } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,15 +11,27 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { supabase } from '@/lib/supabase'
 import type { Tenant } from '@/features/tenants/api'
 
-// Enquanto não existe uma Edge Function com service role para criar o
-// usuário via Admin API (ver ROADMAP.md), vincular o primeiro tenant_admin
-// de uma imobiliária é manual: criar o usuário em Authentication > Add user
-// no painel do Supabase, depois rodar este SQL pra ligá-lo ao tenant.
+const schema = z
+  .object({
+    fullName: z.string(),
+    email: z.email('E-mail inválido.'),
+    password: z.string().min(8, 'A senha precisa ter pelo menos 8 caracteres.'),
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    message: 'As senhas não coincidem.',
+    path: ['confirmPassword'],
+  })
+
+type FormValues = z.infer<typeof schema>
+
 export function LinkAdminDialog({
   open,
   onOpenChange,
@@ -26,62 +41,105 @@ export function LinkAdminDialog({
   onOpenChange: (open: boolean) => void
   tenant: Tenant
 }) {
-  const [email, setEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { fullName: '', email: '', password: '', confirmPassword: '' },
+  })
 
-  const sql = `insert into public.profiles (id, tenant_id, role, full_name)
-select u.id, t.id, 'tenant_admin', null
-from auth.users u, public.tenants t
-where u.email = '${email || '<email-do-admin>'}'
-  and t.slug = '${tenant.slug}';`
+  useEffect(() => {
+    if (open) reset({ fullName: '', email: '', password: '', confirmPassword: '' })
+  }, [open, reset])
 
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(sql)
-      toast.success('SQL copiado.')
-    } catch {
-      toast.error('Não foi possível copiar. Selecione o texto manualmente.')
+  async function onSubmit(values: FormValues) {
+    setSubmitting(true)
+    const { data, error } = await supabase.functions.invoke('create-tenant-admin', {
+      body: {
+        tenant_id: tenant.id,
+        email: values.email,
+        password: values.password,
+        full_name: values.fullName || null,
+      },
+    })
+    setSubmitting(false)
+
+    if (error) {
+      let message = error.message
+      try {
+        const body = await error.context?.json()
+        if (body?.error) message = body.error
+      } catch {
+        // resposta sem corpo JSON legível — mantém error.message
+      }
+      toast.error('Não foi possível criar o administrador', { description: message })
+      return
     }
+
+    toast.success(`Administrador criado: ${data.user.email}`)
+    onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Vincular administrador — {tenant.name}</DialogTitle>
           <DialogDescription>
-            Ainda não é automático (falta a Edge Function de criação de usuário). Por enquanto:
+            Cria um usuário já como tenant_admin desta imobiliária.
           </DialogDescription>
         </DialogHeader>
 
-        <ol className="text-muted-foreground list-inside list-decimal space-y-1 text-sm">
-          <li>
-            No Supabase, vá em <strong className="text-foreground">Authentication → Add user</strong>{' '}
-            e crie o usuário (marque <strong className="text-foreground">Auto Confirm User</strong>).
-          </li>
-          <li>Informe o e-mail usado abaixo.</li>
-          <li>Copie o SQL e rode no SQL Editor do Supabase.</li>
-        </ol>
-
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="admin-email">E-mail do administrador</Label>
-          <Input
-            id="admin-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="admin@exemplo.com"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <Label>SQL</Label>
-            <Button type="button" variant="ghost" size="sm" onClick={handleCopy}>
-              <Copy className="size-3.5" /> Copiar
-            </Button>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="admin-name">Nome</Label>
+            <Input id="admin-name" {...register('fullName')} />
           </div>
-          <pre className="bg-muted overflow-x-auto rounded-lg p-3 text-xs">{sql}</pre>
-        </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="admin-email">E-mail</Label>
+            <Input id="admin-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
+            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="admin-password">Senha</Label>
+            <Input
+              id="admin-password"
+              type="password"
+              {...register('password')}
+              aria-invalid={!!errors.password}
+            />
+            {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="admin-confirm-password">Confirmar senha</Label>
+            <Input
+              id="admin-confirm-password"
+              type="password"
+              {...register('confirmPassword')}
+              aria-invalid={!!errors.confirmPassword}
+            />
+            {errors.confirmPassword && (
+              <p className="text-destructive text-sm">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting && <Loader2 className="animate-spin" />}
+              Criar administrador
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
