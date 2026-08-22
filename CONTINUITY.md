@@ -20,7 +20,8 @@
     login — nunca teve conteúdo público).
   - Console da plataforma: CRUD de tenants (criar/editar/ativar-desativar), tudo direto no
     client via RLS. Vínculo do primeiro `tenant_admin` via Edge Function `create-tenant-admin`
-    (código pronto, **ainda não aplicada no projeto Supabase real** — ver "Próximos passos").
+    — **aplicada e testada ponta a ponta**: cria o usuário, loga, cai no `/dashboard` do tenant
+    certo com role `tenant_admin`.
   - Dashboard do tenant (placeholder), com `TenantProtectedShell` resolvendo tenant/role.
   - Rotas protegidas redirecionam para `/login` quando não há sessão (não é mais um gate global).
 - **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
@@ -31,11 +32,8 @@
 
 ## Próximos passos imediatos
 
-1. **Aguardando o usuário aplicar a Edge Function `create-tenant-admin`** no painel do Supabase
-   (Edge Functions → nova função → colar `supabase/functions/create-tenant-admin/index.ts` →
-   Deploy). Sem variável de ambiente nenhuma pra configurar (SUPABASE_URL/ANON_KEY/
-   SERVICE_ROLE_KEY são injetadas automaticamente pela plataforma). Depois de aplicada, testar
-   "Vincular administrador" ponta a ponta no console da plataforma.
+1. Limpar dados de teste no Supabase (ver "Notas técnicas" abaixo — tenant `imob-teste-qa` e o
+   usuário `edgefn.qa3@example.com` criados durante os testes da Edge Function).
 2. Gestão de usuários do tenant e identidade visual (resto da Fase 1 — ver
    [ROADMAP.md](./ROADMAP.md)).
 
@@ -63,6 +61,17 @@
 - Credenciais de teste (ambiente de desenvolvimento, não são segredo de produção):
   `root@gmail.com` (super_admin) e `tenant.adm@gmail.com` (tenant_admin do Casah) — senhas não
   registradas aqui de propósito; pedir ao usuário se precisar re-testar.
+- **Edge Functions no painel do Supabase**: por padrão vêm com "Enforce JWT Verification"
+  ligado, que barra até o preflight `OPTIONS` do CORS (a requisição nunca chega no código da
+  função) — precisa desligar essa opção nas functions que fazem a própria checagem de auth por
+  dentro (como `create-tenant-admin`). Também: o editor da function no painel abre com um
+  código de exemplo ("Hello World") que precisa ser **substituído por inteiro**, não colado
+  junto — já aconteceu de o deploy "funcionar" mas ainda rodar o código de exemplo antigo.
+- Dados de teste pendentes de limpeza no Supabase real: tenant `imob-teste-qa` (slug) e o
+  usuário de auth `edgefn.qa3@example.com`, criados testando o CRUD de tenants e a Edge
+  Function. `delete from public.tenants where slug = 'imob-teste-qa';` remove o tenant (cascade
+  no profile); o usuário de auth pode ser removido em Authentication → Users no painel, se
+  quiser (não é destrutivo deixá-lo, só sobra sem uso).
 
 ## Decisões em aberto / para revisitar
 

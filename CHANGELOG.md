@@ -22,6 +22,8 @@ formato AAAA-MM-DD.
   `user_metadata.tenant_id`/`role`, que o trigger `handle_new_user` já sabe interpretar).
   Verifica dentro da própria função que quem chama é `super_admin` (não confia no client).
   Substitui o fluxo manual de SQL colado — `LinkAdminDialog` agora chama a função direto.
+  Aplicada no Supabase real e testada ponta a ponta (criar administrador → logar → cair no
+  dashboard do tenant certo com role `tenant_admin`).
 - CRUD de tenants no console da plataforma: criar (`TenantFormDialog`, com slug auto-gerado do
   nome e validado contra a mesma regra do banco), editar (nome/e-mail/telefone; subdomínio é
   fixo após criado), ativar/desativar (`Switch` na listagem). Tudo direto no client, sem
