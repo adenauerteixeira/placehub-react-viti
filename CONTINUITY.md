@@ -35,9 +35,27 @@
     Laravel antigo): 15 cores tema claro/escuro, fundo do logo com transparência, 5 imagens
     (logo claro/escuro, plano de fundo, favicon, imagem sem foto) com upload/remoção, restaurar
     padrão, preview de cartão por tema. Bucket `tenant-branding`, upload restrito por policy no
-    path. **Importante:** só `--primary`/`--accent` (tema claro) são de fato aplicados como CSS
-    var no app hoje — o resto das cores fica salvo e com preview isolado na própria tela, não
-    aplicado no app inteiro ainda (decisão registrada em ARCHITECTURE.md, não é bug).
+    path. **As 15 cores agora são aplicadas de fato em todo o app do tenant** (claro e escuro),
+    não só preview isolado — ver `AppShell`/`tenantThemeVars()` abaixo.
+- **Ajustes de layout pós-Fase 1 (2026-08-22), a pedido do usuário — todos testados
+  visualmente (claro/escuro, screenshots via `browser-automation`):**
+  - `AppShell` (`src/components/app-shell.tsx`), casca compartilhada por `TenantLayout`,
+    `PlatformLayout`, `PublicTenantHomePage` e `LoginPage`: conteúdo centralizado
+    (`mx-auto max-w-7xl`), cabeçalho/rodapé fixos com fundo translúcido
+    (`bg-background/80 backdrop-blur-md`), `h-dvh` + `overflow-y-auto` só no `<main>` pra caber
+    sem scrollbar da página quando possível. Rodapé novo nos 4 contextos (não existia antes).
+    Replica o padrão do Laravel antigo (`layouts/app.blade.php`/`footer.blade.php`/
+    `guest.blade.php`).
+  - `tenantThemeVars()` (`src/features/tenant-branding/apply-tenant-theme.ts`) aplica as 15
+    cores do tenant como CSS variables reais nos tokens do shadcn (não só `--primary`/`--accent`
+    como antes), com `*-foreground` calculado por contraste. Escopado no `TenantLayout`/
+    `PublicTenantHomePage` só — login e console da plataforma continuam neutros de propósito.
+  - Corrigido bug de logo transparente aparecendo com caixa branca:
+    `logo_{light,dark}_background_transparent` nascia `false` por padrão. Migration
+    `20260822181810_default_transparent_logo_backgrounds.sql` (default `true` + `update`
+    retroativo) — **aplicada e confirmada** (Casah já mostra "Transparente" marcado e o logo
+    sem caixa no header).
+  - Detalhes completos em ARCHITECTURE.md e CHANGELOG.md.
 - **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
   de design), tema claro. Aplicado em `src/index.css`: fonte Plus Jakarta Sans, `--radius` maior,
   cores de categoria em `--chart-1`..`--chart-4`. Testado nos dois temas (claro/escuro) via
@@ -46,9 +64,11 @@
 
 ## Próximos passos imediatos
 
-**Fase 1 está completa** (só falta o conteúdo real do dashboard, que é escopo da Fase 4 por
-design). Próximo passo natural: **Fase 2 — Catálogo** (empreendimentos, proprietários, anúncios/
-imóveis com portal público, parceiros, corretores). Ver [ROADMAP.md](./ROADMAP.md).
+**Fase 1 está completa**, incluindo a rodada de ajustes de layout/tema acima (só falta o
+conteúdo real do dashboard, que é escopo da Fase 4 por design). Próximo passo natural: **Fase 2 —
+Catálogo** (empreendimentos, proprietários, anúncios/imóveis com portal público, parceiros,
+corretores). Ver [ROADMAP.md](./ROADMAP.md). Ainda não confirmado com o usuário se seguimos
+direto pra Fase 2 ou se há mais algum ajuste antes.
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
 (ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar).

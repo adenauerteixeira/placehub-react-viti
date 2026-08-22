@@ -108,14 +108,29 @@ transparência por tema, e 5 imagens (`logo_light_path`, `logo_dark_path`,
 `background_image_path`, `favicon_path`, `placeholder_image_path` — todas em
 `supabase/migrations/20260822172344_expand_tenant_branding_fields.sql`).
 
-Em runtime, só `--primary`/`--accent` (do tema claro) são de fato aplicados como CSS variables
-escopadas no `TenantLayout`/`PublicTenantHomePage` — o restante das cores (fundo/superfície/
-texto/bordas por tema, cores do tema escuro) fica salvo no banco mas **ainda não é aplicado**
-automaticamente na UI; a tela de identidade visual mostra um preview isolado de como ficaria
-(cartão de exemplo), não o app inteiro. Aplicar o conjunto completo de tokens por tenant
-(inclusive dark mode) é trabalho futuro, se/quando fizer sentido — por ora o objetivo era
-paridade de *opções disponíveis para o tenant configurar*, não de aplicação em tempo real de
-cada uma.
+Em runtime (2026-08-22), as 15 cores do tenant são aplicadas como CSS variables via
+`tenantThemeVars()` (`src/features/tenant-branding/apply-tenant-theme.ts`), que mapeia os campos
+claro/escuro do tenant para `--background/--foreground/--card/--card-foreground/--popover/
+--popover-foreground/--primary/--primary-foreground/--secondary/--secondary-foreground/--muted/
+--muted-foreground/--accent/--accent-foreground/--border/--input/--ring` (a cor `*-foreground` de
+cada par é calculada por contraste, `src/lib/color-contrast.ts`, não é um campo salvo). O objeto é
+passado como `style` inline no wrapper raiz (`AppShell`) do `TenantLayout` e do
+`PublicTenantHomePage`, escopando as variables só naquela árvore — sem vazar para o login
+(deliberadamente não-tenantizado) nem para o console da plataforma. `--destructive` fica de fora
+(erros continuam com a cor padrão do shadcn em todos os tenants). `resolvedTheme` decide se usa o
+conjunto claro ou escuro do tenant.
+
+## Casca de layout (`AppShell`)
+
+`src/components/app-shell.tsx` é o layout compartilhado por `TenantLayout`, `PlatformLayout`,
+`PublicTenantHomePage` e `LoginPage`: `h-dvh flex flex-col overflow-hidden` na raiz, cabeçalho e
+rodapé `shrink-0` com `bg-background/80 backdrop-blur-md` (fixos visualmente porque o resto da
+página não rola — não usa `position: fixed`), conteúdo centralizado em `mx-auto max-w-7xl`, e
+`<main className="min-h-0 flex-1 overflow-y-auto">` como único elemento que rola quando o conteúdo
+não cabe. Replica o padrão do sistema Laravel original (`layouts/app.blade.php` +
+`layouts/footer.blade.php` + `layouts/guest.blade.php`), pedido explicitamente pelo usuário.
+`LogoBadge` replica o padrão antigo de logo com fundo próprio (cor sólida ou transparente,
+conforme `logo_{light,dark}_background_transparent` do tenant).
 
 ## O que este documento não cobre
 

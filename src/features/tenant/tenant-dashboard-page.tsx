@@ -5,7 +5,7 @@ export function TenantDashboardPage() {
   const { profile } = useTenantOutletContext()
 
   return (
-    <Card className="max-w-lg">
+    <Card className="mx-auto max-w-lg">
       <CardHeader>
         <CardTitle>Bem-vindo{profile.full_name ? `, ${profile.full_name}` : ''}</CardTitle>
         <CardDescription>

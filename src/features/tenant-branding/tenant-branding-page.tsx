@@ -76,7 +76,7 @@ export function TenantBrandingPage() {
   }
 
   return (
-    <div className="flex max-w-4xl flex-col gap-6">
+    <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Logos e imagens</CardTitle>

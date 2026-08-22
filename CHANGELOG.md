@@ -28,11 +28,24 @@ formato AAAA-MM-DD.
   `20260822172344_expand_tenant_branding_fields.sql`. Bucket `tenant-branding`
   (`20260822163342_create_tenant_branding_bucket.sql`), público pra leitura, escrita restrita ao
   `tenant_admin` do próprio tenant via policy no primeiro segmento do caminho do arquivo
-  (`{tenant_id}/...`). Só `--primary`/`--accent` (tema claro) são de fato aplicados como CSS
-  variables escopadas no painel do tenant e na home pública por enquanto — o resto das cores
-  fica salvo e com preview isolado, mas não é aplicado no app inteiro ainda (ver
-  ARCHITECTURE.md). Testado ponta a ponta: todas as seções renderizam, editar e salvar cores
+  (`{tenant_id}/...`). Testado ponta a ponta: todas as seções renderizam, editar e salvar cores
   persiste no banco, enviar/remover imagem reflete corretamente conforme o estado real.
+- Paleta completa do tenant (15 cores, claro e escuro) agora é aplicada de fato em todo o app do
+  tenant, não só `--primary`/`--accent` — `tenantThemeVars()` mapeia cada campo do tenant para os
+  tokens do shadcn (background/card/popover/primary/secondary/muted/accent/border/input/ring),
+  com cor de texto (`*-foreground`) calculada por contraste (`src/lib/color-contrast.ts`).
+  Aplicado no `TenantLayout` e no `PublicTenantHomePage`; login e console da plataforma
+  permanecem com o tema neutro (não são tenantizados). Ver ARCHITECTURE.md.
+- Casca de layout compartilhada (`AppShell`, `src/components/app-shell.tsx`) usada por
+  `TenantLayout`, `PlatformLayout`, `PublicTenantHomePage` e `LoginPage`: cabeçalho e rodapé
+  fixos com fundo translúcido (`bg-background/80 backdrop-blur-md`), conteúdo centralizado
+  (`mx-auto max-w-7xl`), e área central com `overflow-y-auto` isolado (`h-dvh` na raiz) para
+  caber sem barra de rolagem da página sempre que possível — replica o padrão do sistema Laravel
+  original (`layouts/app.blade.php`, `layouts/footer.blade.php`, `layouts/guest.blade.php`).
+  Rodapé novo em todos os 4 contextos (antes só existia implicitamente, sem rodapé nenhum).
+  `PlatformLayout` ganhou também um link de navegação "Imobiliárias" (não tinha nav nenhuma
+  antes). `LogoBadge` replica o padrão antigo de logo com fundo próprio (cor sólida ou
+  transparente).
 - Gestão de usuários do tenant (`/users`, restrita a `tenant_admin`, com link no menu do
   `TenantLayout`): listar, convidar (nome/e-mail/senha/papel/permissões), editar (dados/papel/
   permissões/ativo), ativar/desativar — não é mais possível desativar a si mesmo.
@@ -121,4 +134,13 @@ formato AAAA-MM-DD.
   sem eles. Corrigido em `20260822120251_allow_manual_profile_creation.sql`: sem metadata e já
   havendo um `super_admin`, a trigger não cria o profile (em vez de dar erro) — o profile é
   inserido manualmente depois via SQL, até existir a Edge Function de criação de usuário.
+- Logo com fundo transparente (PNG) aparecia com uma caixa branca atrás no cabeçalho/preview —
+  `logo_light_background_color`/`logo_dark_background_color` nasciam com
+  `*_background_transparent = false` por padrão (schema original espelhava o sistema anterior,
+  que exigia escolher a cor mesmo pra PNG transparente). Corrigido em
+  `20260822181810_default_transparent_logo_backgrounds.sql`: `default true` daqui pra frente, e
+  `update` retroativo nos tenants já existentes.
+- Conteúdo das páginas ficava alinhado à esquerda em telas largas (`max-w-*` sem `mx-auto`, sem
+  wrapper centralizando o `<main>`) — corrigido centralizando via `AppShell` (ver seção
+  "Adicionado" acima) e adicionando `mx-auto` nos cartões estreitos que ainda não usavam.
 
