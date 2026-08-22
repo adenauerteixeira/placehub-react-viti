@@ -23,22 +23,32 @@
   `20260822004432_init_platform_schema.sql` (tenants, profiles, permissions, RLS).
 - `npm run build` e `npm run lint` passam limpos.
 
-**Estado do git:** repositório local ainda **não inicializado** — nada commitado ainda.
+**Estado do git:** commit inicial enviado para `origin/trunk`
+(`https://github.com/adenauerteixeira/placehub-react-viti.git`).
+
+**Estado do Supabase:** projeto real criado pelo usuário (`placehub.plataforma's Project`).
+`.env.local` preenchido com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (chave `sb_publishable_...`,
+formato novo do Supabase). Migration inicial aplicada com sucesso via SQL Editor (colada
+manualmente — CLI ainda não autenticado neste ambiente, ver nota abaixo).
+
+**Bootstrap do super_admin:** resolvido. `handle_new_user()` tinha um bug que quebrava a
+criação de qualquer usuário sem `tenant_id`/`role` em metadata (violava a constraint
+`profiles_super_admin_has_no_tenant`) — corrigido em
+`20260822014440_fix_handle_new_user_bootstrap.sql` (aplicada via SQL Editor, sucesso). Primeiro
+`super_admin` criado: `root@gmail.com`, via Authentication → Add user no painel Supabase.
 
 ## Próximos passos imediatos
 
-1. `git init` + primeiro commit no projeto local.
-2. Confirmar com o usuário antes de configurar o remote e dar push para
-   `https://github.com/adenauerteixeira/placehub-react-viti.git` (repo remoto já existe, vazio).
-3. Pedir ao usuário para criar as contas externas e passar as credenciais (nenhuma delas pode
-   ser criada por mim):
-   - **Supabase**: novo projeto → URL e anon key para `.env.local`.
-   - **Vercel**: projeto conectado ao repo + domínio `placehub.app` com wildcard `*.placehub.app`.
-   - **Resend**: conta + domínio de envio verificado + API key (vai como secret do Supabase,
-     nunca no front).
-4. Depois disso: `npx supabase link` + `npx supabase db push` para aplicar a migration inicial
-   no projeto real, e começar a Fase 1 do [ROADMAP.md](./ROADMAP.md) (login único, resolução de
-   tenant por subdomínio, console da plataforma).
+1. Commitar e (com confirmação do usuário) dar push da migration de correção.
+2. Iniciar a Fase 1 do [ROADMAP.md](./ROADMAP.md): login único, resolução de tenant por
+   subdomínio, console da plataforma (agora já dá para logar como super_admin para testar).
+
+## Notas técnicas para retomar
+
+- CLI do Supabase (`npx supabase`) ainda não está autenticado neste ambiente (`supabase login`
+  pede fluxo interativo no navegador). Migrations futuras: ou o usuário gera um Personal Access
+  Token (Account > Access Tokens) para eu usar `supabase link`/`db push`, ou continuamos colando
+  SQL manualmente no SQL Editor — decidir quando a próxima migration estiver pronta.
 
 ## Decisões em aberto / para revisitar
 

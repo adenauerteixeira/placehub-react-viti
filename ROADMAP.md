@@ -12,7 +12,8 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
 - [x] Schema inicial: `tenants`, `profiles`, `permissions`, RLS básica (migration
       `20260822004432_init_platform_schema.sql`).
 - [x] Documentação de continuidade (README, ROADMAP, CONTINUITY, CHANGELOG, ARCHITECTURE).
-- [ ] Projeto Supabase real criado (nuvem) e credenciais em `.env.local`.
+- [x] Projeto Supabase real criado (nuvem) e credenciais em `.env.local`.
+- [x] Migration inicial aplicada no projeto Supabase real (via SQL Editor).
 - [ ] Projeto Vercel conectado ao repositório, com preview deployments.
 - [ ] Domínio `placehub.app` com wildcard (`*.placehub.app`) apontando para a Vercel.
 - [ ] CI (GitHub Actions): lint + typecheck + build em cada push/PR.
