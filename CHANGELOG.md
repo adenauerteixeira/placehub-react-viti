@@ -112,6 +112,19 @@ formato AAAA-MM-DD.
 
 ### Corrigido
 
+- Favicon do tenant (`favicon_path`) nunca era aplicado na aba do navegador — o upload salvava o
+  arquivo no Storage e a coluna no banco corretamente, mas nada no app trocava o
+  `<link rel="icon">` de `index.html` (que ficava sempre no favicon estático padrão). Adicionado
+  `useTenantFavicon()` (`src/features/tenant-branding/use-tenant-favicon.ts`), usado no
+  `TenantLayout` e no `PublicTenantHomePage`, que atualiza `href`/`type` do link em runtime
+  conforme a extensão do arquivo (.ico/.png/.svg/...) e volta ao favicon padrão fora do contexto
+  do tenant. Testado ponta a ponta: upload troca o ícone na hora e o valor persiste depois de um
+  reload completo da página.
+- Bucket `tenant-branding` só aceitava `image/png`, `image/jpeg`, `image/webp` e `image/svg+xml`
+  no Storage — um favicon `.ico` era rejeitado ali (`mime type image/x-icon is not supported`)
+  mesmo depois de corrigido o seletor de arquivo do navegador (item abaixo). Corrigido em
+  `20260822182500_allow_ico_favicon_mime.sql`, adicionando `image/x-icon` e
+  `image/vnd.microsoft.icon` à lista.
 - Opacidade do cabeçalho/rodapé ficava tecnicamente aplicada (CSS correto) mas invisível a olho
   nu — como o `AppShell` empilhava header/main/footer sem sobreposição (`shrink-0`, não
   `position: fixed`), não havia nada por trás pra misturar com a translucidez. Corrigido usando

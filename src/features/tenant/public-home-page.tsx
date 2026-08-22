@@ -7,11 +7,14 @@ import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-st
 import { useTheme } from '@/lib/theme-provider'
 import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
+import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
 import { usePublicTenant } from '@/features/tenants/api'
 
 export function PublicTenantHomePage({ slug }: { slug: string }) {
   const { data: tenant, isLoading, isError } = usePublicTenant(slug)
   const { resolvedTheme } = useTheme()
+
+  useTenantFavicon(tenant?.favicon_path ?? null, tenant?.updated_at ?? '')
 
   if (isLoading) return <FullscreenSpinner />
   if (isError || !tenant) {

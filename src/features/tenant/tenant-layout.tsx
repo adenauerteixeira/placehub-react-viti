@@ -8,6 +8,7 @@ import { useAuth } from '@/features/auth/auth-context'
 import type { Profile } from '@/features/auth/use-profile'
 import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
+import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
 import type { Tenant } from '@/features/tenants/api'
 
 export type TenantOutletContext = { tenant: Tenant; profile: Profile }
@@ -20,6 +21,8 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
   const { user } = useAuth()
   const { resolvedTheme } = useTheme()
   const dark = resolvedTheme === 'dark'
+
+  useTenantFavicon(tenant.favicon_path, tenant.updated_at)
 
   const logoPath = dark ? tenant.logo_dark_path : tenant.logo_light_path
   const logoUrl = brandingAssetUrl(logoPath, tenant.updated_at)
