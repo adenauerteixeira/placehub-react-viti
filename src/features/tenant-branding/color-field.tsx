@@ -7,10 +7,14 @@ export function ColorField({
   label,
   value,
   onChange,
+  disabled = false,
+  compact = false,
 }: {
   label: string
   value: string
   onChange: (next: string) => void
+  disabled?: boolean
+  compact?: boolean
 }) {
   const isValid = HEX_PATTERN.test(value)
 
@@ -22,12 +26,22 @@ export function ColorField({
           type="color"
           value={isValid ? value : '#000000'}
           onChange={(e) => onChange(e.target.value)}
-          className="border-input size-9 shrink-0 cursor-pointer rounded-md border p-0.5"
+          disabled={disabled}
+          className="border-input size-9 shrink-0 cursor-pointer rounded-md border p-0.5 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label={label}
         />
-        <Input value={value} onChange={(e) => onChange(e.target.value)} className="font-mono" />
+        {!compact && (
+          <Input
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={disabled}
+            className="font-mono"
+          />
+        )}
       </div>
-      {!isValid && <p className="text-destructive text-sm">Use um hex válido, ex: #2563eb.</p>}
+      {!compact && !isValid && (
+        <p className="text-destructive text-sm">Use um hex válido, ex: #2563eb.</p>
+      )}
     </div>
   )
 }

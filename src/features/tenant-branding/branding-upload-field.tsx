@@ -1,9 +1,9 @@
 import { useRef } from 'react'
-import { Loader2, Upload } from 'lucide-react'
+import { Loader2, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { type BrandingAsset, useUploadBrandingAsset } from './api'
+import { type BrandingAsset, useRemoveBrandingAsset, useUploadBrandingAsset } from './api'
 
 const MAX_SIZE_BYTES = 2 * 1024 * 1024
 
@@ -11,17 +11,23 @@ export function BrandingUploadField({
   tenantId,
   asset,
   label,
+  currentPath,
   previewUrl,
-  previewBg = 'bg-muted',
+  previewStyle,
+  accept = 'image/png,image/jpeg,image/webp,image/svg+xml',
 }: {
   tenantId: string
   asset: BrandingAsset
   label: string
+  currentPath: string | null
   previewUrl: string | null
-  previewBg?: string
+  previewStyle?: React.CSSProperties
+  accept?: string
 }) {
   const upload = useUploadBrandingAsset(tenantId)
+  const remove = useRemoveBrandingAsset(tenantId)
   const inputRef = useRef<HTMLInputElement>(null)
+  const busy = upload.isPending || remove.isPending
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -43,12 +49,25 @@ export function BrandingUploadField({
     }
   }
 
+  async function handleRemove() {
+    if (!currentPath) return
+    try {
+      await remove.mutateAsync({ asset, currentPath })
+      toast.success(`${label} removido.`)
+    } catch (error) {
+      toast.error(`Não foi possível remover ${label.toLowerCase()}`, {
+        description: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
       <div className="flex items-center gap-3">
         <div
-          className={`flex size-16 items-center justify-center overflow-hidden rounded-lg border ${previewBg}`}
+          className="bg-muted flex size-16 items-center justify-center overflow-hidden rounded-lg border"
+          style={previewStyle}
         >
           {previewUrl ? (
             <img src={previewUrl} alt={label} className="size-full object-contain" />
@@ -60,16 +79,22 @@ export function BrandingUploadField({
           type="button"
           variant="outline"
           size="sm"
-          disabled={upload.isPending}
+          disabled={busy}
           onClick={() => inputRef.current?.click()}
         >
           {upload.isPending ? <Loader2 className="animate-spin" /> : <Upload />}
           Enviar imagem
         </Button>
+        {currentPath && (
+          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={handleRemove}>
+            {remove.isPending ? <Loader2 className="animate-spin" /> : <Trash2 />}
+            Remover
+          </Button>
+        )}
         <input
           ref={inputRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+          accept={accept}
           className="hidden"
           onChange={handleFileChange}
         />

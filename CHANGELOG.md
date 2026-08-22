@@ -17,16 +17,22 @@ formato AAAA-MM-DD.
 
 ### Adicionado
 
-- Identidade visual do tenant (`/branding`, restrita a `tenant_admin`): cor primária e de
-  destaque (com preview em `<input type="color">` + campo hex), upload de logo (claro/escuro) e
-  favicon. Bucket `tenant-branding` (migration
-  `20260822163342_create_tenant_branding_bucket.sql`), público pra leitura, escrita restrita ao
+- Identidade visual do tenant (`/branding`, restrita a `tenant_admin`), com paridade completa
+  de opções em relação ao sistema anterior (pedido do usuário, revisando a versão inicial mais
+  enxuta): 15 cores (8 tema claro + 7 tema escuro — primária/secundária/destaque, fundo,
+  superfície, texto, texto secundário, borda), cor de fundo do logo com opção de transparência
+  por tema, 5 imagens (logo claro/escuro, plano de fundo, favicon, imagem padrão pra imóvel sem
+  foto) com upload imediato e remoção, botão "Restaurar cores padrão" por tema, e um preview de
+  cartão de exemplo em tempo real por tema (`branding-preview-card.tsx`) — mesmos valores-padrão
+  do sistema anterior (`defaults.ts`). Migration
+  `20260822172344_expand_tenant_branding_fields.sql`. Bucket `tenant-branding`
+  (`20260822163342_create_tenant_branding_bucket.sql`), público pra leitura, escrita restrita ao
   `tenant_admin` do próprio tenant via policy no primeiro segmento do caminho do arquivo
-  (`{tenant_id}/...`). As cores da marca são aplicadas via CSS variables escopadas
-  (`--primary`/`--accent`) tanto no painel do tenant quanto na home pública — não vazam pro
-  console da plataforma nem para outros tenants. Testado ponta a ponta: salvar cores, enviar
-  logo, ver refletido no cabeçalho e na home pública, imagem carregando de verdade (não
-  quebrada).
+  (`{tenant_id}/...`). Só `--primary`/`--accent` (tema claro) são de fato aplicados como CSS
+  variables escopadas no painel do tenant e na home pública por enquanto — o resto das cores
+  fica salvo e com preview isolado, mas não é aplicado no app inteiro ainda (ver
+  ARCHITECTURE.md). Testado ponta a ponta: todas as seções renderizam, editar e salvar cores
+  persiste no banco, enviar/remover imagem reflete corretamente conforme o estado real.
 - Gestão de usuários do tenant (`/users`, restrita a `tenant_admin`, com link no menu do
   `TenantLayout`): listar, convidar (nome/e-mail/senha/papel/permissões), editar (dados/papel/
   permissões/ativo), ativar/desativar — não é mais possível desativar a si mesmo.

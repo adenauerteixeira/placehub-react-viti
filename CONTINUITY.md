@@ -10,13 +10,13 @@
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260822163342_create_tenant_branding_bucket.sql` aplicadas com sucesso via SQL Editor (CLI
+  `20260822172344_expand_tenant_branding_fields.sql` aplicadas com sucesso via SQL Editor (CLI
   ainda não autenticado neste ambiente — ver nota abaixo). Duas Edge Functions no ar:
   `create-tenant-admin` e `invite-tenant-user`. Bucket `tenant-branding` criado.
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah**
-  (slug `casah`, com cor primária `#e11d48` e logo claro definidos), com um `tenant_admin`
-  (`tenant.adm@gmail.com`) e um `broker` (`corretor.qa@example.com` — criado testando o convite
-  de usuários, pode remover ou manter).
+  (slug `casah`, com cor primária `#e11d48`, `dark_surface_color` `#111827`, logo claro/escuro
+  e favicon definidos), com um `tenant_admin` (`tenant.adm@gmail.com`) e um `broker`
+  (`corretor.qa@example.com` — criado testando o convite de usuários, pode remover ou manter).
 - **Funcional e testado ponta a ponta** (navegador headless, contra o Supabase real):
   - Login único (`/login`), redirecionamento pós-login por role/tenant.
   - Home pública do tenant (placeholder "anúncios em breve") e da plataforma (vai direto pro
@@ -30,9 +30,14 @@
   - Gestão de usuários do tenant (`/users`, só `tenant_admin`): convidar (Edge Function
     `invite-tenant-user`, `tenant_id` sempre do profile de quem chama, nunca do body), editar
     papel/dados/permissões, ativar/desativar (não dá pra desativar a si mesmo).
-  - Identidade visual do tenant (`/branding`, só `tenant_admin`): cores (CSS vars escopadas,
-    não vazam pra plataforma nem outros tenants) e logo/favicon (bucket `tenant-branding`,
-    upload restrito por policy no path). Reflete no painel do tenant e na home pública.
+  - Identidade visual do tenant (`/branding`, só `tenant_admin`) — **paridade completa com o
+    sistema anterior**, a pedido do usuário (ver `.../casah/configuracoes/identidade-visual` no
+    Laravel antigo): 15 cores tema claro/escuro, fundo do logo com transparência, 5 imagens
+    (logo claro/escuro, plano de fundo, favicon, imagem sem foto) com upload/remoção, restaurar
+    padrão, preview de cartão por tema. Bucket `tenant-branding`, upload restrito por policy no
+    path. **Importante:** só `--primary`/`--accent` (tema claro) são de fato aplicados como CSS
+    var no app hoje — o resto das cores fica salvo e com preview isolado na própria tela, não
+    aplicado no app inteiro ainda (decisão registrada em ARCHITECTURE.md, não é bug).
 - **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
   de design), tema claro. Aplicado em `src/index.css`: fonte Plus Jakarta Sans, `--radius` maior,
   cores de categoria em `--chart-1`..`--chart-4`. Testado nos dois temas (claro/escuro) via

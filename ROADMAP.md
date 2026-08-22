@@ -36,10 +36,12 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
 - [x] Gestão de usuários do tenant (convite, papéis, permissões por módulo) — restrita a
       `tenant_admin`. Convite via Edge Function (`invite-tenant-user`); editar/ativar-desativar
       direto no client via RLS. Testado ponta a ponta.
-- [x] Identidade visual do tenant (logo claro/escuro, favicon, cor primária/destaque) — bucket
-      `tenant-branding`, upload restrito ao próprio tenant via policy no path. Cores aplicadas
-      via CSS vars escopadas (`--primary`/`--accent`) no painel do tenant e na home pública.
-      Testado ponta a ponta.
+- [x] Identidade visual do tenant — paridade completa com o sistema anterior: 15 cores (tema
+      claro/escuro), fundo do logo com transparência, 5 imagens (logo claro/escuro, plano de
+      fundo, favicon, imagem sem foto), restaurar padrão, preview por tema. Bucket
+      `tenant-branding`, upload restrito ao próprio tenant via policy no path. Só
+      `--primary`/`--accent` são aplicados de fato no app hoje (ver ARCHITECTURE.md — aplicar o
+      resto das cores em tempo real fica como possível próximo passo). Testado ponta a ponta.
 
 Fase 1 completa, exceto o conteúdo real do dashboard (item acima), que é conteúdo da Fase 4 por
 design — o placeholder atual já cumpre o papel desta fase (provar que auth/tenant/permissões

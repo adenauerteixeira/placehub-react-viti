@@ -99,9 +99,23 @@ SaaS colorido"** — fonte Plus Jakarta Sans, cantos bem arredondados (`--radius
 qualquer gráfico/stat-tile futuro (Fase 4) sem inventar um novo sistema de cor. `--primary` é o
 azul da categoria "leads". Tokens em `src/index.css`, testados nos dois temas.
 
-Identidade visual por tenant (Fase 1, ainda não implementada) vai sobrescrever só as variáveis
-de marca (`--primary`, `--accent`) em runtime — não um conjunto de ~20 cores hex configuráveis
-por tenant como no sistema anterior.
+**Identidade visual por tenant** (`/branding`, só `tenant_admin`): decisão original era limitar a
+customização a `--primary`/`--accent` só, deixando o resto vir dos tokens neutros do shadcn.
+Revertido a pedido do usuário (2026-08-22) — a tela replica a paridade completa com o sistema
+anterior: 15 cores (8 tema claro + 7 tema escuro, incluindo fundo/superfície/texto/texto-
+secundário/borda de cada tema, não só primary/accent), cor de fundo do logo com opção de
+transparência por tema, e 5 imagens (`logo_light_path`, `logo_dark_path`,
+`background_image_path`, `favicon_path`, `placeholder_image_path` — todas em
+`supabase/migrations/20260822172344_expand_tenant_branding_fields.sql`).
+
+Em runtime, só `--primary`/`--accent` (do tema claro) são de fato aplicados como CSS variables
+escopadas no `TenantLayout`/`PublicTenantHomePage` — o restante das cores (fundo/superfície/
+texto/bordas por tema, cores do tema escuro) fica salvo no banco mas **ainda não é aplicado**
+automaticamente na UI; a tela de identidade visual mostra um preview isolado de como ficaria
+(cartão de exemplo), não o app inteiro. Aplicar o conjunto completo de tokens por tenant
+(inclusive dark mode) é trabalho futuro, se/quando fizer sentido — por ora o objetivo era
+paridade de *opções disponíveis para o tenant configurar*, não de aplicação em tempo real de
+cada uma.
 
 ## O que este documento não cobre
 
