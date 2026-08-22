@@ -10,6 +10,7 @@ import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
 import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useTenant } from '@/features/tenants/api'
+import { TenantBrandingPage } from '@/features/tenant-branding/tenant-branding-page'
 import { TenantUsersPage } from '@/features/tenant-users/tenant-users-page'
 import { platformUrl, resolveSubdomainContext, tenantUrl } from '@/lib/subdomain'
 import { useRedirectOnce } from '@/lib/use-redirect-once'
@@ -46,14 +47,29 @@ function TenantApp({ slug }: { slug: string }) {
       />
       <Route element={<TenantProtectedShell slug={slug} />}>
         <Route path="/dashboard" element={<TenantDashboardPage />} />
-        <Route path="/users" element={<RequireTenantAdmin />} />
+        <Route
+          path="/users"
+          element={
+            <RequireTenantAdmin>
+              <TenantUsersPage />
+            </RequireTenantAdmin>
+          }
+        />
+        <Route
+          path="/branding"
+          element={
+            <RequireTenantAdmin>
+              <TenantBrandingPage />
+            </RequireTenantAdmin>
+          }
+        />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }
 
-function RequireTenantAdmin() {
+function RequireTenantAdmin({ children }: { children: React.ReactNode }) {
   const { profile } = useTenantOutletContext()
   if (profile.role !== 'tenant_admin') {
     return (
@@ -63,7 +79,7 @@ function RequireTenantAdmin() {
       />
     )
   }
-  return <TenantUsersPage />
+  return children
 }
 
 function TenantProtectedShell({ slug }: { slug: string }) {

@@ -10,12 +10,13 @@
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260822160905_add_email_to_profiles.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
-  autenticado neste ambiente — ver nota abaixo). Duas Edge Functions no ar: `create-tenant-admin`
-  e `invite-tenant-user`.
+  `20260822163342_create_tenant_branding_bucket.sql` aplicadas com sucesso via SQL Editor (CLI
+  ainda não autenticado neste ambiente — ver nota abaixo). Duas Edge Functions no ar:
+  `create-tenant-admin` e `invite-tenant-user`. Bucket `tenant-branding` criado.
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah**
-  (slug `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`) e um `broker`
-  (`corretor.qa@example.com` — criado testando o convite de usuários, pode remover ou manter).
+  (slug `casah`, com cor primária `#e11d48` e logo claro definidos), com um `tenant_admin`
+  (`tenant.adm@gmail.com`) e um `broker` (`corretor.qa@example.com` — criado testando o convite
+  de usuários, pode remover ou manter).
 - **Funcional e testado ponta a ponta** (navegador headless, contra o Supabase real):
   - Login único (`/login`), redirecionamento pós-login por role/tenant.
   - Home pública do tenant (placeholder "anúncios em breve") e da plataforma (vai direto pro
@@ -29,6 +30,9 @@
   - Gestão de usuários do tenant (`/users`, só `tenant_admin`): convidar (Edge Function
     `invite-tenant-user`, `tenant_id` sempre do profile de quem chama, nunca do body), editar
     papel/dados/permissões, ativar/desativar (não dá pra desativar a si mesmo).
+  - Identidade visual do tenant (`/branding`, só `tenant_admin`): cores (CSS vars escopadas,
+    não vazam pra plataforma nem outros tenants) e logo/favicon (bucket `tenant-branding`,
+    upload restrito por policy no path). Reflete no painel do tenant e na home pública.
 - **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
   de design), tema claro. Aplicado em `src/index.css`: fonte Plus Jakarta Sans, `--radius` maior,
   cores de categoria em `--chart-1`..`--chart-4`. Testado nos dois temas (claro/escuro) via
@@ -37,10 +41,12 @@
 
 ## Próximos passos imediatos
 
-1. **Identidade visual do tenant** (logo, cores) com upload no bucket `tenant-branding` — último
-   item da Fase 1 (ver [ROADMAP.md](./ROADMAP.md)).
-2. Limpar dados de teste no Supabase quando conveniente (ver "Notas técnicas" abaixo — não é
-   urgente, nenhum é destrutivo deixar).
+**Fase 1 está completa** (só falta o conteúdo real do dashboard, que é escopo da Fase 4 por
+design). Próximo passo natural: **Fase 2 — Catálogo** (empreendimentos, proprietários, anúncios/
+imóveis com portal público, parceiros, corretores). Ver [ROADMAP.md](./ROADMAP.md).
+
+Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
+(ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar).
 
 ## Notas técnicas para retomar
 

@@ -17,6 +17,16 @@ formato AAAA-MM-DD.
 
 ### Adicionado
 
+- Identidade visual do tenant (`/branding`, restrita a `tenant_admin`): cor primária e de
+  destaque (com preview em `<input type="color">` + campo hex), upload de logo (claro/escuro) e
+  favicon. Bucket `tenant-branding` (migration
+  `20260822163342_create_tenant_branding_bucket.sql`), público pra leitura, escrita restrita ao
+  `tenant_admin` do próprio tenant via policy no primeiro segmento do caminho do arquivo
+  (`{tenant_id}/...`). As cores da marca são aplicadas via CSS variables escopadas
+  (`--primary`/`--accent`) tanto no painel do tenant quanto na home pública — não vazam pro
+  console da plataforma nem para outros tenants. Testado ponta a ponta: salvar cores, enviar
+  logo, ver refletido no cabeçalho e na home pública, imagem carregando de verdade (não
+  quebrada).
 - Gestão de usuários do tenant (`/users`, restrita a `tenant_admin`, com link no menu do
   `TenantLayout`): listar, convidar (nome/e-mail/senha/papel/permissões), editar (dados/papel/
   permissões/ativo), ativar/desativar — não é mais possível desativar a si mesmo.

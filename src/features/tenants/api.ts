@@ -10,11 +10,15 @@ export type Tenant = {
   active: boolean
   primary_color: string
   accent_color: string
+  logo_light_path: string | null
+  logo_dark_path: string | null
+  favicon_path: string | null
   created_at: string
+  updated_at: string
 }
 
 const TENANT_COLUMNS =
-  'id, name, slug, email, phone, active, primary_color, accent_color, created_at'
+  'id, name, slug, email, phone, active, primary_color, accent_color, logo_light_path, logo_dark_path, favicon_path, created_at, updated_at'
 
 export function useTenant(tenantId: string | null | undefined) {
   return useQuery({

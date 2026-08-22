@@ -36,7 +36,14 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
 - [x] Gestão de usuários do tenant (convite, papéis, permissões por módulo) — restrita a
       `tenant_admin`. Convite via Edge Function (`invite-tenant-user`); editar/ativar-desativar
       direto no client via RLS. Testado ponta a ponta.
-- [ ] Identidade visual do tenant (logo, cores) com upload no bucket `tenant-branding`.
+- [x] Identidade visual do tenant (logo claro/escuro, favicon, cor primária/destaque) — bucket
+      `tenant-branding`, upload restrito ao próprio tenant via policy no path. Cores aplicadas
+      via CSS vars escopadas (`--primary`/`--accent`) no painel do tenant e na home pública.
+      Testado ponta a ponta.
+
+Fase 1 completa, exceto o conteúdo real do dashboard (item acima), que é conteúdo da Fase 4 por
+design — o placeholder atual já cumpre o papel desta fase (provar que auth/tenant/permissões
+funcionam).
 
 ## Fase 2 — Catálogo
 
