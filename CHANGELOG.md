@@ -20,6 +20,15 @@ formato AAAA-MM-DD.
 - Push do commit inicial para `https://github.com/adenauerteixeira/placehub-react-viti.git`
   (branch `trunk`).
 - Primeiro usuário `super_admin` da plataforma criado (bootstrap).
+- Autenticação: `AuthProvider` (`src/features/auth/auth-context.tsx`), tela de login única
+  (`login-page.tsx`) com react-hook-form + zod.
+- Resolução de contexto por subdomínio (`src/lib/subdomain.ts`, `src/lib/hostname.ts`) e
+  redirecionamento pós-login por role/tenant (`src/app/app-shell.tsx`).
+- Console da plataforma: layout (`platform-layout.tsx`) e listagem de tenants
+  (`tenants-list-page.tsx`), somente leitura por enquanto.
+- Layout e dashboard placeholder do tenant (`tenant-layout.tsx`, `tenant-dashboard-page.tsx`).
+- Testado ponta a ponta em navegador headless: login em `app.localhost`, perfil carregado,
+  redirecionamento para `/tenants`, RLS respeitada (super_admin vê a lista vazia sem erro).
 
 ### Corrigido
 
@@ -28,4 +37,15 @@ formato AAAA-MM-DD.
   bootstrap do primeiro `super_admin`. Corrigido em
   `20260822014440_fix_handle_new_user_bootstrap.sql`: sem nenhum `super_admin` existente, um
   usuário sem metadata nasce como `super_admin`; essa janela se fecha sozinha depois.
+- Navegação entre subdomínios (`window.location.replace`) sendo chamada durante o *render* em
+  vez de em `useEffect` — o StrictMode do React a disparava duas vezes em sequência, cancelando
+  uma navegação com a outra (`ERR_ABORTED`). Corrigido com `src/lib/use-redirect-once.ts`.
+- `AuthProvider` chamava `getSession()` e `onAuthStateChange` em paralelo, cada um atualizando
+  o mesmo estado — com o storage assíncrono baseado em cookie, `getSession()` podia resolver
+  *depois* de um login recém-feito e sobrescrever a sessão válida. Corrigido usando só
+  `onAuthStateChange` (que já dispara com a sessão atual ao inscrever).
+- Cookie de sessão com `Domain=.localhost`: o Chrome trata `localhost` como *public suffix* e
+  rejeita silenciosamente esse cookie quando setado a partir de um subdomínio (`app.localhost`),
+  quebrando a autenticação em dev local. `cookie-storage.ts` agora usa cookie host-only quando
+  o domínio raiz é `localhost`; em produção (domínio real) o comportamento não muda.
 

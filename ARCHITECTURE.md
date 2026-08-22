@@ -37,6 +37,13 @@ dessas decisões.
 - O cookie compartilhado é só uma conveniência de SSO entre os *nossos* subdomínios — não
   afeta o isolamento de dados, que é garantido pela RLS (abaixo), nem funciona em domínio
   próprio de tenant (esse caso pede login de novo, é aceitável).
+- **Dev local:** o Chrome trata `localhost` como *public suffix* (proteção anti-supercookie) e
+  **rejeita silenciosamente** um cookie `Domain=.localhost` setado a partir de um subdomínio
+  (`app.localhost` → falha até para si mesmo, não só entre subdomínios). Isso não acontece em
+  produção com um domínio registrado de verdade. `cookie-storage.ts` detecta esse caso e usa
+  cookie host-only em `localhost` — login funciona normalmente em cada subdomínio, só o SSO
+  *entre* subdomínios não é testável via `*.localhost` puro (para isso, um domínio de dois
+  labels via hosts file, ex. `*.placehub.test`, seria necessário — não configurado ainda).
 
 ## Isolamento de dados (segurança)
 

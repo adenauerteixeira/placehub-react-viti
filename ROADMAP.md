@@ -21,12 +21,14 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
 
 ## Fase 1 — Plataforma, autenticação e tenants
 
-- [ ] Tela de login única (mesmo formulário em qualquer subdomínio), com redirecionamento
-      pós-login por role/tenant do `profile`.
-- [ ] Resolução de tenant por subdomínio (`{slug}.placehub.app`) no client.
-- [ ] Console da plataforma (`app.placehub.app`): CRUD de tenants, ativar/desativar,
-      criação do primeiro `tenant_admin` de cada tenant (via Edge Function + Admin API).
-- [ ] Dashboard do tenant (vazio/placeholder até a Fase 4 trazer indicadores reais).
+- [x] Tela de login única (mesmo formulário em qualquer subdomínio), com redirecionamento
+      pós-login por role/tenant do `profile`. Testado ponta a ponta em `app.localhost`.
+- [x] Resolução de tenant/plataforma por subdomínio (`src/lib/subdomain.ts`) no client.
+- [x] Console da plataforma (`app.placehub.app`): listagem de tenants (somente leitura).
+- [ ] CRUD de tenants (criar/editar/ativar-desativar), criação do primeiro `tenant_admin` de
+      cada tenant (via Edge Function + Admin API) — próximo incremento.
+- [ ] Dashboard do tenant (vazio/placeholder até a Fase 4 trazer indicadores reais) — feito um
+      placeholder mínimo; falta revisar quando a Fase 2+ trouxer conteúdo real.
 - [ ] Gestão de usuários do tenant (convite, papéis, permissões por módulo).
 - [ ] Identidade visual do tenant (logo, cores) com upload no bucket `tenant-branding`.
 
