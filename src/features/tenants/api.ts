@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
 export type Tenant = {
@@ -63,6 +63,94 @@ export function useTenants() {
 
       if (error) throw error
       return data
+    },
+  })
+}
+
+export type TenantInput = {
+  name: string
+  slug: string
+  email: string
+  phone: string
+}
+
+export function useCreateTenant() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: TenantInput): Promise<Tenant> => {
+      const { data: userData } = await supabase.auth.getUser()
+      const { data, error } = await supabase
+        .from('tenants')
+        .insert({
+          name: input.name,
+          slug: input.slug,
+          email: input.email || null,
+          phone: input.phone || null,
+          created_by: userData.user?.id ?? null,
+        })
+        .select(TENANT_COLUMNS)
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+    },
+  })
+}
+
+export function useUpdateTenant() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...input
+    }: { id: string } & Omit<TenantInput, 'slug'>): Promise<Tenant> => {
+      const { data: userData } = await supabase.auth.getUser()
+      const { data, error } = await supabase
+        .from('tenants')
+        .update({
+          name: input.name,
+          email: input.email || null,
+          phone: input.phone || null,
+          updated_by: userData.user?.id ?? null,
+        })
+        .eq('id', id)
+        .select(TENANT_COLUMNS)
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: (tenant) => {
+      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenant.id] })
+    },
+  })
+}
+
+export function useToggleTenantActive() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }): Promise<Tenant> => {
+      const { data: userData } = await supabase.auth.getUser()
+      const { data, error } = await supabase
+        .from('tenants')
+        .update({ active, updated_by: userData.user?.id ?? null })
+        .eq('id', id)
+        .select(TENANT_COLUMNS)
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: (tenant) => {
+      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenant.id] })
     },
   })
 }

@@ -17,6 +17,17 @@ formato AAAA-MM-DD.
 
 ### Adicionado
 
+- CRUD de tenants no console da plataforma: criar (`TenantFormDialog`, com slug auto-gerado do
+  nome e validado contra a mesma regra do banco), editar (nome/e-mail/telefone; subdomínio é
+  fixo após criado), ativar/desativar (`Switch` na listagem). Tudo direto no client, sem
+  necessidade de Edge Function — protegido pelas policies `tenants_insert`/`tenants_update`
+  (super_admin only) já existentes.
+- Diálogo "Vincular administrador" (`link-admin-dialog.tsx`): gera o SQL para ligar um usuário
+  (criado manualmente no painel do Supabase) a um tenant como `tenant_admin` — solução ponte
+  até existir a Edge Function de criação de usuário via Admin API. Abre automaticamente depois
+  de criar um tenant.
+- Testado ponta a ponta em navegador headless: criar tenant → aparece na lista → editar →
+  desativar/ativar → abrir diálogo de vínculo com o SQL correto.
 - Scaffold do projeto: Vite + React 19 + TypeScript, Tailwind CSS v4, shadcn/ui (preset Nova),
   tema claro/escuro com `ThemeProvider` próprio.
 - Cliente Supabase (`src/lib/supabase.ts`) com sessão persistida em cookie de domínio raiz

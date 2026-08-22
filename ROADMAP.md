@@ -27,8 +27,13 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
 - [x] Console da plataforma (`app.placehub.app`): listagem de tenants (somente leitura).
 - [x] Home do tenant pública (placeholder "anúncios em breve"), login como rota própria
       (`/login`) em vez de gate global — mesmo comportamento do sistema anterior.
-- [ ] CRUD de tenants (criar/editar/ativar-desativar), criação do primeiro `tenant_admin` de
-      cada tenant (via Edge Function + Admin API) — próximo incremento.
+- [x] CRUD de tenants (criar/editar/ativar-desativar) no console da plataforma — direto no
+      client, protegido por RLS (`tenants_insert`/`tenants_update`, super_admin only).
+- [ ] Criação do primeiro `tenant_admin` de cada tenant automatizada via Edge Function + Admin
+      API. Por enquanto é manual: o diálogo "Vincular administrador" gera o SQL pronto (usuário
+      criado no painel do Supabase → SQL liga `profiles.tenant_id`) — ver
+      `src/features/tenants/link-admin-dialog.tsx`. Trocar esse SQL manual pela Edge Function é
+      o próximo passo natural aqui.
 - [ ] Dashboard do tenant (vazio/placeholder até a Fase 4 trazer indicadores reais) — feito um
       placeholder mínimo; falta revisar quando a Fase 2+ trouxer conteúdo real.
 - [ ] Gestão de usuários do tenant (convite, papéis, permissões por módulo).

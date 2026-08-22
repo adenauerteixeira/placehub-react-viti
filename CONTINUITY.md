@@ -18,7 +18,9 @@
   - Login único (`/login`), redirecionamento pós-login por role/tenant.
   - Home pública do tenant (placeholder "anúncios em breve") e da plataforma (vai direto pro
     login — nunca teve conteúdo público).
-  - Console da plataforma: listagem de tenants (só leitura).
+  - Console da plataforma: CRUD de tenants (criar/editar/ativar-desativar), tudo direto no
+    client via RLS — sem Edge Function. Vínculo do primeiro `tenant_admin` ainda é manual (ver
+    "Próximos passos").
   - Dashboard do tenant (placeholder), com `TenantProtectedShell` resolvendo tenant/role.
   - Rotas protegidas redirecionam para `/login` quando não há sessão (não é mais um gate global).
 - **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
@@ -29,14 +31,11 @@
 
 ## Próximos passos imediatos
 
-1. CRUD de tenants no console da plataforma (criar/editar/ativar-desativar). Criar um tenant
-   precisa também criar o primeiro `tenant_admin` — isso exige uma Edge Function com service
-   role (Admin API), porque o painel do Supabase não expõe `user_metadata` no Add User (foi por
-   isso que o Casah precisou do fluxo manual: criar pelo painel sem metadata + eu inserir o
-   profile via SQL depois). Vou precisar que o usuário tenha o CLI do Supabase autenticado (ou
-   aplique a Edge Function manualmente) quando chegar nessa parte.
-2. Depois do CRUD: gestão de usuários do tenant e identidade visual (resto da Fase 1 —
-   ver [ROADMAP.md](./ROADMAP.md)).
+1. Trocar o fluxo manual de "Vincular administrador" (usuário criado no painel + SQL colado) por
+   uma Edge Function com service role chamando a Admin API — precisa do CLI do Supabase
+   autenticado (ou aplicar a função manualmente pelo painel) quando chegar nessa parte.
+2. Gestão de usuários do tenant e identidade visual (resto da Fase 1 — ver
+   [ROADMAP.md](./ROADMAP.md)).
 
 ## Notas técnicas para retomar
 
