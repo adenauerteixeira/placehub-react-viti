@@ -1,7 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import type { Profile } from '@/features/auth/use-profile'
+import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 
-export function TenantDashboardPage({ profile }: { profile: Profile }) {
+export function TenantDashboardPage() {
+  const { profile } = useTenantOutletContext()
+
   return (
     <Card className="max-w-lg">
       <CardHeader>

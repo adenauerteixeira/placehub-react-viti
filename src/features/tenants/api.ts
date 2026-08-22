@@ -33,6 +33,25 @@ export function useTenant(tenantId: string | null | undefined) {
   })
 }
 
+/** Busca por slug, para o portal público (visitante sem sessão). */
+export function usePublicTenant(slug: string | null) {
+  return useQuery({
+    queryKey: ['public-tenant', slug],
+    enabled: !!slug,
+    queryFn: async (): Promise<Tenant | null> => {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select(TENANT_COLUMNS)
+        .eq('slug', slug!)
+        .eq('active', true)
+        .maybeSingle()
+
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 export function useTenants() {
   return useQuery({
     queryKey: ['tenants'],

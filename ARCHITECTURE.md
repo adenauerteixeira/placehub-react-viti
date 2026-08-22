@@ -28,6 +28,12 @@ dessas decisões.
   `window.location.hostname`, extrai o primeiro label e busca o tenant no Supabase. Não há
   Edge Middleware — a SPA é estática na Vercel, com domínio wildcard apontando para o mesmo
   deployment.
+- **Home pública vs. área logada**: a home do tenant (`/`) é **pública** — portal de anúncios
+  (catálogo real chega na Fase 2; por enquanto é um placeholder), sem exigir login, com um botão
+  "Entrar" levando para `/login`. A plataforma não tem conteúdo público (mesmo comportamento do
+  sistema anterior: `/plataforma` sempre foi só o login) — `app.placehub.app/` sem sessão
+  redireciona direto para `/login`. Rotas protegidas (`/dashboard`, `/tenants`, etc.) redirecionam
+  para `/login` quando não há sessão, em vez de a aplicação inteira virar uma tela de login.
 - **Login único**: o mesmo formulário de login é servido em qualquer subdomínio. A sessão do
   Supabase Auth usa um storage baseado em **cookie no domínio raiz** (`.placehub.app`, ver
   `src/lib/cookie-storage.ts`) em vez do `localStorage` padrão — assim, autenticar em

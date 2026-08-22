@@ -29,6 +29,14 @@ formato AAAA-MM-DD.
 - Layout e dashboard placeholder do tenant (`tenant-layout.tsx`, `tenant-dashboard-page.tsx`).
 - Testado ponta a ponta em navegador headless: login em `app.localhost`, perfil carregado,
   redirecionamento para `/tenants`, RLS respeitada (super_admin vê a lista vazia sem erro).
+- Home do tenant pública (`public-home-page.tsx`, placeholder "anúncios em breve" — catálogo
+  real é Fase 2), com botão "Entrar" para `/login`. Login deixou de ser o gate de todo o app:
+  agora é uma rota própria; rotas protegidas redirecionam para `/login` quando não há sessão,
+  em vez da aplicação inteira virar uma tela de login (correção pedida pelo usuário, alinhando
+  com o comportamento do sistema anterior: `tenant.home` sempre foi público).
+- Policy `tenants_select_public` (migration `20260822114717_add_public_tenant_read.sql`):
+  leitura pública de tenants ativos, necessária pra home pública resolver o tenant pelo slug do
+  subdomínio antes do login.
 
 ### Corrigido
 

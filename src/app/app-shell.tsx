@@ -3,29 +3,69 @@ import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-st
 import { NotFoundPage } from '@/components/not-found-page'
 import { useAuth } from '@/features/auth/auth-context'
 import { LoginPage } from '@/features/auth/login-page'
-import { useProfile, type Profile } from '@/features/auth/use-profile'
+import { useProfile } from '@/features/auth/use-profile'
 import { PlatformLayout } from '@/features/platform/platform-layout'
 import { TenantsListPage } from '@/features/platform/tenants-list-page'
+import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
 import { TenantLayout } from '@/features/tenant/tenant-layout'
 import { useTenant } from '@/features/tenants/api'
-import { platformUrl, resolveSubdomainContext, tenantUrl, type SubdomainContext } from '@/lib/subdomain'
+import { platformUrl, resolveSubdomainContext, tenantUrl } from '@/lib/subdomain'
 import { useRedirectOnce } from '@/lib/use-redirect-once'
 
+// A home de cada contexto é pública (portal de anúncios no tenant, nada no
+// apex); login é uma rota própria (/login), não o "portão" do app inteiro —
+// mesmo comportamento do sistema anterior (tenant.home público vs.
+// plataforma/login). Ver ARCHITECTURE.md.
 export function AppShell() {
-  const { session, loading } = useAuth()
-
+  const { loading } = useAuth()
   if (loading) return <FullscreenSpinner />
-  if (!session) return <LoginPage />
 
-  return <AuthenticatedApp />
+  const context = resolveSubdomainContext()
+
+  if (context.kind === 'tenant') return <TenantApp slug={context.slug} />
+  if (context.kind === 'platform') return <PlatformApp />
+  return <ApexRedirect />
 }
 
-function AuthenticatedApp() {
-  const { data: profile, isLoading, isError } = useProfile()
+function ApexRedirect() {
+  useRedirectOnce(platformUrl())
+  return <FullscreenSpinner />
+}
 
-  if (isLoading) return <FullscreenSpinner />
-  if (isError || !profile) {
+function TenantApp({ slug }: { slug: string }) {
+  const { session } = useAuth()
+
+  return (
+    <Routes>
+      <Route path="/" element={<PublicTenantHomePage slug={slug} />} />
+      <Route
+        path="/login"
+        element={session ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+      />
+      <Route element={<TenantProtectedShell slug={slug} />}>
+        <Route path="/dashboard" element={<TenantDashboardPage />} />
+      </Route>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  )
+}
+
+function TenantProtectedShell({ slug }: { slug: string }) {
+  const { session } = useAuth()
+  const { data: profile, isLoading: profileLoading, isError: profileError } = useProfile()
+  const { data: tenant, isLoading: tenantLoading, isError: tenantError } = useTenant(
+    profile?.tenant_id,
+  )
+
+  const isSuperAdmin = profile?.role === 'super_admin'
+  const tenantMismatch = !!tenant && tenant.slug !== slug
+  const redirectUrl = isSuperAdmin ? platformUrl() : tenantMismatch ? tenantUrl(tenant!.slug) : null
+  useRedirectOnce(redirectUrl)
+
+  if (!session) return <Navigate to="/login" replace />
+  if (profileLoading) return <FullscreenSpinner />
+  if (profileError || !profile) {
     return (
       <FullscreenMessage
         title="Não foi possível carregar seu perfil"
@@ -33,7 +73,6 @@ function AuthenticatedApp() {
       />
     )
   }
-
   if (!profile.is_active) {
     return (
       <FullscreenMessage
@@ -42,45 +81,10 @@ function AuthenticatedApp() {
       />
     )
   }
-
-  const context = resolveSubdomainContext()
-
-  return profile.role === 'super_admin' ? (
-    <PlatformGate context={context} profile={profile} />
-  ) : (
-    <TenantGate context={context} profile={profile} />
-  )
-}
-
-function PlatformGate({ context, profile }: { context: SubdomainContext; profile: Profile }) {
-  const shouldRedirect = context.kind !== 'platform'
-  useRedirectOnce(shouldRedirect ? platformUrl() : null)
-
-  if (shouldRedirect) return <FullscreenSpinner />
-
-  return (
-    <Routes>
-      <Route element={<PlatformLayout profile={profile} />}>
-        <Route path="/" element={<Navigate to="/tenants" replace />} />
-        <Route path="/tenants" element={<TenantsListPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
-    </Routes>
-  )
-}
-
-function TenantGate({ context, profile }: { context: SubdomainContext; profile: Profile }) {
-  const { data: tenant, isLoading, isError } = useTenant(profile.tenant_id)
-
-  const shouldRedirect = !!tenant && (context.kind !== 'tenant' || context.slug !== tenant.slug)
-  useRedirectOnce(shouldRedirect && tenant ? tenantUrl(tenant.slug) : null)
-
-  if (isLoading) return <FullscreenSpinner />
-  if (isError || !tenant) {
-    return <FullscreenMessage title="Imobiliária não encontrada" />
-  }
-  if (shouldRedirect) return <FullscreenSpinner />
-
+  if (isSuperAdmin) return <FullscreenSpinner />
+  if (tenantLoading) return <FullscreenSpinner />
+  if (tenantError || !tenant) return <FullscreenMessage title="Imobiliária não encontrada" />
+  if (tenantMismatch) return <FullscreenSpinner />
   if (!tenant.active) {
     return (
       <FullscreenMessage
@@ -90,13 +94,52 @@ function TenantGate({ context, profile }: { context: SubdomainContext; profile: 
     )
   }
 
+  return <TenantLayout tenant={tenant} profile={profile} />
+}
+
+function PlatformApp() {
+  const { session } = useAuth()
+
   return (
     <Routes>
-      <Route element={<TenantLayout tenant={tenant} profile={profile} />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<TenantDashboardPage profile={profile} />} />
-        <Route path="*" element={<NotFoundPage />} />
+      <Route path="/login" element={session ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route element={<PlatformProtectedShell />}>
+        <Route path="/" element={<Navigate to="/tenants" replace />} />
+        <Route path="/tenants" element={<TenantsListPage />} />
       </Route>
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
+}
+
+function PlatformProtectedShell() {
+  const { session } = useAuth()
+  const { data: profile, isLoading: profileLoading, isError: profileError } = useProfile()
+  const isSuperAdmin = profile?.role === 'super_admin'
+  const { data: tenant } = useTenant(!isSuperAdmin ? profile?.tenant_id : undefined)
+
+  const redirectUrl = profile && !isSuperAdmin && tenant ? tenantUrl(tenant.slug) : null
+  useRedirectOnce(redirectUrl)
+
+  if (!session) return <Navigate to="/login" replace />
+  if (profileLoading) return <FullscreenSpinner />
+  if (profileError || !profile) {
+    return (
+      <FullscreenMessage
+        title="Não foi possível carregar seu perfil"
+        description="Tente recarregar a página em instantes."
+      />
+    )
+  }
+  if (!profile.is_active) {
+    return (
+      <FullscreenMessage
+        title="Conta inativa"
+        description="Fale com o administrador da sua imobiliária."
+      />
+    )
+  }
+  if (!isSuperAdmin) return <FullscreenSpinner />
+
+  return <PlatformLayout profile={profile} />
 }

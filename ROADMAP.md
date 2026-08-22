@@ -25,6 +25,8 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
       pós-login por role/tenant do `profile`. Testado ponta a ponta em `app.localhost`.
 - [x] Resolução de tenant/plataforma por subdomínio (`src/lib/subdomain.ts`) no client.
 - [x] Console da plataforma (`app.placehub.app`): listagem de tenants (somente leitura).
+- [x] Home do tenant pública (placeholder "anúncios em breve"), login como rota própria
+      (`/login`) em vez de gate global — mesmo comportamento do sistema anterior.
 - [ ] CRUD de tenants (criar/editar/ativar-desativar), criação do primeiro `tenant_admin` de
       cada tenant (via Edge Function + Admin API) — próximo incremento.
 - [ ] Dashboard do tenant (vazio/placeholder até a Fase 4 trazer indicadores reais) — feito um

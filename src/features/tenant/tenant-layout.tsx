@@ -1,9 +1,15 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useOutletContext } from 'react-router-dom'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { UserMenu } from '@/features/auth/user-menu'
 import { useAuth } from '@/features/auth/auth-context'
 import type { Profile } from '@/features/auth/use-profile'
 import type { Tenant } from '@/features/tenants/api'
+
+export type TenantOutletContext = { tenant: Tenant; profile: Profile }
+
+export function useTenantOutletContext() {
+  return useOutletContext<TenantOutletContext>()
+}
 
 export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Profile }) {
   const { user } = useAuth()
@@ -18,7 +24,7 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
         </div>
       </header>
       <main className="flex-1 p-6">
-        <Outlet />
+        <Outlet context={{ tenant, profile } satisfies TenantOutletContext} />
       </main>
     </div>
   )

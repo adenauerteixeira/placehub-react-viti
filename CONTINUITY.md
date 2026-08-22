@@ -54,16 +54,32 @@ criação de qualquer usuário sem `tenant_id`/`role` em metadata (violava a con
   tem esse problema com um domínio real).
 - `npm run build` e `npm run lint` seguem limpos.
 
-**Estado do git:** commits desta etapa ainda não feitos — fazer commit + push (usuário já deu
-permissão permanente para push neste repo, não precisa perguntar de novo) antes de seguir.
+**Correção pedida pelo usuário (importante, alinhada ao sistema anterior):** a home do tenant
+não pode ser o login — no Laravel, `tenant.home` sempre foi pública (portal de anúncios),
+login era uma ação separada. Corrigido: `/` do tenant agora é `PublicTenantHomePage` (placeholder
+"anúncios em breve", catálogo real é Fase 2) com botão "Entrar" → `/login`. Login virou uma rota
+própria em vez do gate de todo o app. Rotas protegidas (`/dashboard`, `/tenants`) redirecionam
+para `/login` quando não há sessão — antes, a aplicação inteira virava a tela de login. A
+plataforma (`app.`) continua indo direto para `/login` na home (nunca teve conteúdo público, nem
+no sistema antigo). Precisou de uma nova migration (`20260822114717_add_public_tenant_read.sql`
+— policy `tenants_select_public`, leitura pública de tenants ativos) porque um visitante
+anônimo precisa resolver "qual tenant é esse slug" antes de logar. **Enviada ao usuário, ainda
+não confirmou ter aplicado.**
+
+**Estado do git:** commit do trabalho de autenticação/console da plataforma já enviado
+(`origin/trunk`). A correção da home pública (acima) ainda **não foi commitada** — fazer isso a
+seguir (usuário já deu permissão permanente para push neste repo, não precisa perguntar de novo).
 
 ## Próximos passos imediatos
 
-1. Commitar e dar push do trabalho de autenticação/plataforma.
-2. Criar um tenant de teste (manualmente via SQL Editor, já que o CRUD de tenants ainda não
-   existe) para poder testar o lado `TenantGate`/`TenantLayout`/`TenantDashboardPage`, que ainda
-   não foi validado em navegador (só o lado plataforma foi).
-3. Seguir a Fase 1: CRUD de tenants no console da plataforma — isso precisa de uma Edge Function
+1. Commitar e dar push da correção de home pública / rota de login.
+2. Confirmar com o usuário que a migration `20260822114717_add_public_tenant_read.sql` foi
+   aplicada; sem ela, a home pública do tenant sempre mostra "não encontrada" (RLS bloqueia).
+3. Criar um tenant de teste (manualmente via SQL Editor, já que o CRUD de tenants ainda não
+   existe) para poder testar o lado tenant (`TenantProtectedShell`/`TenantLayout`/
+   `TenantDashboardPage`/`PublicTenantHomePage` com dado real), que ainda não foi validado em
+   navegador com um tenant de verdade (só o lado plataforma e os estados "não encontrado" foram).
+4. Seguir a Fase 1: CRUD de tenants no console da plataforma — isso precisa de uma Edge Function
    com service role para criar o primeiro `tenant_admin` via Admin API (criar `auth.users` com
    metadata `{tenant_id, role: 'tenant_admin'}`). Vou precisar pedir ao usuário para criar o
    projeto/CLI do Supabase autenticado (ou aplicar a Edge Function manualmente) quando chegar
