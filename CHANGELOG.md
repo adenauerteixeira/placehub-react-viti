@@ -5,6 +5,16 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Alterado
+
+- Toggle de tema simplificado: alterna direto entre claro/escuro num clique (era um menu com
+  Claro/Escuro/Sistema).
+- Tema visual trocado do preset neutro "Nova" do shadcn para uma direção própria ("Dashboard
+  SaaS colorido" — decidida comparando 3 opções num canvas de design). Fonte Geist → Plus
+  Jakarta Sans, `--radius` maior (cantos mais arredondados), cores de categoria
+  (azul/verde/âmbar/violeta) nos tokens `--chart-1`..`--chart-4` para reaproveitar no dashboard
+  real (Fase 4). Detalhes em ARCHITECTURE.md.
+
 ### Adicionado
 
 - Scaffold do projeto: Vite + React 19 + TypeScript, Tailwind CSS v4, shadcn/ui (preset Nova),

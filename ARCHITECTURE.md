@@ -10,7 +10,7 @@ dessas decisões.
 | Camada | Escolha | Por quê |
 |---|---|---|
 | Front-end | Vite + React 19 + TypeScript | pedido do usuário |
-| Estilo | Tailwind CSS v4 + shadcn/ui (preset "Nova", base Radix) | tokens de tema prontos para claro/escuro, componentes acessíveis |
+| Estilo | Tailwind CSS v4 + shadcn/ui (base Radix; tema próprio "SaaS colorido" — ver abaixo) | componentes acessíveis prontos; tema customizado para não ficar genérico |
 | Roteamento | React Router v7 | padrão maduro para SPA na Vercel |
 | Server state | `@supabase/supabase-js` + TanStack Query | cache/mutations sem reinventar |
 | Formulários | react-hook-form + zod | integra com os componentes `<Form>` do shadcn |
@@ -92,10 +92,16 @@ leitura pública), `property-photos` (leitura pública), `sale-documents` (compr
 
 ## Tema claro/escuro e identidade visual do tenant
 
-Tokens neutros (background, foreground, border, muted) vêm do shadcn (`src/index.css`),
-testados e acessíveis nos dois temas. A identidade visual de cada tenant sobrescreve só as
-variáveis de marca (`--primary`, `--accent`) em runtime — não há mais um conjunto de ~20 cores
-hex configuráveis por tenant como no sistema anterior.
+Direção visual escolhida (2026-08-22, comparando 3 opções num canvas de design): **"Dashboard
+SaaS colorido"** — fonte Plus Jakarta Sans, cantos bem arredondados (`--radius: 0.875rem`), e as
+4 cores de categoria do dashboard (leads/vendas/comissão/conversão) mapeadas nos tokens padrão
+`--chart-1`..`--chart-4` do shadcn (azul/verde/âmbar/violeta), para serem reaproveitadas em
+qualquer gráfico/stat-tile futuro (Fase 4) sem inventar um novo sistema de cor. `--primary` é o
+azul da categoria "leads". Tokens em `src/index.css`, testados nos dois temas.
+
+Identidade visual por tenant (Fase 1, ainda não implementada) vai sobrescrever só as variáveis
+de marca (`--primary`, `--accent`) em runtime — não um conjunto de ~20 cores hex configuráveis
+por tenant como no sistema anterior.
 
 ## O que este documento não cobre
 

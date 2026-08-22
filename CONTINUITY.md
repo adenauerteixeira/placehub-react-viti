@@ -21,6 +21,10 @@
   - Console da plataforma: listagem de tenants (só leitura).
   - Dashboard do tenant (placeholder), com `TenantProtectedShell` resolvendo tenant/role.
   - Rotas protegidas redirecionam para `/login` quando não há sessão (não é mais um gate global).
+- **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
+  de design), tema claro. Aplicado em `src/index.css`: fonte Plus Jakarta Sans, `--radius` maior,
+  cores de categoria em `--chart-1`..`--chart-4`. Testado nos dois temas (claro/escuro) via
+  screenshot. Toggle de tema simplificado (clique único, sem menu).
 - `npm run build` e `npm run lint` limpos.
 
 ## Próximos passos imediatos
@@ -50,6 +54,11 @@
   (matar processo na porta, subir de novo, esperar "assentar" uns 3s) antes de testar depois de
   editar arquivos — testar durante uma janela de HMR ativo produz `ERR_ABORTED` em cascata que
   não tem nada a ver com bugs reais do app.
+- **`lsof -ti:5173 | xargs kill` NÃO mata o servidor de dev neste ambiente** (Windows/Git Bash,
+  listener em `[::1]`) — falha silenciosamente, sem erro. Use `netstat -ano | grep LISTENING |
+  grep :5173` pra achar o PID real e `taskkill //F //PID <pid>`. Já causou uma sessão inteira de
+  debug perseguindo um "bug" que na verdade era um processo zumbi servindo a versão antiga do
+  código.
 - Credenciais de teste (ambiente de desenvolvimento, não são segredo de produção):
   `root@gmail.com` (super_admin) e `tenant.adm@gmail.com` (tenant_admin do Casah) — senhas não
   registradas aqui de propósito; pedir ao usuário se precisar re-testar.
