@@ -65,15 +65,19 @@ export function BrandingUploadField({
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
       <div className="flex items-center gap-3">
-        <div
-          className="bg-muted flex size-16 items-center justify-center overflow-hidden rounded-lg border"
-          style={previewStyle}
-        >
-          {previewUrl ? (
-            <img src={previewUrl} alt={label} className="size-full object-contain" />
-          ) : (
-            <span className="text-muted-foreground text-xs">Sem imagem</span>
-          )}
+        <div className="bg-checkerboard relative size-16 overflow-hidden rounded-lg border">
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={previewStyle}
+          >
+            {previewUrl ? (
+              <img src={previewUrl} alt={label} className="size-full object-contain" />
+            ) : (
+              <span className="text-muted-foreground text-center text-[10px] leading-tight">
+                Sem imagem
+              </span>
+            )}
+          </div>
         </div>
         <Button
           type="button"

@@ -131,3 +131,16 @@
     @apply font-sans;
     }
 }
+
+/* Fundo em xadrez pra deixar visível se uma imagem tem transparência real
+   (mesmo padrão do Figma/Photoshop) — sem isso, um PNG transparente sobre
+   um fundo quase branco é indistinguível de um PNG com fundo branco. */
+.bg-checkerboard {
+  background-image:
+    linear-gradient(45deg, #80808033 25%, transparent 25%),
+    linear-gradient(-45deg, #80808033 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #80808033 75%),
+    linear-gradient(-45deg, transparent 75%, #80808033 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+}

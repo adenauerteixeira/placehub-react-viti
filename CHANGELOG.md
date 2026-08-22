@@ -112,6 +112,25 @@ formato AAAA-MM-DD.
 
 ### Corrigido
 
+- Opacidade do cabeçalho/rodapé ficava tecnicamente aplicada (CSS correto) mas invisível a olho
+  nu — como o `AppShell` empilhava header/main/footer sem sobreposição (`shrink-0`, não
+  `position: fixed`), não havia nada por trás pra misturar com a translucidez. Corrigido usando
+  `position: fixed` de verdade (altura fixa `h-16`/`h-11`) com o `<main>` passando por baixo ao
+  rolar — agora dá pra ver o conteúdo desfocado atrás do cabeçalho/rodapé, como no
+  `guest.blade.php` original. Ver ARCHITECTURE.md.
+- Favicon (.ico) não aparecia como opção selecionável no seletor de arquivos do sistema
+  operacional — o navegador filtra pelo MIME type do `accept`, e `.ico` costuma ser reportado com
+  um MIME inconsistente ou vazio. Corrigido incluindo a extensão `.ico` diretamente no `accept`
+  (além do MIME), que os navegadores também aceitam como filtro.
+- Preview dos campos de upload de imagem (logo, plano de fundo, favicon, anúncio sem foto) usava
+  um fundo cinza sólido (`bg-muted`) atrás da miniatura — numa imagem com fundo realmente
+  transparente sobre um cartão branco, isso é visualmente indistinguível de uma imagem com fundo
+  branco, então não dava pra confirmar se a transparência do PNG estava sendo respeitada. Trocado
+  por um fundo em xadrez (`.bg-checkerboard`), que deixa qualquer área transparente óbvia. Ver
+  ARCHITECTURE.md.
+- Rótulo "Imagem sem foto" renomeado para **"Anúncio sem foto"** — é a imagem usada como capa de
+  um anúncio/imóvel quando ele é cadastrado sem nenhuma foto própria (Fase 2), não uma imagem
+  genérica de espaço reservado.
 - `handle_new_user()` quebrava a criação de qualquer usuário sem `tenant_id`/`role` em
   `raw_user_meta_data` (violava `profiles_super_admin_has_no_tenant`) — impedia inclusive o
   bootstrap do primeiro `super_admin`. Corrigido em

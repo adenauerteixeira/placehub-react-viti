@@ -165,12 +165,12 @@ export function TenantBrandingPage() {
               label="Favicon"
               currentPath={tenant.favicon_path}
               previewUrl={brandingAssetUrl(tenant.favicon_path, tenant.updated_at)}
-              accept="image/png,image/svg+xml,image/x-icon"
+              accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.png,.svg"
             />
             <BrandingUploadField
               tenantId={tenant.id}
               asset="placeholder-image"
-              label="Imagem sem foto"
+              label="Anúncio sem foto"
               currentPath={tenant.placeholder_image_path}
               previewUrl={brandingAssetUrl(tenant.placeholder_image_path, tenant.updated_at)}
             />

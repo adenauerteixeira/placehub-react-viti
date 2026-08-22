@@ -123,14 +123,32 @@ conjunto claro ou escuro do tenant.
 ## Casca de layout (`AppShell`)
 
 `src/components/app-shell.tsx` é o layout compartilhado por `TenantLayout`, `PlatformLayout`,
-`PublicTenantHomePage` e `LoginPage`: `h-dvh flex flex-col overflow-hidden` na raiz, cabeçalho e
-rodapé `shrink-0` com `bg-background/80 backdrop-blur-md` (fixos visualmente porque o resto da
-página não rola — não usa `position: fixed`), conteúdo centralizado em `mx-auto max-w-7xl`, e
-`<main className="min-h-0 flex-1 overflow-y-auto">` como único elemento que rola quando o conteúdo
-não cabe. Replica o padrão do sistema Laravel original (`layouts/app.blade.php` +
-`layouts/footer.blade.php` + `layouts/guest.blade.php`), pedido explicitamente pelo usuário.
-`LogoBadge` replica o padrão antigo de logo com fundo próprio (cor sólida ou transparente,
-conforme `logo_{light,dark}_background_transparent` do tenant).
+`PublicTenantHomePage` e `LoginPage`: cabeçalho e rodapé são **`position: fixed`** de verdade
+(altura fixa `h-16`/`h-11`, sobrepostos ao conteúdo), com `bg-background/70 backdrop-blur-xl`.
+`<main>` ocupa o resto da tela (`absolute inset-x-0 top-16 bottom-11 overflow-y-auto`) e é o único
+elemento que rola. Replica o padrão do `guest.blade.php` do sistema anterior — **a translucidez só
+fica visível de fato porque o conteúdo passa por baixo do cabeçalho/rodapé ao rolar**; uma versão
+anterior desta casca usava `shrink-0` (header/main/footer empilhados, sem sobreposição), o que
+deixava a opacidade tecnicamente aplicada mas invisível a olho nu (nada por trás pra misturar).
+Conteúdo centralizado em `mx-auto max-w-7xl` dentro do `<main>`. `LogoBadge` replica o padrão
+antigo de logo com fundo próprio (cor sólida ou transparente, conforme
+`logo_{light,dark}_background_transparent` do tenant).
+
+**Nota sobre alturas fixas:** as classes `top-16`/`bottom-11` do `<main>` têm que bater exatamente
+com `h-16`/`h-11` do cabeçalho/rodapé — são escritas por extenso no JSX (não geradas via
+`` `top-${n}` `` nem `.replace()`), porque o Tailwind só inclui no CSS final classes que aparecem
+como texto literal no código-fonte (scanner estático, não em runtime).
+
+## Preview de imagem com transparência (`bg-checkerboard`)
+
+Os campos de upload de imagem (`BrandingUploadField`) mostram a miniatura sobre um fundo em
+xadrez (`.bg-checkerboard`, `src/index.css`) em vez de uma cor sólida — mesmo padrão do
+Figma/Photoshop. Motivo: numa miniatura de 64px sobre um cartão branco (tema claro), uma imagem
+com fundo `transparent` fica visualmente idêntica a uma com fundo branco — não dá pra saber, só
+olhando, se a transparência foi realmente respeitada. Com o xadrez atrás, qualquer área
+transparente da imagem (real, do PNG, ou da nossa cor de fundo configurável dos logos) aparece
+óbvia. Implementação: dois `div` empilhados (`relative`/`absolute inset-0`) — o de baixo tem o
+xadrez fixo, o de cima recebe o `previewStyle` (cor sólida ou `transparent`) e a imagem.
 
 ## O que este documento não cobre
 
