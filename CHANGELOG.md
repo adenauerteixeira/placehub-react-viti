@@ -37,6 +37,9 @@ formato AAAA-MM-DD.
 - Policy `tenants_select_public` (migration `20260822114717_add_public_tenant_read.sql`):
   leitura pública de tenants ativos, necessária pra home pública resolver o tenant pelo slug do
   subdomínio antes do login.
+- Primeiro tenant real criado: **Casah** (slug `casah`), com o primeiro `tenant_admin`
+  (`tenant.adm@gmail.com`). Testado ponta a ponta: home pública → `/login` → `/dashboard`,
+  `TenantProtectedShell` resolvendo tenant/role corretamente, papel `tenant_admin` exibido.
 
 ### Corrigido
 
@@ -56,4 +59,10 @@ formato AAAA-MM-DD.
   rejeita silenciosamente esse cookie quando setado a partir de um subdomínio (`app.localhost`),
   quebrando a autenticação em dev local. `cookie-storage.ts` agora usa cookie host-only quando
   o domínio raiz é `localhost`; em produção (domínio real) o comportamento não muda.
+- `handle_new_user()` também quebrava ao criar um usuário pelo painel do Supabase (Add user)
+  depois que o primeiro `super_admin` já existia, porque o painel não expõe um campo de
+  `user_metadata` — a trigger exigia `role`/`tenant_id` e revertia a criação inteira do usuário
+  sem eles. Corrigido em `20260822120251_allow_manual_profile_creation.sql`: sem metadata e já
+  havendo um `super_admin`, a trigger não cria o profile (em vez de dar erro) — o profile é
+  inserido manualmente depois via SQL, até existir a Edge Function de criação de usuário.
 
