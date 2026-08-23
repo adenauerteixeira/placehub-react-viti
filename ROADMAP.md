@@ -61,7 +61,9 @@ auth/tenant/permissões funcionam).
       vínculo opcional com um profile (role `broker`, único por corretor). RLS já libera leitura
       pública de corretores ativos — a página pública em si (`/corretores`) vem na etapa de
       Anúncios. Testado ponta a ponta, incluindo upload de foto.
-- [ ] Proprietários (`owners`).
+- [x] Proprietários (`owners`) — CRUD completo (`/owners`, permissão `owners`), construída do
+      zero (no sistema anterior era um scaffold morto, sem tenant_id, sem rotas). Testado ponta
+      a ponta.
 - [ ] Anúncios/imóveis (`announcements` + `announcement_images`), com portal público de
       visualização (`{slug}.placehub.app/anuncios/...`, sem login) e páginas públicas de
       corretor.

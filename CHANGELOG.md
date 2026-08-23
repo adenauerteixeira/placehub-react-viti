@@ -50,6 +50,12 @@ formato AAAA-MM-DD.
   sistema anterior usava sufixo incremental só pra corretor, inconsistente com o resto —
   padronizado). RLS já libera leitura pública de corretores ativos (a tela pública vem na etapa
   de Anúncios). Testado ponta a ponta, incluindo envio de foto logo após criar o corretor.
+- Proprietários (`/owners`, permissão `owners`): CRUD completo, construído do zero — no sistema
+  anterior essa tabela era um scaffold morto (só `id`/timestamps, sem `tenant_id`, controller
+  vazio, sem rota registrada, nunca ligada a nenhum anúncio). Mesmo formato de Parceiros
+  (PF/PJ, documento validado, `unique(tenant_id, document)`). Testado ponta a ponta. Com isso,
+  as 4 entidades de apoio do catálogo estão prontas — só falta Anúncios/imóveis, que amarra
+  todas elas.
 - Identidade visual do tenant (`/branding`, restrita a `tenant_admin`), com paridade completa
   de opções em relação ao sistema anterior (pedido do usuário, revisando a versão inicial mais
   enxuta): 15 cores (8 tema claro + 7 tema escuro — primária/secundária/destaque, fundo,

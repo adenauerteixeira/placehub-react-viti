@@ -6,6 +6,7 @@ import { LoginPage } from '@/features/auth/login-page'
 import { hasPermission, useProfile } from '@/features/auth/use-profile'
 import { BrokersListPage } from '@/features/brokers/brokers-list-page'
 import { DevelopmentsListPage } from '@/features/developments/developments-list-page'
+import { OwnersListPage } from '@/features/owners/owners-list-page'
 import { PartnersListPage } from '@/features/partners/partners-list-page'
 import { PlatformLayout } from '@/features/platform/platform-layout'
 import { TenantsListPage } from '@/features/platform/tenants-list-page'
@@ -87,6 +88,14 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequirePermission module="brokers">
               <BrokersListPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/owners"
+          element={
+            <RequirePermission module="owners">
+              <OwnersListPage />
             </RequirePermission>
           }
         />

@@ -56,6 +56,9 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
               {hasPermission(profile, 'brokers') && (
                 <TenantNavLink to="/brokers">Corretores</TenantNavLink>
               )}
+              {hasPermission(profile, 'owners') && (
+                <TenantNavLink to="/owners">Proprietários</TenantNavLink>
+              )}
               {profile.role === 'tenant_admin' && (
                 <>
                   <TenantNavLink to="/users">Usuários</TenantNavLink>
