@@ -41,6 +41,15 @@ formato AAAA-MM-DD.
   agora também no client antes de gastar uma chamada) e `unique(tenant_id, document)` — o
   sistema anterior não impedia parceiro duplicado. Testado ponta a ponta (CPF inválido barrado
   no form, CPF válido salva e formata a máscara na listagem).
+- Corretores (`/brokers`, permissão `brokers`): CRUD completo com foto (upload direto pro bucket
+  novo `catalog-media`, mesmo padrão de path-prefix por tenant do `tenant-branding`), CPF (mesma
+  validação real de dígito verificador), CRECI/UF com `unique(tenant_id, creci, creci_state)`,
+  comissão (%, default 2), bio, ativo/inativo, e vínculo opcional com uma conta de login
+  (`profile_id`, substitui o `user_id` do sistema anterior — só lista profiles com role `broker`
+  ainda não vinculados a outro corretor). Slug com sufixo aleatório escopado por tenant (o
+  sistema anterior usava sufixo incremental só pra corretor, inconsistente com o resto —
+  padronizado). RLS já libera leitura pública de corretores ativos (a tela pública vem na etapa
+  de Anúncios). Testado ponta a ponta, incluindo envio de foto logo após criar o corretor.
 - Identidade visual do tenant (`/branding`, restrita a `tenant_admin`), com paridade completa
   de opções em relação ao sistema anterior (pedido do usuário, revisando a versão inicial mais
   enxuta): 15 cores (8 tema claro + 7 tema escuro — primária/secundária/destaque, fundo,

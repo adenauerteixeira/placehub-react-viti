@@ -56,10 +56,15 @@ auth/tenant/permissões funcionam).
 - [x] Parceiros (`partners`) — CRUD completo (`/partners`, permissão `partners`), PF/PJ com
       validação real de CPF/CNPJ (dígitos verificadores, `src/lib/cpf-cnpj.ts`),
       `unique(tenant_id, document)`. Testado ponta a ponta.
+- [x] Corretores (`brokers`) — CRUD completo (`/brokers`, permissão `brokers`): foto (bucket
+      `catalog-media`), CPF, CRECI/UF (`unique(tenant_id, creci, creci_state)`), comissão %,
+      vínculo opcional com um profile (role `broker`, único por corretor). RLS já libera leitura
+      pública de corretores ativos — a página pública em si (`/corretores`) vem na etapa de
+      Anúncios. Testado ponta a ponta, incluindo upload de foto.
 - [ ] Proprietários (`owners`).
 - [ ] Anúncios/imóveis (`announcements` + `announcement_images`), com portal público de
-      visualização (`{slug}.placehub.app/anuncios/...`, sem login).
-- [ ] Corretores (`brokers`), com página pública de perfil.
+      visualização (`{slug}.placehub.app/anuncios/...`, sem login) e páginas públicas de
+      corretor.
 
 ## Fase 3 — Funil comercial
 

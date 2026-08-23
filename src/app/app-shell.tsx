@@ -4,6 +4,7 @@ import { NotFoundPage } from '@/components/not-found-page'
 import { useAuth } from '@/features/auth/auth-context'
 import { LoginPage } from '@/features/auth/login-page'
 import { hasPermission, useProfile } from '@/features/auth/use-profile'
+import { BrokersListPage } from '@/features/brokers/brokers-list-page'
 import { DevelopmentsListPage } from '@/features/developments/developments-list-page'
 import { PartnersListPage } from '@/features/partners/partners-list-page'
 import { PlatformLayout } from '@/features/platform/platform-layout'
@@ -78,6 +79,14 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequirePermission module="partners">
               <PartnersListPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/brokers"
+          element={
+            <RequirePermission module="brokers">
+              <BrokersListPage />
             </RequirePermission>
           }
         />
