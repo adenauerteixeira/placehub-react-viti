@@ -49,6 +49,44 @@ export function useBrokers(tenantId: string | null | undefined) {
   })
 }
 
+/** Portal público — só corretores ativos (garantido por RLS). */
+export function usePublicBrokers(tenantId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['public-brokers', tenantId],
+    enabled: !!tenantId,
+    queryFn: async (): Promise<Broker[]> => {
+      const { data, error } = await supabase
+        .from('brokers')
+        .select(BROKER_COLUMNS)
+        .eq('tenant_id', tenantId!)
+        .eq('active', true)
+        .order('name')
+
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function usePublicBroker(tenantId: string | null | undefined, slug: string | null | undefined) {
+  return useQuery({
+    queryKey: ['public-broker', tenantId, slug],
+    enabled: !!tenantId && !!slug,
+    queryFn: async (): Promise<Broker | null> => {
+      const { data, error } = await supabase
+        .from('brokers')
+        .select(BROKER_COLUMNS)
+        .eq('tenant_id', tenantId!)
+        .eq('slug', slug!)
+        .eq('active', true)
+        .maybeSingle()
+
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 /** Profiles com role "broker", ativos, que ainda não estão vinculados a
  * nenhum corretor (ou são o próprio vínculo atual, na edição). */
 export function useEligibleBrokerProfiles(tenantId: string | null, currentBrokerProfileId: string | null) {

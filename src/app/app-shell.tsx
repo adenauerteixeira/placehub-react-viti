@@ -12,6 +12,9 @@ import { OwnersListPage } from '@/features/owners/owners-list-page'
 import { PartnersListPage } from '@/features/partners/partners-list-page'
 import { PlatformLayout } from '@/features/platform/platform-layout'
 import { TenantsListPage } from '@/features/platform/tenants-list-page'
+import { PublicAnnouncementDetailPage } from '@/features/tenant/public-announcement-detail-page'
+import { PublicBrokerDetailPage } from '@/features/tenant/public-broker-detail-page'
+import { PublicBrokersListPage } from '@/features/tenant/public-brokers-list-page'
 import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
 import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
@@ -47,6 +50,9 @@ function TenantApp({ slug }: { slug: string }) {
   return (
     <Routes>
       <Route path="/" element={<PublicTenantHomePage slug={slug} />} />
+      <Route path="/anuncios/:slug" element={<PublicAnnouncementDetailPage tenantSlug={slug} />} />
+      <Route path="/corretores" element={<PublicBrokersListPage tenantSlug={slug} />} />
+      <Route path="/corretores/:slug" element={<PublicBrokerDetailPage tenantSlug={slug} />} />
       <Route
         path="/login"
         element={session ? <Navigate to="/dashboard" replace /> : <LoginPage />}

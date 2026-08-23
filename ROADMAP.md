@@ -64,9 +64,18 @@ auth/tenant/permissões funcionam).
 - [x] Proprietários (`owners`) — CRUD completo (`/owners`, permissão `owners`), construída do
       zero (no sistema anterior era um scaffold morto, sem tenant_id, sem rotas). Testado ponta
       a ponta.
-- [ ] Anúncios/imóveis (`announcements` + `announcement_images`), com portal público de
-      visualização (`{slug}.placehub.app/anuncios/...`, sem login) e páginas públicas de
-      corretor.
+- [x] Anúncios/imóveis (`announcements` + `announcement_images` + `announcement_amenities`) —
+      CRUD completo em abas (`/announcements`, permissão `announcements`): dados básicos,
+      endereço, características, amenidades, galeria com capa unificada (`is_cover`). Publicação
+      validada por trigger no banco (descrição/cidade/UF/preço/capa obrigatórios pra
+      `status = 'published'`). RLS restringe corretores sem papel admin/manager a só ver os
+      próprios anúncios. Portal público (`/`, `/anuncios/:slug`, `/corretores`,
+      `/corretores/:slug`) — listagem agrupada por tipo de imóvel, detalhe com galeria/vídeo/
+      amenidades/contato via WhatsApp, perfil público de corretor com os anúncios dele. Testado
+      ponta a ponta com um visitante genuinamente anônimo (sem sessão).
+
+Fase 2 completa — as 5 entidades do catálogo (Empreendimentos, Parceiros, Corretores,
+Proprietários, Anúncios) e o portal público estão no ar.
 
 ## Fase 3 — Funil comercial
 

@@ -22,6 +22,19 @@ formato AAAA-MM-DD.
 
 ### Adicionado
 
+- **Fase 2 (Catálogo) fechada.** Anúncios/imóveis (`/announcements`, permissão `announcements`):
+  formulário em abas (dados básicos, endereço, características, amenidades, mídia); galeria com
+  upload múltiplo e capa unificada via `is_cover` (sem coluna solta duplicada como no sistema
+  anterior); amenidades por checkbox reaproveitando o catálogo `amenities`; publicação validada
+  por trigger no banco — `status = 'published'` exige descrição, cidade, UF, preço válido e capa,
+  e a exceção do Postgres chega como mensagem legível no toast, não só um erro genérico. RLS
+  restringe corretores sem papel admin/manager a enxergar só os próprios anúncios (responsável ou
+  vinculado como corretor) — regra que no sistema anterior só existia numa Policy de aplicação,
+  agora garantida no banco. Portal público reescrito: home (`/`) lista anúncios publicados
+  agrupados por tipo de imóvel; `/anuncios/:slug` é o detalhe (galeria, vídeo com embed de
+  YouTube/Vimeo, características, amenidades, contato via WhatsApp); `/corretores` e
+  `/corretores/:slug` são a listagem e o perfil público de corretor, com os anúncios dele. Testado
+  ponta a ponta como visitante genuinamente anônimo (zero cookies, sem login).
 - **Fase 2 (Catálogo) iniciada.** Fundação: helper `has_permission(module)` (RLS reutilizável —
   `tenant_admin`/`super_admin` sempre têm acesso, `manager`/`broker` só se o módulo estiver em
   `profile_permissions`), catálogo `amenities` (mesmo padrão de `permissions`), permissão
@@ -151,6 +164,14 @@ formato AAAA-MM-DD.
 
 ### Corrigido
 
+- Toasts de erro mostravam "[object Object]" quando o erro vinha do Postgres/PostgREST (objeto
+  simples com `.message`, não `instanceof Error`) — só apareciam corretamente erros que já eram
+  `Error` de verdade (ex. de rede). Novo helper `errorMessage()` (`src/lib/errors.ts`), aplicado
+  nos 16 lugares que tinham esse padrão — encontrado testando o trigger de validação de
+  publicação de anúncio, onde o toast finalmente mostra a mensagem real do banco.
+- CRECI sem UF preenchida mostrava um "/" solto no final ("12345/") nas páginas públicas de
+  corretor (mesma causa raiz do bug já corrigido na listagem interna, mas essa cópia específica
+  ficou faltando).
 - Favicon do tenant (`favicon_path`) nunca era aplicado na aba do navegador — o upload salvava o
   arquivo no Storage e a coluna no banco corretamente, mas nada no app trocava o
   `<link rel="icon">` de `index.html` (que ficava sempre no favicon estático padrão). Adicionado

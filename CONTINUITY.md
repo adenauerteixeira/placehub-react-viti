@@ -10,73 +10,44 @@
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260822182500_allow_ico_favicon_mime.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
+  `20260823120000_create_announcements.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
   autenticado neste ambiente — ver nota abaixo). Duas Edge Functions no ar: `create-tenant-admin`
-  e `invite-tenant-user`. Bucket `tenant-branding` criado, aceita `image/x-icon`/
-  `image/vnd.microsoft.icon` além dos formatos comuns (favicon .ico).
-- **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah**
-  (slug `casah`, com cor primária `#e11d48`, `dark_surface_color` `#111827`, logo claro/escuro
-  e favicon definidos), com um `tenant_admin` (`tenant.adm@gmail.com`) e um `broker`
-  (`corretor.qa@example.com` — criado testando o convite de usuários, pode remover ou manter).
-- **Funcional e testado ponta a ponta** (navegador headless, contra o Supabase real):
-  - Login único (`/login`), redirecionamento pós-login por role/tenant.
-  - Home pública do tenant (placeholder "anúncios em breve") e da plataforma (vai direto pro
-    login — nunca teve conteúdo público).
-  - Console da plataforma: CRUD de tenants (criar/editar/ativar-desativar), tudo direto no
-    client via RLS. Vínculo do primeiro `tenant_admin` via Edge Function `create-tenant-admin`
-    — **aplicada e testada ponta a ponta**: cria o usuário, loga, cai no `/dashboard` do tenant
-    certo com role `tenant_admin`.
-  - Dashboard do tenant (placeholder), com `TenantProtectedShell` resolvendo tenant/role.
-  - Rotas protegidas redirecionam para `/login` quando não há sessão (não é mais um gate global).
-  - Gestão de usuários do tenant (`/users`, só `tenant_admin`): convidar (Edge Function
-    `invite-tenant-user`, `tenant_id` sempre do profile de quem chama, nunca do body), editar
-    papel/dados/permissões, ativar/desativar (não dá pra desativar a si mesmo).
-  - Identidade visual do tenant (`/branding`, só `tenant_admin`) — **paridade completa com o
-    sistema anterior**, a pedido do usuário (ver `.../casah/configuracoes/identidade-visual` no
-    Laravel antigo): 15 cores tema claro/escuro, fundo do logo com transparência, 5 imagens
-    (logo claro/escuro, plano de fundo, favicon, imagem sem foto) com upload/remoção, restaurar
-    padrão, preview de cartão por tema. Bucket `tenant-branding`, upload restrito por policy no
-    path. **As 15 cores agora são aplicadas de fato em todo o app do tenant** (claro e escuro),
-    não só preview isolado — ver `AppShell`/`tenantThemeVars()` abaixo.
-- **Ajustes de layout pós-Fase 1 (2026-08-22/23), a pedido do usuário — todos testados
-  visualmente (claro/escuro, screenshots via `browser-automation`), em duas rodadas:**
-  - **1ª rodada:** `AppShell` (`src/components/app-shell.tsx`) centralizando conteúdo
-    (`mx-auto max-w-7xl`) e com rodapé novo nos 4 contextos (`TenantLayout`, `PlatformLayout`,
-    `PublicTenantHomePage`, `LoginPage`); `tenantThemeVars()`
-    (`src/features/tenant-branding/apply-tenant-theme.ts`) aplicando as 15 cores do tenant como
-    CSS variables reais (não só `--primary`/`--accent`); migration
-    `20260822181810_default_transparent_logo_backgrounds.sql` pro bug do logo transparente com
-    caixa branca.
-  - **2ª rodada (correções sobre a 1ª):** a opacidade do header/footer estava tecnicamente
-    aplicada mas invisível — a casca empilhava header/main/footer sem sobrepor nada
-    (`shrink-0`), então não tinha o que misturar com a translucidez. Trocado pra
-    `position: fixed` de verdade (`h-16`/`h-11`), com `<main>` passando por baixo ao rolar —
-    replica o `guest.blade.php` original com fidelidade. Favicon (.ico) ganhou dois ajustes:
-    `accept` do input de arquivo incluindo a extensão (o MIME de .ico é inconsistente entre
-    navegadores) e o bucket `tenant-branding` liberado pra `image/x-icon`/
-    `image/vnd.microsoft.icon` (migration `20260822182500_allow_ico_favicon_mime.sql`) — o
-    Storage rejeitava o arquivo mesmo com o seletor já aceitando. Preview dos uploads trocou
-    fundo cinza sólido por xadrez (`.bg-checkerboard`), já que numa miniatura branca sobre
-    cartão branco não dava pra saber se a transparência real do PNG estava sendo respeitada.
-    **Favicon nunca era de fato aplicado na aba do navegador** (upload salvava certinho, mas
-    nada trocava o `<link rel="icon">` real) — corrigido com `useTenantFavicon()`
-    (`src/features/tenant-branding/use-tenant-favicon.ts`), testado com upload + reload completo
-    da página. "Plano de fundo"/"Favicon"/"Anúncio sem foto" ganharam a mesma apresentação em
-    card dos logos (antes ficavam soltos, sem moldura, visual bem mais pobre).
-  - Detalhes completos em ARCHITECTURE.md e CHANGELOG.md.
-- **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
-  de design), tema claro. Aplicado em `src/index.css`: fonte Plus Jakarta Sans, `--radius` maior,
-  cores de categoria em `--chart-1`..`--chart-4`. Testado nos dois temas (claro/escuro) via
-  screenshot. Toggle de tema simplificado (clique único, sem menu).
+  e `invite-tenant-user`. Buckets: `tenant-branding` (logos/favicon do tenant) e `catalog-media`
+  (fotos de corretor + galeria de anúncio, novo na Fase 2).
+- **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
+  `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
+  ficaram no banco (empreendimento/parceiro/proprietário/corretor/anúncio "QA Teste") — não são
+  destrutivos deixar, ver "Notas técnicas" pra limpar se quiser.
+- **Fase 1 (fundação, auth, tenants, usuários, identidade visual) e Fase 2 (catálogo completo)
+  estão fechadas e testadas ponta a ponta contra o Supabase real.** Resumo do que existe hoje:
+  - Login único (`/login`) com redirecionamento pós-login por role/tenant; console da plataforma
+    (CRUD de tenants); gestão de usuários do tenant (convite/papéis/permissões por módulo);
+    identidade visual completa (15 cores + 5 imagens, aplicadas de fato em todo o app, claro e
+    escuro) — detalhes na entrada da Fase 1 abaixo, sem mudança desde a última sessão.
+  - **Catálogo (Fase 2), 5 entidades, todas com CRUD completo e testado**: Empreendimentos
+    (`/developments`), Parceiros (`/partners`, PF/PJ com validação real de CPF/CNPJ), Corretores
+    (`/brokers`, foto + CRECI/UF + comissão + vínculo opcional com login), Proprietários
+    (`/owners`, construída do zero — no sistema anterior era um scaffold morto), e Anúncios
+    (`/announcements`, a peça central: formulário em abas, galeria com capa unificada, amenidades,
+    publicação validada por trigger no banco).
+  - **Permissões por módulo finalmente checadas de verdade**: `has_permission()` no banco (RLS) e
+    `hasPermission()` no client (nav/rotas) — antes existiam desde a Fase 1 mas nunca eram
+    checadas em lugar nenhum.
+  - **Portal público reescrito**: home (`/`) lista anúncios publicados agrupados por tipo;
+    `/anuncios/:slug` é o detalhe (galeria, vídeo, características, amenidades, WhatsApp);
+    `/corretores` e `/corretores/:slug` são a listagem e o perfil público de corretor. **Testado
+    como visitante genuinamente anônimo** (zero cookies, sem login) — importante porque a Fase 1
+    tinha uma policy (`tenants_select_public`) que já cobria isso pros tenants; as novas policies
+    de `announcements`/`brokers`/`developments` seguem o mesmo espírito.
+  - Detalhes completos de cada rodada em CHANGELOG.md; decisões de arquitetura/RLS em
+    ARCHITECTURE.md.
 - `npm run build` e `npm run lint` limpos.
 
 ## Próximos passos imediatos
 
-**Fase 1 está fechada** (usuário confirmou explicitamente "para finalizar a Fase 1" na 2ª rodada
-de ajustes acima), incluindo as duas rodadas de layout/tema/branding (só falta o conteúdo real
-do dashboard, que é escopo da Fase 4 por design). Próximo passo natural: **Fase 2 — Catálogo**
-(empreendimentos, proprietários, anúncios/imóveis com portal público, parceiros, corretores). Ver
-[ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar início da Fase 2.
+**Fase 2 está fechada.** Próximo passo natural: **Fase 3 — Funil comercial** (leads + agenda de
+contato, negociações, propostas, reservas com expiração automática, vendas). Ver
+[ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar início da Fase 3.
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
 (ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar).
@@ -112,9 +83,13 @@ Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando
   código de exemplo ("Hello World") que precisa ser **substituído por inteiro**, não colado
   junto — já aconteceu de o deploy "funcionar" mas ainda rodar o código de exemplo antigo.
 - Dados de teste pendentes de limpeza no Supabase real (nenhum urgente): tenant `imob-teste-qa`
-  (`delete from public.tenants where slug = 'imob-teste-qa';`, cascade no profile) e os usuários
-  de auth `edgefn.qa3@example.com` e `corretor.qa@example.com` (remover em Authentication →
-  Users no painel, se quiser — não é destrutivo deixá-los, só sobram sem uso).
+  (`delete from public.tenants where slug = 'imob-teste-qa';`, cascade no profile), usuários de
+  auth `edgefn.qa3@example.com` e `corretor.qa@example.com` (Authentication → Users no painel), e
+  os registros "QA Teste"/"QA" criados testando o catálogo na Fase 2 (empreendimento "Residencial
+  Vista Verde", parceiro "Imobiliária Parceira QA", proprietário "Maria Proprietária QA", corretor
+  "Corretor QA Teste", anúncios "Casa QA Teste 3 quartos" e "Apto QA Toast Teste" — todos do
+  tenant Casah, `delete from public.announcements/brokers/owners/partners/developments where name
+  ilike '%qa%' or title ilike '%qa%'` cobre a maioria). Nada disso é destrutivo deixar.
 
 ## Decisões em aberto / para revisitar
 

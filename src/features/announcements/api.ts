@@ -83,6 +83,66 @@ export function useAnnouncements(tenantId: string | null | undefined) {
   })
 }
 
+/** Portal público — só enxerga anúncios `published` (garantido por RLS,
+ * não só por este filtro no client). */
+export function usePublicAnnouncements(tenantId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['public-announcements', tenantId],
+    enabled: !!tenantId,
+    queryFn: async (): Promise<Announcement[]> => {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select(ANNOUNCEMENT_COLUMNS)
+        .eq('tenant_id', tenantId!)
+        .eq('status', 'published')
+        .order('featured', { ascending: false })
+        .order('promotion', { ascending: false })
+        .order('published_at', { ascending: false })
+
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+/** Mapa announcement_id -> path da foto de capa, pra montar os cards da
+ * home pública sem precisar de N queries (uma por anúncio). */
+export function usePublicAnnouncementCovers(announcementIds: string[]) {
+  return useQuery({
+    queryKey: ['public-announcement-covers', announcementIds],
+    enabled: announcementIds.length > 0,
+    queryFn: async (): Promise<Record<string, string>> => {
+      const { data, error } = await supabase
+        .from('announcement_images')
+        .select('announcement_id, path')
+        .in('announcement_id', announcementIds)
+        .eq('is_cover', true)
+
+      if (error) throw error
+      return Object.fromEntries(data.map((row) => [row.announcement_id, row.path]))
+    },
+  })
+}
+
+export function usePublicAnnouncement(tenantId: string | null | undefined, slug: string | null | undefined) {
+  return useQuery({
+    queryKey: ['public-announcement', tenantId, slug],
+    enabled: !!tenantId && !!slug,
+    queryFn: async (): Promise<Announcement | null> => {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select(ANNOUNCEMENT_COLUMNS)
+        .eq('tenant_id', tenantId!)
+        .eq('slug', slug!)
+        .eq('status', 'published')
+        .maybeSingle()
+
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 export function useAnnouncement(id: string | null | undefined) {
   return useQuery({
     queryKey: ['announcement', id],
