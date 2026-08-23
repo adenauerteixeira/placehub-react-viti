@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Pencil, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -51,11 +51,7 @@ export function DevelopmentsListPage() {
             </TableHeader>
             <TableBody>
               {developments.map((development) => (
-                <TableRow
-                  key={development.id}
-                  className="cursor-pointer"
-                  onClick={() => setEditing(development)}
-                >
+                <TableRow key={development.id}>
                   <TableCell className="font-medium">{development.name}</TableCell>
                   <TableCell className="text-muted-foreground">
                     {DEVELOPMENT_TYPE_LABELS[development.type]}
@@ -69,8 +65,13 @@ export function DevelopmentsListPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(development)}>
-                      Editar
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Editar"
+                      onClick={() => setEditing(development)}
+                    >
+                      <Pencil className="size-4" />
                     </Button>
                   </TableCell>
                 </TableRow>

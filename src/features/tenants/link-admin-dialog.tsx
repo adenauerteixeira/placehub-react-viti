@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { capitalizeName } from '@/lib/capitalize'
 import { supabase } from '@/lib/supabase'
 import type { Tenant } from '@/features/tenants/api'
 
@@ -46,6 +47,7 @@ export function LinkAdminDialog({
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -84,9 +86,14 @@ export function LinkAdminDialog({
     onOpenChange(false)
   }
 
+  const nameField = register('fullName')
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Vincular administrador — {tenant.name}</DialogTitle>
           <DialogDescription>
@@ -96,18 +103,25 @@ export function LinkAdminDialog({
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="admin-name">Nome</Label>
-            <Input id="admin-name" {...register('fullName')} />
+            <FieldLabel htmlFor="admin-name">Nome</FieldLabel>
+            <Input
+              id="admin-name"
+              {...nameField}
+              onBlur={(e) => {
+                nameField.onBlur(e)
+                setValue('fullName', capitalizeName(e.target.value))
+              }}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="admin-email">E-mail</Label>
+            <FieldLabel htmlFor="admin-email">E-mail</FieldLabel>
             <Input id="admin-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
             {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="admin-password">Senha</Label>
+            <FieldLabel htmlFor="admin-password">Senha</FieldLabel>
             <Input
               id="admin-password"
               type="password"
@@ -118,7 +132,7 @@ export function LinkAdminDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="admin-confirm-password">Confirmar senha</Label>
+            <FieldLabel htmlFor="admin-confirm-password">Confirmar senha</FieldLabel>
             <Input
               id="admin-confirm-password"
               type="password"

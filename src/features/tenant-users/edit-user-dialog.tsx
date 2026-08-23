@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PhoneInput } from '@/components/phone-input'
 import { errorMessage } from '@/lib/errors'
 import {
   Dialog,
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { capitalizeName } from '@/lib/capitalize'
 import { useUpdateTenantUser, type TenantUser } from './api'
 import { PermissionCheckboxes } from './permission-checkboxes'
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type AssignableRole } from './permissions'
@@ -47,7 +49,7 @@ export function EditUserDialog({
   const update = useUpdateTenantUser(tenantId)
   const [permissions, setPermissions] = useState<string[]>([])
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FormValues>({
+  const { register, control, handleSubmit, reset, setValue, watch } = useForm<FormValues>({
     resolver: zodResolver(schema),
   })
 
@@ -84,9 +86,15 @@ export function EditUserDialog({
     }
   }
 
+  const nameField = register('fullName')
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent
+        className="sm:max-w-lg"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Editar usuário</DialogTitle>
           <DialogDescription>{user.email}</DialogDescription>
@@ -95,13 +103,26 @@ export function EditUserDialog({
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="edit-user-name">Nome</FieldLabel>
-            <Input id="edit-user-name" {...register('fullName')} />
+            <Input
+              id="edit-user-name"
+              {...nameField}
+              onBlur={(e) => {
+                nameField.onBlur(e)
+                setValue('fullName', capitalizeName(e.target.value))
+              }}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="edit-user-phone">Telefone</FieldLabel>
-              <Input id="edit-user-phone" {...register('phone')} />
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field }) => (
+                  <PhoneInput id="edit-user-phone" value={field.value} onChange={field.onChange} />
+                )}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="edit-user-creci" hint="Registro profissional, se este usuário for corretor.">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, User } from 'lucide-react'
+import { Pencil, Plus, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -65,7 +65,7 @@ export function BrokersListPage() {
               {brokers.map((broker) => {
                 const photoUrl = brokerPhotoUrl(broker.photo_path, broker.updated_at)
                 return (
-                  <TableRow key={broker.id} className="cursor-pointer" onClick={() => setEditing(broker)}>
+                  <TableRow key={broker.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <div className="bg-muted flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border">
@@ -88,7 +88,7 @@ export function BrokersListPage() {
                     <TableCell className="text-muted-foreground">
                       {Number(broker.commission_percentage).toLocaleString('pt-BR')}%
                     </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={broker.active}
@@ -101,8 +101,13 @@ export function BrokersListPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => setEditing(broker)}>
-                        Editar
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Editar"
+                        onClick={() => setEditing(broker)}
+                      >
+                        <Pencil className="size-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

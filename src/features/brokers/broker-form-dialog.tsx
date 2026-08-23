@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2, Upload, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DocumentInput } from '@/components/document-input'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/phone-input'
 import { Textarea } from '@/components/ui/textarea'
 import { errorMessage } from '@/lib/errors'
 import {
@@ -18,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { capitalizeName } from '@/lib/capitalize'
 import { isValidCpf } from '@/lib/cpf-cnpj'
 import { slugWithRandomSuffix } from '@/lib/slugify'
 import {
@@ -92,6 +95,7 @@ export function BrokerFormDialog({
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     watch,
@@ -172,10 +176,15 @@ export function BrokerFormDialog({
   }
 
   const photoUrl = activeBroker ? brokerPhotoUrl(activeBroker.photo_path, activeBroker.updated_at) : null
+  const nameField = register('name')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        className="max-h-[85vh] overflow-y-auto"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar corretor' : 'Novo corretor'}</DialogTitle>
           <DialogDescription>
@@ -215,7 +224,15 @@ export function BrokerFormDialog({
 
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="broker-name">Nome</FieldLabel>
-            <Input id="broker-name" {...register('name')} aria-invalid={!!errors.name} />
+            <Input
+              id="broker-name"
+              {...nameField}
+              onBlur={(e) => {
+                nameField.onBlur(e)
+                setValue('name', capitalizeName(e.target.value))
+              }}
+              aria-invalid={!!errors.name}
+            />
             {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
           </div>
 
@@ -224,7 +241,13 @@ export function BrokerFormDialog({
               <FieldLabel htmlFor="broker-phone" hint="Usado no botão de WhatsApp da página pública do corretor.">
                 Telefone
               </FieldLabel>
-              <Input id="broker-phone" {...register('phone')} />
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field }) => (
+                  <PhoneInput id="broker-phone" value={field.value} onChange={field.onChange} />
+                )}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="broker-email">E-mail</FieldLabel>
@@ -238,7 +261,19 @@ export function BrokerFormDialog({
               <FieldLabel htmlFor="broker-cpf" hint="Validado por dígito verificador — não é só checagem de tamanho.">
                 CPF
               </FieldLabel>
-              <Input id="broker-cpf" {...register('cpf')} aria-invalid={!!errors.cpf} />
+              <Controller
+                control={control}
+                name="cpf"
+                render={({ field }) => (
+                  <DocumentInput
+                    id="broker-cpf"
+                    personType="PF"
+                    value={field.value}
+                    onChange={field.onChange}
+                    aria-invalid={!!errors.cpf}
+                  />
+                )}
+              />
               {errors.cpf && <p className="text-destructive text-sm">{errors.cpf.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -314,6 +349,9 @@ export function BrokerFormDialog({
           </div>
 
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={submitting}>
               {submitting && <Loader2 className="animate-spin" />}
               {isEdit || justCreated ? 'Salvar' : 'Criar corretor'}

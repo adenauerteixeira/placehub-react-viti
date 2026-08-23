@@ -28,9 +28,10 @@ export function PublicAnnouncementCard({
               Sem foto
             </div>
           )}
-          {announcement.featured && (
-            <Badge className="absolute top-2 left-2">Destaque</Badge>
-          )}
+          <div className="absolute top-2 left-2 flex gap-1">
+            {announcement.featured && <Badge>Destaque</Badge>}
+            {hasPromo && <Badge variant="secondary">Promoção</Badge>}
+          </div>
         </div>
         <CardContent className="flex flex-col gap-1">
           <p className="text-muted-foreground text-xs">{PROPERTY_TYPE_LABELS[announcement.property_type]}</p>

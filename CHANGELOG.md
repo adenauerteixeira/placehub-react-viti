@@ -5,6 +5,37 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (2ª rodada de melhorias pós-Fase 2, 2026-08-23)
+
+- **Mais padrões novos pra todo o sistema:**
+  - `PhoneInput`/`formatPhone` (`src/components/phone-input.tsx`, `src/lib/phone.ts`): máscara
+    de telefone `(XX) X XXXX-XXXX` (celular) / `(XX) XXXX-XXXX` (fixo), progressiva enquanto
+    digita. Aplicado em Parceiros, Proprietários, Corretores, Imobiliárias e Usuários do tenant.
+  - `DocumentInput` (`src/components/document-input.tsx`): mesma ideia pra CPF/CNPJ
+    (`XXX.XXX.XXX-XX` / `XX.XXX.XXX/XXXX-XX`), reaproveitando `formatDocument()` (que passou a
+    formatar progressivamente, não só quando o documento está completo). Aplicado em Parceiros,
+    Proprietários e Corretores.
+  - `capitalizeName()` (`src/lib/capitalize.ts`): capitaliza campos "Nome" ao sair do campo,
+    mantendo minúsculas as preposições de ligação comuns em nomes (de/da/das/do/dos/e) — exceto
+    quando são a primeira palavra. Aplicado em Empreendimentos, Parceiros, Proprietários,
+    Corretores, e nos formulários de usuário (convidar/editar/vincular administrador).
+  - Diálogos (`Dialog`) de todo o sistema agora só fecham por **Cancelar**, **Salvar/Criar** ou
+    o **X** — clique fora ou Esc não fecham mais (evita perder dados preenchidos sem querer).
+    Onde faltava, foi adicionado um botão **Cancelar** explícito (ex.: Corretores).
+  - Colunas de ação nas listagens (Empreendimentos, Parceiros, Corretores, Proprietários,
+    Imobiliárias, Usuários do tenant) padronizadas como ícones (lápis pra editar), sem mais texto
+    "Editar"/"Excluir" — a listagem de Imobiliárias trocou o menu suspenso de duas ações por dois
+    ícones diretos na linha (editar + vincular administrador).
+- Anúncios marcados como "Destaque" e/ou "Promoção" agora mostram isso pro visitante: badge no
+  card da home pública (já existia só pra Destaque) e na listagem interna de anúncios.
+
+### Alterado (2ª rodada de melhorias pós-Fase 2, 2026-08-23)
+
+- Clicar na linha de uma listagem (Anúncios, Empreendimentos, Parceiros, Corretores,
+  Proprietários) não abre mais a edição — só o ícone de lápis abre. Antes a linha inteira era
+  clicável, o que atrapalhava selecionar texto ou clicar por engano.
+- Link "Voltar para anúncios" na tela de editar/criar anúncio virou só "Voltar".
+
 ### Adicionado (rodada de melhorias pós-Fase 2, 2026-08-23)
 
 - **Padrões novos pra todo o sistema:**

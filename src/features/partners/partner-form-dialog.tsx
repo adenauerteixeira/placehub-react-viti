@@ -1,12 +1,14 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DocumentInput } from '@/components/document-input'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/phone-input'
 import { Textarea } from '@/components/ui/textarea'
 import { errorMessage } from '@/lib/errors'
 import {
@@ -18,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { capitalizeName } from '@/lib/capitalize'
 import { isValidDocument } from '@/lib/cpf-cnpj'
 import { useCreatePartner, useUpdatePartner, type Partner, type PersonType } from './api'
 
@@ -64,6 +67,7 @@ export function PartnerFormDialog({
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     watch,
@@ -105,10 +109,14 @@ export function PartnerFormDialog({
   }
 
   const personType = watch('person_type') as PersonType
+  const nameField = register('name')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar parceiro' : 'Novo parceiro'}</DialogTitle>
           <DialogDescription>
@@ -119,7 +127,15 @@ export function PartnerFormDialog({
           <div className="grid grid-cols-[1fr_auto] gap-4">
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="partner-name">Nome</FieldLabel>
-              <Input id="partner-name" {...register('name')} aria-invalid={!!errors.name} />
+              <Input
+                id="partner-name"
+                {...nameField}
+                onBlur={(e) => {
+                  nameField.onBlur(e)
+                  setValue('name', capitalizeName(e.target.value))
+                }}
+                aria-invalid={!!errors.name}
+              />
               {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -141,14 +157,32 @@ export function PartnerFormDialog({
               <FieldLabel htmlFor="partner-document" hint="Validado por dígito verificador — não é só checagem de tamanho.">
                 {personType === 'PF' ? 'CPF' : 'CNPJ'}
               </FieldLabel>
-              <Input id="partner-document" {...register('document')} aria-invalid={!!errors.document} />
+              <Controller
+                control={control}
+                name="document"
+                render={({ field }) => (
+                  <DocumentInput
+                    id="partner-document"
+                    personType={personType}
+                    value={field.value}
+                    onChange={field.onChange}
+                    aria-invalid={!!errors.document}
+                  />
+                )}
+              />
               {errors.document && (
                 <p className="text-destructive text-sm">{errors.document.message}</p>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="partner-phone">Telefone</FieldLabel>
-              <Input id="partner-phone" {...register('phone')} />
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field }) => (
+                  <PhoneInput id="partner-phone" value={field.value} onChange={field.onChange} />
+                )}
+              />
             </div>
           </div>
 
@@ -166,6 +200,9 @@ export function PartnerFormDialog({
           </div>
 
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={submitting}>
               {submitting && <Loader2 className="animate-spin" />}
               {isEdit ? 'Salvar' : 'Criar parceiro'}

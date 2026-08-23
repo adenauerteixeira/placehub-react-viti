@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { capitalizeName } from '@/lib/capitalize'
 import { slugWithRandomSuffix } from '@/lib/slugify'
 import {
   useCreateDevelopment,
@@ -97,9 +98,14 @@ export function DevelopmentFormDialog({
     }
   }
 
+  const nameField = register('name')
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar empreendimento' : 'Novo empreendimento'}</DialogTitle>
           <DialogDescription>
@@ -113,7 +119,15 @@ export function DevelopmentFormDialog({
             <FieldLabel htmlFor="dev-name" hint="Nome do empreendimento, como aparece pro visitante no anúncio.">
               Nome
             </FieldLabel>
-            <Input id="dev-name" {...register('name')} aria-invalid={!!errors.name} />
+            <Input
+              id="dev-name"
+              {...nameField}
+              onBlur={(e) => {
+                nameField.onBlur(e)
+                setValue('name', capitalizeName(e.target.value))
+              }}
+              aria-invalid={!!errors.name}
+            />
             {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
           </div>
 
@@ -161,6 +175,9 @@ export function DevelopmentFormDialog({
           </div>
 
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={submitting}>
               {submitting && <Loader2 className="animate-spin" />}
               {isEdit ? 'Salvar' : 'Criar empreendimento'}

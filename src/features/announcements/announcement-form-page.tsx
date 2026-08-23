@@ -322,7 +322,7 @@ export function AnnouncementFormPage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <Link to="/announcements" className="text-muted-foreground hover:text-foreground w-fit text-sm">
-        ← Voltar para anúncios
+        ← Voltar
       </Link>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

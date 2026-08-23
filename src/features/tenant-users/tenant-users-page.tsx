@@ -1,16 +1,10 @@
 import { useState } from 'react'
-import { MoreHorizontal, Plus } from 'lucide-react'
+import { Pencil, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { errorMessage } from '@/lib/errors'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -87,16 +81,14 @@ export function TenantUsersPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Ações">
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingUser(user)}>Editar</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Editar"
+                      onClick={() => setEditingUser(user)}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

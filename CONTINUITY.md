@@ -59,6 +59,22 @@
   - Coluna de ações (editar/excluir) na listagem de Anúncios; link "Anúncios" na tela de login;
     correção do botão Salvar não voltando pra listagem de anúncios.
   - Detalhes completos em CHANGELOG.md/ROADMAP.md.
+- **2ª rodada de polimento pós-Fase 2 (2026-08-23), a pedido do usuário — 7 pontos, testados
+  ponta a ponta (inclusive máscaras e capitalização, via automação de navegador):**
+  - `PhoneInput`/`DocumentInput` (`src/components/phone-input.tsx`,
+    `src/components/document-input.tsx`) — máscara `(XX) X XXXX-XXXX` (telefone) e
+    `XXX.XXX.XXX-XX`/`XX.XXX.XXX/XXXX-XX` (CPF/CNPJ), aplicadas em Parceiros, Proprietários,
+    Corretores, Imobiliárias e Usuários do tenant.
+  - `capitalizeName()` (`src/lib/capitalize.ts`) — capitaliza campo "Nome" ao sair do campo,
+    mantendo minúsculas as preposições de ligação (de/da/das/do/dos/e), exceto na primeira
+    palavra. Testado: "joão da silva de souza" → "João da Silva de Souza".
+  - Diálogos só fecham por Cancelar/Salvar/X — não mais clicando fora ou Esc (`onInteractOutside`/
+    `onEscapeKeyDown` prevenidos em todo `DialogContent`). Corretores ganhou o botão Cancelar que
+    não tinha.
+  - Ícones (lápis) substituindo texto "Editar"/"Excluir" em todas as listagens; linha da tabela
+    não abre mais edição sozinha (só o ícone) — evita clique acidental.
+  - Badges de Destaque/Promoção visíveis pro visitante (card público) e na listagem interna.
+  - Link "Voltar para anúncios" → só "Voltar".
 - `npm run build` e `npm run lint` limpos.
 
 ## Próximos passos imediatos

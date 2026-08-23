@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Pencil, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -64,7 +64,7 @@ export function PartnersListPage() {
             </TableHeader>
             <TableBody>
               {partners.map((partner) => (
-                <TableRow key={partner.id} className="cursor-pointer" onClick={() => setEditing(partner)}>
+                <TableRow key={partner.id}>
                   <TableCell className="font-medium">
                     {partner.name}{' '}
                     <span className="text-muted-foreground font-normal">({partner.person_type})</span>
@@ -75,7 +75,7 @@ export function PartnersListPage() {
                   <TableCell className="text-muted-foreground">
                     {partner.phone || partner.email || '—'}
                   </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <Switch
                         checked={partner.active}
@@ -88,8 +88,13 @@ export function PartnersListPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(partner)}>
-                      Editar
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Editar"
+                      onClick={() => setEditing(partner)}
+                    >
+                      <Pencil className="size-4" />
                     </Button>
                   </TableCell>
                 </TableRow>

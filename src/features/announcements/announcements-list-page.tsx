@@ -86,12 +86,14 @@ export function AnnouncementsListPage() {
             </TableHeader>
             <TableBody>
               {filtered.map((announcement) => (
-                <TableRow
-                  key={announcement.id}
-                  className="cursor-pointer"
-                  onClick={() => navigate(`/announcements/${announcement.id}`)}
-                >
-                  <TableCell className="font-medium">{announcement.title}</TableCell>
+                <TableRow key={announcement.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {announcement.title}
+                      {announcement.featured && <Badge variant="outline">Destaque</Badge>}
+                      {announcement.promotion && <Badge variant="secondary">Promoção</Badge>}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {PROPERTY_TYPE_LABELS[announcement.property_type]}
                   </TableCell>
@@ -103,7 +105,7 @@ export function AnnouncementsListPage() {
                       {ANNOUNCEMENT_STATUS_LABELS[announcement.status]}
                     </Badge>
                   </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"

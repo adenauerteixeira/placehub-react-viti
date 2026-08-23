@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { capitalizeName } from '@/lib/capitalize'
 import { useInviteTenantUser } from './api'
 import { PermissionCheckboxes } from './permission-checkboxes'
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type AssignableRole } from './permissions'
@@ -84,9 +85,15 @@ export function InviteUserDialog({
     }
   }
 
+  const nameField = register('fullName')
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent
+        className="sm:max-w-lg"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Novo usuário</DialogTitle>
           <DialogDescription>Cria um usuário nesta imobiliária, com papel e permissões.</DialogDescription>
@@ -95,7 +102,14 @@ export function InviteUserDialog({
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="invite-name">Nome</FieldLabel>
-            <Input id="invite-name" {...register('fullName')} />
+            <Input
+              id="invite-name"
+              {...nameField}
+              onBlur={(e) => {
+                nameField.onBlur(e)
+                setValue('fullName', capitalizeName(e.target.value))
+              }}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">

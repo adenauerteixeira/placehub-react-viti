@@ -86,6 +86,13 @@ Proprietários, Anúncios) e o portal público estão no ar.
       juntos em todo header (antes só um ou outro), coluna de ações na listagem de anúncios,
       link "Anúncios" na tela de login, e correção do botão Salvar não voltando pra listagem.
       Testado ponta a ponta. Ver CHANGELOG.md.
+- [x] 2ª rodada de polimento pós-Fase 2 (2026-08-23), a pedido do usuário: máscara de telefone
+      `(XX) X XXXX-XXXX` e de CPF/CNPJ, capitalização automática de campos "Nome" (com exceção
+      das preposições de ligação), diálogos só fecham por Cancelar/Salvar/X (não mais clicando
+      fora ou Esc), colunas de ação padronizadas como ícones em todas as listagens (sem texto
+      "Editar"/"Excluir"), badges de Destaque/Promoção visíveis pro visitante, linha da listagem
+      não abre mais edição sozinha (só o ícone), link "Voltar" simplificado. Testado ponta a
+      ponta. Ver CHANGELOG.md.
 
 ## Fase 3 — Funil comercial
 

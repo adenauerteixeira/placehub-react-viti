@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/phone-input'
 import { errorMessage } from '@/lib/errors'
 import {
   Dialog,
@@ -52,6 +53,7 @@ export function TenantFormDialog({
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     watch,
@@ -102,7 +104,10 @@ export function TenantFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar imobiliária' : 'Nova imobiliária'}</DialogTitle>
           <DialogDescription>
@@ -143,7 +148,13 @@ export function TenantFormDialog({
 
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="tenant-phone">Telefone</FieldLabel>
-            <Input id="tenant-phone" {...register('phone')} />
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <PhoneInput id="tenant-phone" value={field.value} onChange={field.onChange} />
+              )}
+            />
           </div>
 
           <DialogFooter>

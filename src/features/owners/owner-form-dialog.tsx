@@ -1,12 +1,14 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DocumentInput } from '@/components/document-input'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/phone-input'
 import { Textarea } from '@/components/ui/textarea'
 import { errorMessage } from '@/lib/errors'
 import {
@@ -18,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { capitalizeName } from '@/lib/capitalize'
 import { isValidDocument } from '@/lib/cpf-cnpj'
 import type { PersonType } from '@/features/partners/api'
 import { useCreateOwner, useUpdateOwner, type Owner } from './api'
@@ -65,6 +68,7 @@ export function OwnerFormDialog({
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     watch,
@@ -106,10 +110,14 @@ export function OwnerFormDialog({
   }
 
   const personType = watch('person_type') as PersonType
+  const nameField = register('name')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar proprietário' : 'Novo proprietário'}</DialogTitle>
           <DialogDescription>
@@ -122,7 +130,15 @@ export function OwnerFormDialog({
           <div className="grid grid-cols-[1fr_auto] gap-4">
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="owner-name">Nome</FieldLabel>
-              <Input id="owner-name" {...register('name')} aria-invalid={!!errors.name} />
+              <Input
+                id="owner-name"
+                {...nameField}
+                onBlur={(e) => {
+                  nameField.onBlur(e)
+                  setValue('name', capitalizeName(e.target.value))
+                }}
+                aria-invalid={!!errors.name}
+              />
               {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -144,14 +160,32 @@ export function OwnerFormDialog({
               <FieldLabel htmlFor="owner-document" hint="Validado por dígito verificador — não é só checagem de tamanho.">
                 {personType === 'PF' ? 'CPF' : 'CNPJ'}
               </FieldLabel>
-              <Input id="owner-document" {...register('document')} aria-invalid={!!errors.document} />
+              <Controller
+                control={control}
+                name="document"
+                render={({ field }) => (
+                  <DocumentInput
+                    id="owner-document"
+                    personType={personType}
+                    value={field.value}
+                    onChange={field.onChange}
+                    aria-invalid={!!errors.document}
+                  />
+                )}
+              />
               {errors.document && (
                 <p className="text-destructive text-sm">{errors.document.message}</p>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="owner-phone">Telefone</FieldLabel>
-              <Input id="owner-phone" {...register('phone')} />
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field }) => (
+                  <PhoneInput id="owner-phone" value={field.value} onChange={field.onChange} />
+                )}
+              />
             </div>
           </div>
 
@@ -169,6 +203,9 @@ export function OwnerFormDialog({
           </div>
 
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={submitting}>
               {submitting && <Loader2 className="animate-spin" />}
               {isEdit ? 'Salvar' : 'Criar proprietário'}

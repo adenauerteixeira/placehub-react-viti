@@ -1,16 +1,10 @@
 import { useState } from 'react'
-import { MoreHorizontal, Plus } from 'lucide-react'
+import { Pencil, Plus, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { errorMessage } from '@/lib/errors'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -90,21 +84,24 @@ export function TenantsListPage() {
                     {new Date(tenant.created_at).toLocaleDateString('pt-BR')}
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Ações">
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingTenant(tenant)}>
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setLinkingTenant(tenant)}>
-                          Vincular administrador
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Editar"
+                        onClick={() => setEditingTenant(tenant)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Vincular administrador"
+                        onClick={() => setLinkingTenant(tenant)}
+                      >
+                        <UserPlus className="size-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
