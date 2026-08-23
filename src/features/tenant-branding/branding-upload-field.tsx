@@ -3,6 +3,7 @@ import { Loader2, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 import { type BrandingAsset, useRemoveBrandingAsset, useUploadBrandingAsset } from './api'
 
 const MAX_SIZE_BYTES = 2 * 1024 * 1024
@@ -15,6 +16,7 @@ export function BrandingUploadField({
   previewUrl,
   previewStyle,
   accept = 'image/png,image/jpeg,image/webp,image/svg+xml',
+  stacked = false,
 }: {
   tenantId: string
   asset: BrandingAsset
@@ -23,6 +25,8 @@ export function BrandingUploadField({
   previewUrl: string | null
   previewStyle?: React.CSSProperties
   accept?: string
+  /** Preview acima dos botões (em vez de lado a lado) — melhor pra colunas estreitas. */
+  stacked?: boolean
 }) {
   const upload = useUploadBrandingAsset(tenantId)
   const remove = useRemoveBrandingAsset(tenantId)
@@ -61,48 +65,67 @@ export function BrandingUploadField({
     }
   }
 
+  const preview = (
+    <div
+      className={cn(
+        'bg-checkerboard relative shrink-0 overflow-hidden rounded-lg border',
+        stacked ? 'size-20' : 'size-16',
+      )}
+    >
+      <div className="absolute inset-0 flex items-center justify-center" style={previewStyle}>
+        {previewUrl ? (
+          <img src={previewUrl} alt={label} className="size-full object-contain" />
+        ) : (
+          <span className="text-muted-foreground text-center text-[10px] leading-tight">
+            Sem imagem
+          </span>
+        )}
+      </div>
+    </div>
+  )
+
+  const actions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={busy}
+        onClick={() => inputRef.current?.click()}
+      >
+        {upload.isPending ? <Loader2 className="animate-spin" /> : <Upload />}
+        Enviar imagem
+      </Button>
+      {currentPath && (
+        <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={handleRemove}>
+          {remove.isPending ? <Loader2 className="animate-spin" /> : <Trash2 />}
+          Remover
+        </Button>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={handleFileChange}
+      />
+    </div>
+  )
+
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
-      <div className="flex items-center gap-3">
-        <div className="bg-checkerboard relative size-16 overflow-hidden rounded-lg border">
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={previewStyle}
-          >
-            {previewUrl ? (
-              <img src={previewUrl} alt={label} className="size-full object-contain" />
-            ) : (
-              <span className="text-muted-foreground text-center text-[10px] leading-tight">
-                Sem imagem
-              </span>
-            )}
-          </div>
+      {stacked ? (
+        <div className="flex flex-col items-start gap-3">
+          {preview}
+          {actions}
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={busy}
-          onClick={() => inputRef.current?.click()}
-        >
-          {upload.isPending ? <Loader2 className="animate-spin" /> : <Upload />}
-          Enviar imagem
-        </Button>
-        {currentPath && (
-          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={handleRemove}>
-            {remove.isPending ? <Loader2 className="animate-spin" /> : <Trash2 />}
-            Remover
-          </Button>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          className="hidden"
-          onChange={handleFileChange}
-        />
-      </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          {preview}
+          {actions}
+        </div>
+      )}
     </div>
   )
 }

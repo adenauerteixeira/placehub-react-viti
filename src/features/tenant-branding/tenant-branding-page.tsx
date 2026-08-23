@@ -151,29 +151,49 @@ export function TenantBrandingPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <BrandingUploadField
-              tenantId={tenant.id}
-              asset="background-image"
-              label="Plano de fundo"
-              currentPath={tenant.background_image_path}
-              previewUrl={brandingAssetUrl(tenant.background_image_path, tenant.updated_at)}
-            />
-            <BrandingUploadField
-              tenantId={tenant.id}
-              asset="favicon"
-              label="Favicon"
-              currentPath={tenant.favicon_path}
-              previewUrl={brandingAssetUrl(tenant.favicon_path, tenant.updated_at)}
-              accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.png,.svg"
-            />
-            <BrandingUploadField
-              tenantId={tenant.id}
-              asset="placeholder-image"
-              label="Anúncio sem foto"
-              currentPath={tenant.placeholder_image_path}
-              previewUrl={brandingAssetUrl(tenant.placeholder_image_path, tenant.updated_at)}
-            />
+          <div className="grid gap-6 sm:grid-cols-3">
+            <div className="flex flex-col gap-3 rounded-xl border p-4">
+              <BrandingUploadField
+                tenantId={tenant.id}
+                asset="background-image"
+                label="Plano de fundo"
+                currentPath={tenant.background_image_path}
+                previewUrl={brandingAssetUrl(tenant.background_image_path, tenant.updated_at)}
+                stacked
+              />
+              <p className="text-muted-foreground text-xs">
+                Imagem de fundo usada no portal público da imobiliária.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-xl border p-4">
+              <BrandingUploadField
+                tenantId={tenant.id}
+                asset="favicon"
+                label="Favicon"
+                currentPath={tenant.favicon_path}
+                previewUrl={brandingAssetUrl(tenant.favicon_path, tenant.updated_at)}
+                accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.png,.svg"
+                stacked
+              />
+              <p className="text-muted-foreground text-xs">
+                Ícone exibido na aba do navegador (aceita .ico).
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-xl border p-4">
+              <BrandingUploadField
+                tenantId={tenant.id}
+                asset="placeholder-image"
+                label="Anúncio sem foto"
+                currentPath={tenant.placeholder_image_path}
+                previewUrl={brandingAssetUrl(tenant.placeholder_image_path, tenant.updated_at)}
+                stacked
+              />
+              <p className="text-muted-foreground text-xs">
+                Capa usada em anúncios cadastrados sem nenhuma foto própria.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

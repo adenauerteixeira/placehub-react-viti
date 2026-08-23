@@ -14,6 +14,11 @@ formato AAAA-MM-DD.
   Jakarta Sans, `--radius` maior (cantos mais arredondados), cores de categoria
   (azul/verde/âmbar/violeta) nos tokens `--chart-1`..`--chart-4` para reaproveitar no dashboard
   real (Fase 4). Detalhes em ARCHITECTURE.md.
+- "Plano de fundo", "Favicon" e "Anúncio sem foto" (`/branding`) ganharam a mesma apresentação em
+  card dos logos claro/escuro (borda arredondada, preview maior empilhado acima dos botões, texto
+  explicando pra que serve cada imagem) — antes ficavam soltos num grid de 3 colunas sem moldura,
+  com visual bem mais pobre que os logos ao lado. `BrandingUploadField` ganhou a prop `stacked`
+  pra essa variante de layout (preview em cima, botões embaixo, melhor pra colunas estreitas).
 
 ### Adicionado
 
