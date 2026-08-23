@@ -5,14 +5,15 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-08-22
+## Estado atual — 2026-08-23
 
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260822172344_expand_tenant_branding_fields.sql` aplicadas com sucesso via SQL Editor (CLI
-  ainda não autenticado neste ambiente — ver nota abaixo). Duas Edge Functions no ar:
-  `create-tenant-admin` e `invite-tenant-user`. Bucket `tenant-branding` criado.
+  `20260822182500_allow_ico_favicon_mime.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
+  autenticado neste ambiente — ver nota abaixo). Duas Edge Functions no ar: `create-tenant-admin`
+  e `invite-tenant-user`. Bucket `tenant-branding` criado, aceita `image/x-icon`/
+  `image/vnd.microsoft.icon` além dos formatos comuns (favicon .ico).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah**
   (slug `casah`, com cor primária `#e11d48`, `dark_surface_color` `#111827`, logo claro/escuro
   e favicon definidos), com um `tenant_admin` (`tenant.adm@gmail.com`) e um `broker`
@@ -37,24 +38,31 @@
     padrão, preview de cartão por tema. Bucket `tenant-branding`, upload restrito por policy no
     path. **As 15 cores agora são aplicadas de fato em todo o app do tenant** (claro e escuro),
     não só preview isolado — ver `AppShell`/`tenantThemeVars()` abaixo.
-- **Ajustes de layout pós-Fase 1 (2026-08-22), a pedido do usuário — todos testados
-  visualmente (claro/escuro, screenshots via `browser-automation`):**
-  - `AppShell` (`src/components/app-shell.tsx`), casca compartilhada por `TenantLayout`,
-    `PlatformLayout`, `PublicTenantHomePage` e `LoginPage`: conteúdo centralizado
-    (`mx-auto max-w-7xl`), cabeçalho/rodapé fixos com fundo translúcido
-    (`bg-background/80 backdrop-blur-md`), `h-dvh` + `overflow-y-auto` só no `<main>` pra caber
-    sem scrollbar da página quando possível. Rodapé novo nos 4 contextos (não existia antes).
-    Replica o padrão do Laravel antigo (`layouts/app.blade.php`/`footer.blade.php`/
-    `guest.blade.php`).
-  - `tenantThemeVars()` (`src/features/tenant-branding/apply-tenant-theme.ts`) aplica as 15
-    cores do tenant como CSS variables reais nos tokens do shadcn (não só `--primary`/`--accent`
-    como antes), com `*-foreground` calculado por contraste. Escopado no `TenantLayout`/
-    `PublicTenantHomePage` só — login e console da plataforma continuam neutros de propósito.
-  - Corrigido bug de logo transparente aparecendo com caixa branca:
-    `logo_{light,dark}_background_transparent` nascia `false` por padrão. Migration
-    `20260822181810_default_transparent_logo_backgrounds.sql` (default `true` + `update`
-    retroativo) — **aplicada e confirmada** (Casah já mostra "Transparente" marcado e o logo
-    sem caixa no header).
+- **Ajustes de layout pós-Fase 1 (2026-08-22/23), a pedido do usuário — todos testados
+  visualmente (claro/escuro, screenshots via `browser-automation`), em duas rodadas:**
+  - **1ª rodada:** `AppShell` (`src/components/app-shell.tsx`) centralizando conteúdo
+    (`mx-auto max-w-7xl`) e com rodapé novo nos 4 contextos (`TenantLayout`, `PlatformLayout`,
+    `PublicTenantHomePage`, `LoginPage`); `tenantThemeVars()`
+    (`src/features/tenant-branding/apply-tenant-theme.ts`) aplicando as 15 cores do tenant como
+    CSS variables reais (não só `--primary`/`--accent`); migration
+    `20260822181810_default_transparent_logo_backgrounds.sql` pro bug do logo transparente com
+    caixa branca.
+  - **2ª rodada (correções sobre a 1ª):** a opacidade do header/footer estava tecnicamente
+    aplicada mas invisível — a casca empilhava header/main/footer sem sobrepor nada
+    (`shrink-0`), então não tinha o que misturar com a translucidez. Trocado pra
+    `position: fixed` de verdade (`h-16`/`h-11`), com `<main>` passando por baixo ao rolar —
+    replica o `guest.blade.php` original com fidelidade. Favicon (.ico) ganhou dois ajustes:
+    `accept` do input de arquivo incluindo a extensão (o MIME de .ico é inconsistente entre
+    navegadores) e o bucket `tenant-branding` liberado pra `image/x-icon`/
+    `image/vnd.microsoft.icon` (migration `20260822182500_allow_ico_favicon_mime.sql`) — o
+    Storage rejeitava o arquivo mesmo com o seletor já aceitando. Preview dos uploads trocou
+    fundo cinza sólido por xadrez (`.bg-checkerboard`), já que numa miniatura branca sobre
+    cartão branco não dava pra saber se a transparência real do PNG estava sendo respeitada.
+    **Favicon nunca era de fato aplicado na aba do navegador** (upload salvava certinho, mas
+    nada trocava o `<link rel="icon">` real) — corrigido com `useTenantFavicon()`
+    (`src/features/tenant-branding/use-tenant-favicon.ts`), testado com upload + reload completo
+    da página. "Plano de fundo"/"Favicon"/"Anúncio sem foto" ganharam a mesma apresentação em
+    card dos logos (antes ficavam soltos, sem moldura, visual bem mais pobre).
   - Detalhes completos em ARCHITECTURE.md e CHANGELOG.md.
 - **Visual:** direção escolhida foi "Dashboard SaaS colorido" (de 3 opções comparadas num canvas
   de design), tema claro. Aplicado em `src/index.css`: fonte Plus Jakarta Sans, `--radius` maior,
@@ -64,11 +72,11 @@
 
 ## Próximos passos imediatos
 
-**Fase 1 está completa**, incluindo a rodada de ajustes de layout/tema acima (só falta o
-conteúdo real do dashboard, que é escopo da Fase 4 por design). Próximo passo natural: **Fase 2 —
-Catálogo** (empreendimentos, proprietários, anúncios/imóveis com portal público, parceiros,
-corretores). Ver [ROADMAP.md](./ROADMAP.md). Ainda não confirmado com o usuário se seguimos
-direto pra Fase 2 ou se há mais algum ajuste antes.
+**Fase 1 está fechada** (usuário confirmou explicitamente "para finalizar a Fase 1" na 2ª rodada
+de ajustes acima), incluindo as duas rodadas de layout/tema/branding (só falta o conteúdo real
+do dashboard, que é escopo da Fase 4 por design). Próximo passo natural: **Fase 2 — Catálogo**
+(empreendimentos, proprietários, anúncios/imóveis com portal público, parceiros, corretores). Ver
+[ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar início da Fase 2.
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
 (ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar).
