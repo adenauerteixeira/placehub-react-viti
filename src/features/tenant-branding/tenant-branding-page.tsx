@@ -10,6 +10,7 @@ import { brandingAssetUrl, useUpdateTenantColors, type TenantColorsInput } from 
 import { BrandingPreviewCard } from './branding-preview-card'
 import { BrandingUploadField } from './branding-upload-field'
 import { ColorField } from './color-field'
+import { errorMessage } from '@/lib/errors'
 import {
   DARK_COLOR_FIELDS,
   LIGHT_COLOR_FIELDS,
@@ -70,7 +71,7 @@ export function TenantBrandingPage() {
       toast.success('Identidade visual atualizada.')
     } catch (error) {
       toast.error('Não foi possível salvar', {
-        description: error instanceof Error ? error.message : String(error),
+        description: errorMessage(error),
       })
     }
   }

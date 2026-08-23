@@ -11,6 +11,7 @@ import { formatDocument } from '@/lib/cpf-cnpj'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useOwners, useToggleOwnerActive, type Owner } from './api'
 import { OwnerFormDialog } from './owner-form-dialog'
+import { errorMessage } from '@/lib/errors'
 
 export function OwnersListPage() {
   const { tenant } = useTenantOutletContext()
@@ -26,7 +27,7 @@ export function OwnersListPage() {
       toast.success(active ? 'Proprietário ativado.' : 'Proprietário desativado.')
     } catch (error) {
       toast.error('Não foi possível atualizar o status', {
-        description: error instanceof Error ? error.message : String(error),
+        description: errorMessage(error),
       })
     }
   }

@@ -11,6 +11,7 @@ import { formatDocument } from '@/lib/cpf-cnpj'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { usePartners, useTogglePartnerActive, type Partner } from './api'
 import { PartnerFormDialog } from './partner-form-dialog'
+import { errorMessage } from '@/lib/errors'
 
 export function PartnersListPage() {
   const { tenant } = useTenantOutletContext()
@@ -26,7 +27,7 @@ export function PartnersListPage() {
       toast.success(active ? 'Parceiro ativado.' : 'Parceiro desativado.')
     } catch (error) {
       toast.error('Não foi possível atualizar o status', {
-        description: error instanceof Error ? error.message : String(error),
+        description: errorMessage(error),
       })
     }
   }

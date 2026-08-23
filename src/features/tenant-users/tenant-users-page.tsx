@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { errorMessage } from '@/lib/errors'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +34,7 @@ export function TenantUsersPage() {
       toast.success(is_active ? 'Usuário ativado.' : 'Usuário desativado.')
     } catch (error) {
       toast.error('Não foi possível atualizar o status', {
-        description: error instanceof Error ? error.message : String(error),
+        description: errorMessage(error),
       })
     }
   }

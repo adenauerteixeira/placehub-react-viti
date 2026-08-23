@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { type BrandingAsset, useRemoveBrandingAsset, useUploadBrandingAsset } from './api'
+import { errorMessage } from '@/lib/errors'
 
 const MAX_SIZE_BYTES = 2 * 1024 * 1024
 
@@ -48,7 +49,7 @@ export function BrandingUploadField({
       toast.success(`${label} atualizado.`)
     } catch (error) {
       toast.error(`Não foi possível enviar ${label.toLowerCase()}`, {
-        description: error instanceof Error ? error.message : String(error),
+        description: errorMessage(error),
       })
     }
   }
@@ -60,7 +61,7 @@ export function BrandingUploadField({
       toast.success(`${label} removido.`)
     } catch (error) {
       toast.error(`Não foi possível remover ${label.toLowerCase()}`, {
-        description: error instanceof Error ? error.message : String(error),
+        description: errorMessage(error),
       })
     }
   }

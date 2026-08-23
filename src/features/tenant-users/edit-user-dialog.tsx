@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { errorMessage } from '@/lib/errors'
 import {
   Dialog,
   DialogContent,
@@ -77,7 +78,7 @@ export function EditUserDialog({
       onOpenChange(false)
     } catch (error) {
       toast.error('Não foi possível salvar', {
-        description: error instanceof Error ? error.message : String(error),
+        description: errorMessage(error),
       })
     }
   }

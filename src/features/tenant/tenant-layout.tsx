@@ -47,6 +47,9 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
             )}
             <nav className="flex items-center gap-4 text-sm">
               <TenantNavLink to="/dashboard">Painel</TenantNavLink>
+              {hasPermission(profile, 'announcements') && (
+                <TenantNavLink to="/announcements">Anúncios</TenantNavLink>
+              )}
               {hasPermission(profile, 'developments') && (
                 <TenantNavLink to="/developments">Empreendimentos</TenantNavLink>
               )}

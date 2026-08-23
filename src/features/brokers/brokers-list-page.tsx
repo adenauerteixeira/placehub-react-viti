@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { brokerPhotoUrl, useBrokers, useToggleBrokerActive, type Broker } from './api'
 import { BrokerFormDialog } from './broker-form-dialog'
+import { errorMessage } from '@/lib/errors'
 
 export function BrokersListPage() {
   const { tenant } = useTenantOutletContext()
@@ -25,7 +26,7 @@ export function BrokersListPage() {
       toast.success(active ? 'Corretor ativado.' : 'Corretor desativado.')
     } catch (error) {
       toast.error('Não foi possível atualizar o status', {
-        description: error instanceof Error ? error.message : String(error),
+        description: errorMessage(error),
       })
     }
   }

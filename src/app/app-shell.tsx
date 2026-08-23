@@ -4,6 +4,8 @@ import { NotFoundPage } from '@/components/not-found-page'
 import { useAuth } from '@/features/auth/auth-context'
 import { LoginPage } from '@/features/auth/login-page'
 import { hasPermission, useProfile } from '@/features/auth/use-profile'
+import { AnnouncementFormPage } from '@/features/announcements/announcement-form-page'
+import { AnnouncementsListPage } from '@/features/announcements/announcements-list-page'
 import { BrokersListPage } from '@/features/brokers/brokers-list-page'
 import { DevelopmentsListPage } from '@/features/developments/developments-list-page'
 import { OwnersListPage } from '@/features/owners/owners-list-page'
@@ -96,6 +98,22 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequirePermission module="owners">
               <OwnersListPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/announcements"
+          element={
+            <RequirePermission module="announcements">
+              <AnnouncementsListPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/announcements/:id"
+          element={
+            <RequirePermission module="announcements">
+              <AnnouncementFormPage />
             </RequirePermission>
           }
         />

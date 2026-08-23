@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { errorMessage } from '@/lib/errors'
 import {
   Dialog,
   DialogContent,
@@ -91,7 +92,7 @@ export function DevelopmentFormDialog({
       onOpenChange(false)
     } catch (error) {
       toast.error(isEdit ? 'Não foi possível salvar' : 'Não foi possível criar', {
-        description: error instanceof Error ? error.message : String(error),
+        description: errorMessage(error),
       })
     }
   }

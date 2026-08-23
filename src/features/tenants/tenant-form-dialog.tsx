@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { errorMessage } from '@/lib/errors'
 import {
   Dialog,
   DialogContent,
@@ -74,7 +75,7 @@ export function TenantFormDialog({
   }, [name, isEdit, slugEdited, setValue])
 
   function friendlyError(error: unknown): string {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = errorMessage(error)
     if (message.includes('duplicate key') || message.includes('tenants_slug_key')) {
       return 'Esse identificador já está em uso por outra imobiliária.'
     }
