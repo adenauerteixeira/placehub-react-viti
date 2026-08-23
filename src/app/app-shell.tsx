@@ -3,7 +3,8 @@ import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-st
 import { NotFoundPage } from '@/components/not-found-page'
 import { useAuth } from '@/features/auth/auth-context'
 import { LoginPage } from '@/features/auth/login-page'
-import { useProfile } from '@/features/auth/use-profile'
+import { hasPermission, useProfile } from '@/features/auth/use-profile'
+import { DevelopmentsListPage } from '@/features/developments/developments-list-page'
 import { PlatformLayout } from '@/features/platform/platform-layout'
 import { TenantsListPage } from '@/features/platform/tenants-list-page'
 import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
@@ -63,6 +64,14 @@ function TenantApp({ slug }: { slug: string }) {
             </RequireTenantAdmin>
           }
         />
+        <Route
+          path="/developments"
+          element={
+            <RequirePermission module="developments">
+              <DevelopmentsListPage />
+            </RequirePermission>
+          }
+        />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
@@ -76,6 +85,25 @@ function RequireTenantAdmin({ children }: { children: React.ReactNode }) {
       <FullscreenMessage
         title="Sem permissão"
         description="Essa área é restrita ao administrador da imobiliária."
+      />
+    )
+  }
+  return children
+}
+
+function RequirePermission({
+  module,
+  children,
+}: {
+  module: string
+  children: React.ReactNode
+}) {
+  const { profile } = useTenantOutletContext()
+  if (!hasPermission(profile, module)) {
+    return (
+      <FullscreenMessage
+        title="Sem permissão"
+        description="Você não tem acesso a este módulo. Fale com o administrador da sua imobiliária."
       />
     )
   }

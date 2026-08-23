@@ -22,6 +22,19 @@ formato AAAA-MM-DD.
 
 ### Adicionado
 
+- **Fase 2 (Catálogo) iniciada.** Fundação: helper `has_permission(module)` (RLS reutilizável —
+  `tenant_admin`/`super_admin` sempre têm acesso, `manager`/`broker` só se o módulo estiver em
+  `profile_permissions`), catálogo `amenities` (mesmo padrão de `permissions`), permissão
+  `owners` que faltava desde a Fase 1, bucket `catalog-media` (fotos de corretor/galeria de
+  anúncio). `useProfile()` agora traz `permissions: string[]` junto do profile; nova função
+  `hasPermission(profile, module)` no client espelha a regra do banco pra montar nav/rotas sem
+  mostrar algo que a API vai recusar (RLS continua sendo quem garante de verdade).
+- Empreendimentos (`/developments`, permissão `developments`): CRUD completo (nome, tipo,
+  incorporadora, status), slug gerado com sufixo aleatório e **escopado por tenant**
+  (`unique(tenant_id, slug)` — no sistema anterior o slug de empreendimento era único
+  globalmente). Link no menu do tenant liberado por `hasPermission()`, não mais restrito a
+  `tenant_admin` — primeiro módulo a fechar esse gap (permissões existiam desde a Fase 1 mas
+  nunca eram checadas em lugar nenhum). Testado ponta a ponta.
 - Identidade visual do tenant (`/branding`, restrita a `tenant_admin`), com paridade completa
   de opções em relação ao sistema anterior (pedido do usuário, revisando a versão inicial mais
   enxuta): 15 cores (8 tema claro + 7 tema escuro — primária/secundária/destaque, fundo,

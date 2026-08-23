@@ -5,7 +5,7 @@ import { AppFooter, AppShell, LogoBadge } from '@/components/app-shell'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { UserMenu } from '@/features/auth/user-menu'
 import { useAuth } from '@/features/auth/auth-context'
-import type { Profile } from '@/features/auth/use-profile'
+import { hasPermission, type Profile } from '@/features/auth/use-profile'
 import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
@@ -47,6 +47,9 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
             )}
             <nav className="flex items-center gap-4 text-sm">
               <TenantNavLink to="/dashboard">Painel</TenantNavLink>
+              {hasPermission(profile, 'developments') && (
+                <TenantNavLink to="/developments">Empreendimentos</TenantNavLink>
+              )}
               {profile.role === 'tenant_admin' && (
                 <>
                   <TenantNavLink to="/users">Usuários</TenantNavLink>

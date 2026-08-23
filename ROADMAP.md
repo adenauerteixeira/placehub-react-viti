@@ -51,7 +51,8 @@ auth/tenant/permissões funcionam).
 
 ## Fase 2 — Catálogo
 
-- [ ] Empreendimentos (`developments`).
+- [x] Empreendimentos (`developments`) — CRUD completo (`/developments`, permissão `developments`
+      via `has_permission()`), slug escopado por tenant. Testado ponta a ponta.
 - [ ] Proprietários (`owners`).
 - [ ] Anúncios/imóveis (`announcements` + `announcement_images`), com portal público de
       visualização (`{slug}.placehub.app/anuncios/...`, sem login).
