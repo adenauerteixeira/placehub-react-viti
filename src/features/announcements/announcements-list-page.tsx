@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { errorMessage } from '@/lib/errors'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useAnnouncements, type AnnouncementStatus } from './api'
+import { useAnnouncements, useDeleteAnnouncement, type AnnouncementStatus } from './api'
 import { ANNOUNCEMENT_STATUS_LABELS, ANNOUNCEMENT_STATUS_VARIANT, PROPERTY_TYPE_LABELS } from './labels'
 
 const ALL = '__all__'
@@ -17,7 +19,19 @@ export function AnnouncementsListPage() {
   const { tenant } = useTenantOutletContext()
   const navigate = useNavigate()
   const { data: announcements, isLoading, isError } = useAnnouncements(tenant.id)
+  const deleteAnnouncement = useDeleteAnnouncement(tenant.id)
   const [statusFilter, setStatusFilter] = useState(ALL)
+
+  async function handleDelete(e: React.MouseEvent, id: string, title: string) {
+    e.stopPropagation()
+    if (!window.confirm(`Excluir o anúncio "${title}"? Essa ação não pode ser desfeita.`)) return
+    try {
+      await deleteAnnouncement.mutateAsync(id)
+      toast.success('Anúncio excluído.')
+    } catch (error) {
+      toast.error('Não foi possível excluir', { description: errorMessage(error) })
+    }
+  }
 
   const filtered = useMemo(() => {
     if (!announcements) return []
@@ -67,6 +81,7 @@ export function AnnouncementsListPage() {
                 <TableHead>Tipo</TableHead>
                 <TableHead>Preço</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-0" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -87,6 +102,27 @@ export function AnnouncementsListPage() {
                     <Badge variant={ANNOUNCEMENT_STATUS_VARIANT[announcement.status]}>
                       {ANNOUNCEMENT_STATUS_LABELS[announcement.status]}
                     </Badge>
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Editar"
+                        onClick={() => navigate(`/announcements/${announcement.id}`)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Excluir"
+                        className="text-destructive hover:text-destructive"
+                        onClick={(e) => handleDelete(e, announcement.id, announcement.title)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

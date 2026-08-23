@@ -41,13 +41,32 @@
     de `announcements`/`brokers`/`developments` seguem o mesmo espírito.
   - Detalhes completos de cada rodada em CHANGELOG.md; decisões de arquitetura/RLS em
     ARCHITECTURE.md.
+- **Rodada de polimento pós-Fase 2 (2026-08-23), a pedido do usuário — 10 melhorias, todas
+  testadas ponta a ponta contra o Supabase real (inclusive currency mask, lightbox e CEP
+  testados via automação de navegador):**
+  - `FieldLabel` (`src/components/field-label.tsx`) — label com tooltip de ajuda opcional,
+    virou padrão do sistema, aplicado em quase todos os formulários (Fase 1 e 2).
+  - `CurrencyInput` (`src/components/currency-input.tsx`) — máscara "R$ 0,00" nos campos de
+    preço/condomínio/IPTU de anúncios.
+  - `TenantBrand` (`src/features/tenant-branding/tenant-brand.tsx`) — logo **e** nome do tenant
+    juntos em todo header (login, painel, portal público) — antes só aparecia um ou outro.
+  - CEP com autopreenchimento via ViaCEP (`src/lib/viacep.ts`) no formulário de anúncios.
+  - Página de detalhe do anúncio redesenhada com o layout do sistema anterior (card de
+    cabeçalho + popover "Falar com um corretor" + grid 2 colunas) e **lightbox de fotos de
+    verdade** (foto cheia, setas, teclado Esc/←/→, contador X/Y).
+  - Hero de "publicidade da imobiliária" na home pública usando `background_image_path` — campo
+    que existia desde a Fase 1 mas nunca tinha sido aplicado em lugar nenhum.
+  - Coluna de ações (editar/excluir) na listagem de Anúncios; link "Anúncios" na tela de login;
+    correção do botão Salvar não voltando pra listagem de anúncios.
+  - Detalhes completos em CHANGELOG.md/ROADMAP.md.
 - `npm run build` e `npm run lint` limpos.
 
 ## Próximos passos imediatos
 
-**Fase 2 está fechada.** Próximo passo natural: **Fase 3 — Funil comercial** (leads + agenda de
-contato, negociações, propostas, reservas com expiração automática, vendas). Ver
-[ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar início da Fase 3.
+**Fase 2 e a rodada de polimento pós-Fase 2 estão fechadas.** Próximo passo natural: **Fase 3 —
+Funil comercial** (leads + agenda de contato, negociações, propostas, reservas com expiração
+automática, vendas). Ver [ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar início da
+Fase 3.
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
 (ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar).

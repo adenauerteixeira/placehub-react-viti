@@ -5,6 +5,37 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (rodada de melhorias pós-Fase 2, 2026-08-23)
+
+- **Padrões novos pra todo o sistema:**
+  - `FieldLabel` (`src/components/field-label.tsx`): label de campo com ícone de ajuda (tooltip)
+    opcional — aplicado nos formulários de Empreendimentos, Parceiros, Corretores,
+    Proprietários, Anúncios, Imobiliárias (plataforma) e Usuários do tenant.
+  - `CurrencyInput` (`src/components/currency-input.tsx`): máscara monetária "R$ 0,00" (dígitos
+    entram da direita, como numa maquininha) — aplicado em Preço, Preço promocional, Condomínio
+    e IPTU do formulário de anúncios.
+  - `TenantBrand`/`useTenantLogo` (`src/features/tenant-branding/tenant-brand.tsx`): logo **e**
+    nome do tenant lado a lado em todo header (login, painel do tenant, portal público, detalhe
+    de anúncio, corretores) — antes mostrava só o logo OU só o nome, nunca os dois.
+- CEP com autopreenchimento via ViaCEP (`src/lib/viacep.ts`, API pública gratuita, sem chave) no
+  formulário de anúncios — sai do campo CEP e rua/bairro/cidade/UF preenchem sozinhos.
+- Página de detalhe do anúncio (portal público) redesenhada seguindo o layout do sistema
+  anterior: card de cabeçalho (badges, título, preço, botão "Falar com um corretor" — popover
+  com todos os corretores ativos, o vinculado ao anúncio primeiro), grid de 2 colunas
+  (características + descrição + amenidades à esquerda, galeria de fotos + vídeo à direita).
+  Galeria com **lightbox de verdade**: foto principal + miniaturas clicáveis, visualizador em
+  tela cheia com setas, teclado (← → fecha com Esc) e contador "X / Y" — replicado do
+  comportamento Alpine.js do sistema anterior, agora em React puro.
+- Hero de "publicidade da imobiliária" na home pública, usando `background_image_path` — campo
+  que existia desde a Fase 1 mas nunca tinha sido aplicado em lugar nenhum (só ficava salvo no
+  banco). O sistema anterior não tinha nada parecido (só um hero com texto fixo igual pra todo
+  tenant, sem imagem); o novo usa a imagem de fundo do tenant (ou um gradiente com as cores da
+  marca, se não houver imagem) + nome + CTA de WhatsApp + link pra corretores.
+- Login mostra o link "Anúncios" (portal público) quando acessado a partir de um subdomínio de
+  tenant — antes, depois de sair da conta, não tinha como voltar pro portal sem editar a URL.
+- Coluna de ações (editar/excluir com ícones) na listagem de Anúncios — antes só dava pra editar
+  clicando na linha, e não tinha excluir na listagem (só dentro do formulário).
+
 ### Alterado
 
 - Toggle de tema simplificado: alterna direto entre claro/escuro num clique (era um menu com
@@ -164,6 +195,10 @@ formato AAAA-MM-DD.
 
 ### Corrigido
 
+- Salvar um anúncio (criar ou editar) mantinha o usuário na tela de edição em vez de voltar pra
+  listagem — agora os dois fluxos voltam pra `/announcements` depois de salvar, igual ao resto
+  do sistema (Empreendimentos, Parceiros, Corretores, Proprietários já fechavam o dialog ao
+  salvar).
 - Toasts de erro mostravam "[object Object]" quando o erro vinha do Postgres/PostgREST (objeto
   simples com `.message`, não `instanceof Error`) — só apareciam corretamente erros que já eram
   `Error` de verdade (ex. de rede). Novo helper `errorMessage()` (`src/lib/errors.ts`), aplicado

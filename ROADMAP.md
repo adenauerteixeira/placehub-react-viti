@@ -77,6 +77,16 @@ auth/tenant/permissões funcionam).
 Fase 2 completa — as 5 entidades do catálogo (Empreendimentos, Parceiros, Corretores,
 Proprietários, Anúncios) e o portal público estão no ar.
 
+- [x] Rodada de polimento pós-Fase 2 (2026-08-23), a pedido do usuário: página de detalhe do
+      anúncio redesenhada com layout do sistema anterior (galeria com lightbox de verdade — foto
+      cheia, setas, teclado, contador), hero de "publicidade da imobiliária" na home pública
+      usando `background_image_path` (nunca tinha sido aplicado em lugar nenhum), CEP com
+      autopreenchimento (ViaCEP), máscara monetária "R$ 0,00" nos campos de preço, tooltip de
+      ajuda em campo de formulário como padrão do sistema (`FieldLabel`), logo+nome do tenant
+      juntos em todo header (antes só um ou outro), coluna de ações na listagem de anúncios,
+      link "Anúncios" na tela de login, e correção do botão Salvar não voltando pra listagem.
+      Testado ponta a ponta. Ver CHANGELOG.md.
+
 ## Fase 3 — Funil comercial
 
 - [ ] Leads + agenda de contato (`leads`, `lead_follow_ups`).

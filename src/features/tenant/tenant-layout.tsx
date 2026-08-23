@@ -1,13 +1,13 @@
 import { NavLink, Outlet, useOutletContext } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/lib/theme-provider'
-import { AppFooter, AppShell, LogoBadge } from '@/components/app-shell'
+import { AppFooter, AppShell } from '@/components/app-shell'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { UserMenu } from '@/features/auth/user-menu'
 import { useAuth } from '@/features/auth/auth-context'
 import { hasPermission, type Profile } from '@/features/auth/use-profile'
-import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
+import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
 import type { Tenant } from '@/features/tenants/api'
 
@@ -24,27 +24,13 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
 
   useTenantFavicon(tenant.favicon_path, tenant.updated_at)
 
-  const logoPath = dark ? tenant.logo_dark_path : tenant.logo_light_path
-  const logoUrl = brandingAssetUrl(logoPath, tenant.updated_at)
-  const logoBackground = dark
-    ? tenant.logo_dark_background_transparent
-      ? 'transparent'
-      : tenant.logo_dark_background_color
-    : tenant.logo_light_background_transparent
-      ? 'transparent'
-      : tenant.logo_light_background_color
-
   return (
     <AppShell
       style={tenantThemeVars(tenant, resolvedTheme)}
       header={
         <>
           <div className="flex items-center gap-6">
-            {logoUrl ? (
-              <LogoBadge src={logoUrl} alt={tenant.name} background={logoBackground} />
-            ) : (
-              <span className="text-lg font-semibold">{tenant.name}</span>
-            )}
+            <TenantBrand tenant={tenant} dark={dark} />
             <nav className="flex items-center gap-4 text-sm">
               <TenantNavLink to="/dashboard">Painel</TenantNavLink>
               {hasPermission(profile, 'announcements') && (

@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2, Upload, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { errorMessage } from '@/lib/errors'
 import {
@@ -214,18 +214,20 @@ export function BrokerFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="broker-name">Nome</Label>
+            <FieldLabel htmlFor="broker-name">Nome</FieldLabel>
             <Input id="broker-name" {...register('name')} aria-invalid={!!errors.name} />
             {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="broker-phone">Telefone</Label>
+              <FieldLabel htmlFor="broker-phone" hint="Usado no botão de WhatsApp da página pública do corretor.">
+                Telefone
+              </FieldLabel>
               <Input id="broker-phone" {...register('phone')} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="broker-email">E-mail</Label>
+              <FieldLabel htmlFor="broker-email">E-mail</FieldLabel>
               <Input id="broker-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
               {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
             </div>
@@ -233,16 +235,20 @@ export function BrokerFormDialog({
 
           <div className="grid grid-cols-[1fr_auto_auto] gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="broker-cpf">CPF</Label>
+              <FieldLabel htmlFor="broker-cpf" hint="Validado por dígito verificador — não é só checagem de tamanho.">
+                CPF
+              </FieldLabel>
               <Input id="broker-cpf" {...register('cpf')} aria-invalid={!!errors.cpf} />
               {errors.cpf && <p className="text-destructive text-sm">{errors.cpf.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="broker-creci">CRECI</Label>
+              <FieldLabel htmlFor="broker-creci" hint="Registro profissional do corretor — único por UF dentro da imobiliária.">
+                CRECI
+              </FieldLabel>
               <Input id="broker-creci" className="w-28" {...register('creci')} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>UF</Label>
+              <FieldLabel>UF</FieldLabel>
               <Select
                 value={watch('creci_state')}
                 onValueChange={(v) => setValue('creci_state', v)}
@@ -264,7 +270,12 @@ export function BrokerFormDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="broker-commission">Comissão (%)</Label>
+              <FieldLabel
+                htmlFor="broker-commission"
+                hint="Percentual usado como padrão no cálculo da comissão do corretor nas vendas (Fase 3)."
+              >
+                Comissão (%)
+              </FieldLabel>
               <Input
                 id="broker-commission"
                 type="number"
@@ -276,7 +287,9 @@ export function BrokerFormDialog({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>Conta de login vinculada</Label>
+              <FieldLabel hint="Vincula este corretor a uma conta de login existente (role Corretor). Opcional.">
+                Conta de login vinculada
+              </FieldLabel>
               <Select value={watch('profile_id')} onValueChange={(v) => setValue('profile_id', v)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -294,7 +307,9 @@ export function BrokerFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="broker-bio">Bio</Label>
+            <FieldLabel htmlFor="broker-bio" hint="Texto exibido na página pública do corretor.">
+              Bio
+            </FieldLabel>
             <Textarea id="broker-bio" rows={3} {...register('bio')} />
           </div>
 

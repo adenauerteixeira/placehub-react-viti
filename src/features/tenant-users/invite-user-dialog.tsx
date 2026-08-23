@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { errorMessage } from '@/lib/errors'
 import {
   Dialog,
@@ -94,19 +94,21 @@ export function InviteUserDialog({
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="invite-name">Nome</Label>
+            <FieldLabel htmlFor="invite-name">Nome</FieldLabel>
             <Input id="invite-name" {...register('fullName')} />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="invite-email">E-mail</Label>
+            <FieldLabel htmlFor="invite-email" hint="Usado pra fazer login — precisa ser único na plataforma inteira.">
+              E-mail
+            </FieldLabel>
             <Input id="invite-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
             {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="invite-password">Senha</Label>
+              <FieldLabel htmlFor="invite-password">Senha</FieldLabel>
               <Input
                 id="invite-password"
                 type="password"
@@ -116,7 +118,7 @@ export function InviteUserDialog({
               {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="invite-confirm-password">Confirmar senha</Label>
+              <FieldLabel htmlFor="invite-confirm-password">Confirmar senha</FieldLabel>
               <Input
                 id="invite-confirm-password"
                 type="password"
@@ -130,7 +132,9 @@ export function InviteUserDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label>Papel</Label>
+            <FieldLabel hint="Define o nível de acesso padrão — tenant_admin e manager veem tudo do módulo liberado; corretor só o que é dele.">
+              Papel
+            </FieldLabel>
             <Select
               value={watch('role')}
               onValueChange={(value) => setValue('role', value as AssignableRole)}
@@ -149,7 +153,9 @@ export function InviteUserDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label>Permissões</Label>
+            <FieldLabel hint="Módulos que este usuário pode acessar no menu — tenant_admin sempre vê tudo, independente do que estiver marcado aqui.">
+              Permissões
+            </FieldLabel>
             <PermissionCheckboxes selected={permissions} onChange={setPermissions} />
           </div>
 

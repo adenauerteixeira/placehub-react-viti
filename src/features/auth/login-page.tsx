@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { Link } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -10,7 +11,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AppFooter, AppShell } from '@/components/app-shell'
+import { useTheme } from '@/lib/theme-provider'
 import { supabase } from '@/lib/supabase'
+import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
+import { usePublicTenant } from '@/features/tenants/api'
 
 const loginSchema = z.object({
   email: z.email('Informe um e-mail válido.'),
@@ -19,8 +23,10 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>
 
-export function LoginPage() {
+export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
   const [submitting, setSubmitting] = useState(false)
+  const { resolvedTheme } = useTheme()
+  const { data: tenant } = usePublicTenant(tenantSlug ?? null)
   const {
     register,
     handleSubmit,
@@ -39,16 +45,29 @@ export function LoginPage() {
     // Sessão atualizada via onAuthStateChange — o app re-renderiza sozinho.
   }
 
+  const dark = resolvedTheme === 'dark'
+
   return (
     <AppShell
       centerMain
       header={
         <>
-          <span className="text-lg font-semibold">PlaceHub</span>
-          <ThemeToggle />
+          {tenant ? (
+            <TenantBrand tenant={tenant} dark={dark} />
+          ) : (
+            <span className="text-lg font-semibold">PlaceHub</span>
+          )}
+          <div className="flex items-center gap-2">
+            {tenantSlug && (
+              <Button asChild variant="ghost">
+                <Link to="/">Anúncios</Link>
+              </Button>
+            )}
+            <ThemeToggle />
+          </div>
         </>
       }
-      footer={<AppFooter>Plataforma PlaceHub</AppFooter>}
+      footer={<AppFooter>{tenant ? `${tenant.name} · Plataforma PlaceHub` : 'Plataforma PlaceHub'}</AppFooter>}
     >
       <Card className="mx-auto w-full max-w-sm">
         <CardHeader>

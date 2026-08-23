@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { errorMessage } from '@/lib/errors'
@@ -93,23 +94,27 @@ export function EditUserDialog({
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="edit-user-name">Nome</Label>
+            <FieldLabel htmlFor="edit-user-name">Nome</FieldLabel>
             <Input id="edit-user-name" {...register('fullName')} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-user-phone">Telefone</Label>
+              <FieldLabel htmlFor="edit-user-phone">Telefone</FieldLabel>
               <Input id="edit-user-phone" {...register('phone')} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-user-creci">CRECI</Label>
+              <FieldLabel htmlFor="edit-user-creci" hint="Registro profissional, se este usuário for corretor.">
+                CRECI
+              </FieldLabel>
               <Input id="edit-user-creci" {...register('creci')} />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label>Papel</Label>
+            <FieldLabel hint="Define o nível de acesso padrão — tenant_admin e manager veem tudo do módulo liberado; corretor só o que é dele.">
+              Papel
+            </FieldLabel>
             <Select
               value={watch('role')}
               onValueChange={(value) => setValue('role', value as AssignableRole)}
@@ -139,7 +144,9 @@ export function EditUserDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label>Permissões</Label>
+            <FieldLabel hint="Módulos que este usuário pode acessar no menu — tenant_admin sempre vê tudo, independente do que estiver marcado aqui.">
+              Permissões
+            </FieldLabel>
             <PermissionCheckboxes selected={permissions} onChange={setPermissions} />
           </div>
 

@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { errorMessage } from '@/lib/errors'
 import {
   Dialog,
@@ -114,13 +114,15 @@ export function TenantFormDialog({
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tenant-name">Nome</Label>
+            <FieldLabel htmlFor="tenant-name">Nome</FieldLabel>
             <Input id="tenant-name" {...register('name')} aria-invalid={!!errors.name} />
             {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tenant-slug">Subdomínio</Label>
+            <FieldLabel htmlFor="tenant-slug" hint="Endereço público da imobiliária ({subdomínio}.placehub.app). Não pode ser alterado depois de criado.">
+              Subdomínio
+            </FieldLabel>
             <div className="flex items-center gap-1.5">
               <Input
                 id="tenant-slug"
@@ -134,13 +136,13 @@ export function TenantFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tenant-email">E-mail de contato</Label>
+            <FieldLabel htmlFor="tenant-email">E-mail de contato</FieldLabel>
             <Input id="tenant-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
             {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tenant-phone">Telefone</Label>
+            <FieldLabel htmlFor="tenant-phone">Telefone</FieldLabel>
             <Input id="tenant-phone" {...register('phone')} />
           </div>
 

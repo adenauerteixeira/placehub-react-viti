@@ -6,6 +6,7 @@ import App from './App.tsx'
 import { ThemeProvider } from '@/lib/theme-provider'
 import { AuthProvider } from '@/features/auth/auth-context'
 import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,10 +21,12 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-        <Toaster />
+        <TooltipProvider delayDuration={200}>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+          <Toaster />
+        </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
   </StrictMode>,

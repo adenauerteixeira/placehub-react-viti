@@ -55,7 +55,7 @@ function TenantApp({ slug }: { slug: string }) {
       <Route path="/corretores/:slug" element={<PublicBrokerDetailPage tenantSlug={slug} />} />
       <Route
         path="/login"
-        element={session ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+        element={session ? <Navigate to="/dashboard" replace /> : <LoginPage tenantSlug={slug} />}
       />
       <Route element={<TenantProtectedShell slug={slug} />}>
         <Route path="/dashboard" element={<TenantDashboardPage />} />

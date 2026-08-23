@@ -4,7 +4,7 @@ import { User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { AppFooter, AppShell, LogoBadge } from '@/components/app-shell'
+import { AppFooter, AppShell } from '@/components/app-shell'
 import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-state'
 import { useTheme } from '@/lib/theme-provider'
 import { whatsappUrl } from '@/lib/whatsapp'
@@ -14,8 +14,8 @@ import {
   usePublicAnnouncements,
 } from '@/features/announcements/api'
 import { brokerPhotoUrl, usePublicBroker } from '@/features/brokers/api'
-import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
+import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
 import { usePublicTenant } from '@/features/tenants/api'
 import { PublicAnnouncementCard } from './public-announcement-card'
@@ -49,15 +49,6 @@ export function PublicBrokerDetailPage({ tenantSlug }: { tenantSlug: string }) {
   }
 
   const dark = resolvedTheme === 'dark'
-  const logoPath = dark ? tenant.logo_dark_path : tenant.logo_light_path
-  const logoUrl = brandingAssetUrl(logoPath, tenant.updated_at)
-  const logoBackground = dark
-    ? tenant.logo_dark_background_transparent
-      ? 'transparent'
-      : tenant.logo_dark_background_color
-    : tenant.logo_light_background_transparent
-      ? 'transparent'
-      : tenant.logo_light_background_color
   const photoUrl = brokerPhotoUrl(broker.photo_path, broker.updated_at)
 
   return (
@@ -65,11 +56,7 @@ export function PublicBrokerDetailPage({ tenantSlug }: { tenantSlug: string }) {
       style={tenantThemeVars(tenant, resolvedTheme)}
       header={
         <>
-          {logoUrl ? (
-            <LogoBadge src={logoUrl} alt={tenant.name} background={logoBackground} />
-          ) : (
-            <span className="text-lg font-semibold">{tenant.name}</span>
-          )}
+          <TenantBrand tenant={tenant} dark={dark} />
           <div className="flex items-center gap-4">
             <Link to="/" className="text-muted-foreground hover:text-foreground text-sm">
               Anúncios

@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { errorMessage } from '@/lib/errors'
 import {
@@ -118,12 +118,12 @@ export function PartnerFormDialog({
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="grid grid-cols-[1fr_auto] gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="partner-name">Nome</Label>
+              <FieldLabel htmlFor="partner-name">Nome</FieldLabel>
               <Input id="partner-name" {...register('name')} aria-invalid={!!errors.name} />
               {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>Tipo</Label>
+              <FieldLabel hint="Pessoa física ou jurídica — muda a validação do documento (CPF/CNPJ).">Tipo</FieldLabel>
               <Select value={personType} onValueChange={(v) => setValue('person_type', v as PersonType)}>
                 <SelectTrigger className="w-24">
                   <SelectValue />
@@ -138,26 +138,30 @@ export function PartnerFormDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="partner-document">{personType === 'PF' ? 'CPF' : 'CNPJ'}</Label>
+              <FieldLabel htmlFor="partner-document" hint="Validado por dígito verificador — não é só checagem de tamanho.">
+                {personType === 'PF' ? 'CPF' : 'CNPJ'}
+              </FieldLabel>
               <Input id="partner-document" {...register('document')} aria-invalid={!!errors.document} />
               {errors.document && (
                 <p className="text-destructive text-sm">{errors.document.message}</p>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="partner-phone">Telefone</Label>
+              <FieldLabel htmlFor="partner-phone">Telefone</FieldLabel>
               <Input id="partner-phone" {...register('phone')} />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="partner-email">E-mail</Label>
+            <FieldLabel htmlFor="partner-email">E-mail</FieldLabel>
             <Input id="partner-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
             {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="partner-notes">Observações</Label>
+            <FieldLabel htmlFor="partner-notes" hint="Anotações internas — não aparece em nenhum lugar público.">
+              Observações
+            </FieldLabel>
             <Textarea id="partner-notes" rows={3} {...register('notes')} />
           </div>
 

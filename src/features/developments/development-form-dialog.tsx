@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { errorMessage } from '@/lib/errors'
 import {
   Dialog,
@@ -110,14 +110,16 @@ export function DevelopmentFormDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="dev-name">Nome</Label>
+            <FieldLabel htmlFor="dev-name" hint="Nome do empreendimento, como aparece pro visitante no anúncio.">
+              Nome
+            </FieldLabel>
             <Input id="dev-name" {...register('name')} aria-invalid={!!errors.name} />
             {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label>Tipo</Label>
+              <FieldLabel hint="Categoria do empreendimento — loteamento, condomínio ou lançamento.">Tipo</FieldLabel>
               <Select value={watch('type')} onValueChange={(v) => setValue('type', v as DevelopmentType)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -132,7 +134,7 @@ export function DevelopmentFormDialog({
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>Status</Label>
+              <FieldLabel hint="Só empreendimentos ativos ou concluídos aparecem pra vincular num anúncio.">Status</FieldLabel>
               <Select
                 value={watch('status')}
                 onValueChange={(v) => setValue('status', v as DevelopmentStatus)}
@@ -152,7 +154,9 @@ export function DevelopmentFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="dev-developer">Incorporadora</Label>
+            <FieldLabel htmlFor="dev-developer" hint="Empresa responsável pela construção/incorporação, se houver.">
+              Incorporadora
+            </FieldLabel>
             <Input id="dev-developer" {...register('developer')} />
           </div>
 
