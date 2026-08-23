@@ -35,6 +35,12 @@ formato AAAA-MM-DD.
   globalmente). Link no menu do tenant liberado por `hasPermission()`, não mais restrito a
   `tenant_admin` — primeiro módulo a fechar esse gap (permissões existiam desde a Fase 1 mas
   nunca eram checadas em lugar nenhum). Testado ponta a ponta.
+- Parceiros (`/partners`, permissão `partners`): CRUD completo (nome, PF/PJ, documento,
+  telefone, e-mail, observações, ativo/inativo). Validação real de CPF/CNPJ por dígito
+  verificador (`src/lib/cpf-cnpj.ts`, mesma checagem que o sistema anterior tinha no back-end,
+  agora também no client antes de gastar uma chamada) e `unique(tenant_id, document)` — o
+  sistema anterior não impedia parceiro duplicado. Testado ponta a ponta (CPF inválido barrado
+  no form, CPF válido salva e formata a máscara na listagem).
 - Identidade visual do tenant (`/branding`, restrita a `tenant_admin`), com paridade completa
   de opções em relação ao sistema anterior (pedido do usuário, revisando a versão inicial mais
   enxuta): 15 cores (8 tema claro + 7 tema escuro — primária/secundária/destaque, fundo,

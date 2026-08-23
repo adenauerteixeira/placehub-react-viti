@@ -53,10 +53,12 @@ auth/tenant/permissões funcionam).
 
 - [x] Empreendimentos (`developments`) — CRUD completo (`/developments`, permissão `developments`
       via `has_permission()`), slug escopado por tenant. Testado ponta a ponta.
+- [x] Parceiros (`partners`) — CRUD completo (`/partners`, permissão `partners`), PF/PJ com
+      validação real de CPF/CNPJ (dígitos verificadores, `src/lib/cpf-cnpj.ts`),
+      `unique(tenant_id, document)`. Testado ponta a ponta.
 - [ ] Proprietários (`owners`).
 - [ ] Anúncios/imóveis (`announcements` + `announcement_images`), com portal público de
       visualização (`{slug}.placehub.app/anuncios/...`, sem login).
-- [ ] Parceiros (`partners`).
 - [ ] Corretores (`brokers`), com página pública de perfil.
 
 ## Fase 3 — Funil comercial
