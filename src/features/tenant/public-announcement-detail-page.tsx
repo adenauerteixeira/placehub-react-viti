@@ -162,6 +162,14 @@ export function PublicAnnouncementDetailPage({ tenantSlug }: { tenantSlug: strin
             ) : (
               <p className="text-xl font-semibold">{formatPrice(announcement.price)}</p>
             )}
+            {(announcement.condominium_fee != null || announcement.iptu != null) && (
+              <div className="text-muted-foreground text-xs sm:text-right">
+                {announcement.condominium_fee != null && (
+                  <p>Condomínio: {formatPrice(announcement.condominium_fee)}</p>
+                )}
+                {announcement.iptu != null && <p>IPTU: {formatPrice(announcement.iptu)}</p>}
+              </div>
+            )}
             {announcement.reference_code && (
               <p className="text-muted-foreground text-xs">Ref. {announcement.reference_code}</p>
             )}

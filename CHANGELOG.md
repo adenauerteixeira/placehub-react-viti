@@ -5,6 +5,20 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Corrigido (4ª rodada de melhorias pós-Fase 2, 2026-08-24)
+
+- **Cor da borda (Identidade visual) só era aplicada visualmente dentro da própria tela de
+  Identidade visual, nunca nos outros módulos.** Causa: `Card`, `Dialog`, `Select`, `Popover` e
+  `DropdownMenu` (`src/components/ui/*.tsx`) usavam um contorno fixo (`ring-foreground/10`, ring
+  de 10% de opacidade sobre a cor do texto) em vez de reagir à cor de borda configurável do
+  tenant — como praticamente toda tela do sistema é composta de `Card`s, o efeito prático era
+  "a cor de borda não muda nada". Trocado pra `ring-border` (referencia a mesma variável `--border`
+  que tabelas, inputs e cabeçalho já usavam corretamente) nos 5 componentes.
+- Valor de condomínio (e IPTU, já que estava no mesmo caso) preenchido no cadastro do anúncio
+  nunca aparecia em lugar nenhum pro visitante — o campo salvava certinho, só não tinha exibição.
+  Adicionado na página pública de detalhe do anúncio, abaixo do preço, exibido só quando
+  preenchido ("quando houver").
+
 ### Adicionado (3ª rodada de melhorias pós-Fase 2, 2026-08-23)
 
 - Edição de usuário do tenant agora permite corrigir o **e-mail de login** (antes só dava pra

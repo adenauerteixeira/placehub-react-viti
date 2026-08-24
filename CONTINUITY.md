@@ -90,11 +90,20 @@
   - Definido o fluxo de branch por fase: `trunk` continua recebendo commits durante o
     desenvolvimento; ao fechar uma fase, cria-se uma branch de snapshot (`fase-N-nome-curto`) a
     partir do commit final, sem trocar a branch de trabalho. `fase-2-catalogo` já criada.
+- **4ª rodada de polimento pós-Fase 2 (2026-08-24), a pedido do usuário — 2 correções, testadas
+  ponta a ponta via automação de navegador:**
+  - Cor da borda (Identidade visual) não se refletia em nenhum outro módulo — `Card`, `Dialog`,
+    `Select`, `Popover` e `DropdownMenu` usavam um contorno fixo (`ring-foreground/10`) em vez de
+    reagir à variável `--border` do tenant. Como quase toda tela é composta de `Card`, a cor de
+    borda configurada parecia não ter efeito nenhum fora da própria tela de Identidade visual.
+    Corrigido nos 5 componentes base (`ring-border`).
+  - Valor de condomínio (e IPTU) do anúncio salvava certinho mas nunca aparecia pro visitante —
+    adicionado na página pública de detalhe, abaixo do preço, só quando preenchido.
 - `npm run build` e `npm run lint` limpos.
 
 ## Próximos passos imediatos
 
-**Fase 2 e as 3 rodadas de polimento pós-Fase 2 estão fechadas.** Próximo passo natural:
+**Fase 2 e as 4 rodadas de polimento pós-Fase 2 estão fechadas.** Próximo passo natural:
 **Fase 3 — Funil comercial** (leads + agenda de contato, negociações, propostas, reservas com
 expiração automática, vendas). Ver [ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar
 início da Fase 3.
