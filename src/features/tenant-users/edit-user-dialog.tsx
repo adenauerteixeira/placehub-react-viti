@@ -22,21 +22,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { BR_STATES } from '@/features/brokers/labels'
 import { capitalizeName } from '@/lib/capitalize'
-import { useUpdateTenantUser, useUpdateTenantUserEmail, type TenantUser } from './api'
+import {
+  useResetTenantUserPassword,
+  useUpdateTenantUser,
+  useUpdateTenantUserEmail,
+  type TenantUser,
+} from './api'
 import { PermissionCheckboxes } from './permission-checkboxes'
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type AssignableRole } from './permissions'
 
 const NONE = '__none__'
 
-const schema = z.object({
-  fullName: z.string(),
-  email: z.email('E-mail inválido.'),
-  phone: z.string(),
-  creci: z.string(),
-  creci_state: z.string(),
-  role: z.enum(ASSIGNABLE_ROLES),
-  isActive: z.boolean(),
-})
+const schema = z
+  .object({
+    fullName: z.string(),
+    email: z.email('E-mail inválido.'),
+    phone: z.string(),
+    creci: z.string(),
+    creci_state: z.string(),
+    role: z.enum(ASSIGNABLE_ROLES),
+    isActive: z.boolean(),
+    newPassword: z.string(),
+    confirmNewPassword: z.string(),
+  })
+  .refine((v) => v.newPassword === '' || v.newPassword.length >= 8, {
+    message: 'A senha precisa ter pelo menos 8 caracteres.',
+    path: ['newPassword'],
+  })
+  .refine((v) => v.newPassword === v.confirmNewPassword, {
+    message: 'As senhas não coincidem.',
+    path: ['confirmNewPassword'],
+  })
 
 type FormValues = z.infer<typeof schema>
 
@@ -53,6 +69,7 @@ export function EditUserDialog({
 }) {
   const update = useUpdateTenantUser(tenantId)
   const updateEmail = useUpdateTenantUserEmail(tenantId)
+  const resetPassword = useResetTenantUserPassword()
   const [permissions, setPermissions] = useState<string[]>([])
 
   const {
@@ -77,6 +94,8 @@ export function EditUserDialog({
       creci_state: user.creci_state ?? NONE,
       role: (user.role as AssignableRole) ?? 'broker',
       isActive: user.is_active,
+      newPassword: '',
+      confirmNewPassword: '',
     })
     setPermissions(user.profile_permissions.map((p) => p.permission_key))
   }, [open, user, reset])
@@ -85,6 +104,9 @@ export function EditUserDialog({
     try {
       if (values.email !== user.email) {
         await updateEmail.mutateAsync({ user_id: user.id, email: values.email })
+      }
+      if (values.newPassword !== '') {
+        await resetPassword.mutateAsync({ user_id: user.id, password: values.newPassword })
       }
       await update.mutateAsync({
         id: user.id,
@@ -107,7 +129,7 @@ export function EditUserDialog({
   }
 
   const nameField = register('fullName')
-  const submitting = update.isPending || updateEmail.isPending
+  const submitting = update.isPending || updateEmail.isPending || resetPassword.isPending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -140,6 +162,35 @@ export function EditUserDialog({
             </FieldLabel>
             <Input id="edit-user-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
             {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="edit-user-new-password" hint="Deixe em branco pra manter a senha atual. Preencha só se o usuário esqueceu a senha e precisa de uma nova.">
+                Nova senha
+              </FieldLabel>
+              <Input
+                id="edit-user-new-password"
+                type="password"
+                autoComplete="new-password"
+                {...register('newPassword')}
+                aria-invalid={!!errors.newPassword}
+              />
+              {errors.newPassword && <p className="text-destructive text-sm">{errors.newPassword.message}</p>}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="edit-user-confirm-new-password">Confirmar nova senha</FieldLabel>
+              <Input
+                id="edit-user-confirm-new-password"
+                type="password"
+                autoComplete="new-password"
+                {...register('confirmNewPassword')}
+                aria-invalid={!!errors.confirmNewPassword}
+              />
+              {errors.confirmNewPassword && (
+                <p className="text-destructive text-sm">{errors.confirmNewPassword.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

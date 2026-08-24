@@ -166,6 +166,28 @@ export function useUpdateTenantUserEmail(tenantId: string | null | undefined) {
   })
 }
 
+export function useResetTenantUserPassword() {
+  return useMutation({
+    mutationFn: async ({ user_id, password }: { user_id: string; password: string }) => {
+      const { data, error } = await supabase.functions.invoke('reset-tenant-user-password', {
+        body: { user_id, password },
+      })
+
+      if (error) {
+        let message = error.message
+        try {
+          const body = await error.context?.json()
+          if (body?.error) message = body.error
+        } catch {
+          // sem corpo JSON legível — mantém error.message
+        }
+        throw new Error(message)
+      }
+      if (data?.error) throw new Error(data.error)
+    },
+  })
+}
+
 export function useToggleTenantUserActive(tenantId: string | null | undefined) {
   const queryClient = useQueryClient()
 

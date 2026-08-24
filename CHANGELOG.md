@@ -5,6 +5,14 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (5ª rodada de melhorias pós-Fase 2, 2026-08-24)
+
+- Edição de usuário do tenant ganhou os campos **Nova senha**/**Confirmar nova senha**
+  (opcionais — em branco mantém a senha atual). Cobre o caso de um usuário esquecer a senha e o
+  `tenant_admin` precisar redefinir: nova Edge Function `reset-tenant-user-password`, mesmo
+  padrão de autorização de `update-tenant-user-email` (Admin API, só `tenant_admin`, só dentro
+  do próprio tenant).
+
 ### Corrigido (4ª rodada de melhorias pós-Fase 2, 2026-08-24)
 
 - **Cor da borda (Identidade visual) só era aplicada visualmente dentro da própria tela de

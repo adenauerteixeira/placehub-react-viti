@@ -11,8 +11,9 @@
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
   `20260823140000_add_creci_state_to_profiles.sql` aplicadas com sucesso via SQL Editor (CLI
-  ainda não autenticado neste ambiente — ver nota abaixo). Três Edge Functions no ar:
-  `create-tenant-admin`, `invite-tenant-user` e `update-tenant-user-email` (nova). Buckets:
+  ainda não autenticado neste ambiente — ver nota abaixo). Quatro Edge Functions no ar:
+  `create-tenant-admin`, `invite-tenant-user`, `update-tenant-user-email` e
+  `reset-tenant-user-password` (nova). Buckets:
   `tenant-branding` (logos/favicon do tenant) e `catalog-media` (fotos de corretor + galeria de
   anúncio, novo na Fase 2).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
@@ -99,11 +100,16 @@
     Corrigido nos 5 componentes base (`ring-border`).
   - Valor de condomínio (e IPTU) do anúncio salvava certinho mas nunca aparecia pro visitante —
     adicionado na página pública de detalhe, abaixo do preço, só quando preenchido.
+- **5ª rodada de polimento pós-Fase 2 (2026-08-24), a pedido do usuário — testada ponta a ponta
+  (login com a senha nova depois de redefinida):**
+  - Edição de usuário ganhou campos opcionais "Nova senha"/"Confirmar nova senha", pro
+    `tenant_admin` redefinir a senha de um usuário que esqueceu (nova Edge Function
+    `reset-tenant-user-password`, mesmo padrão de auth das outras duas).
 - `npm run build` e `npm run lint` limpos.
 
 ## Próximos passos imediatos
 
-**Fase 2 e as 4 rodadas de polimento pós-Fase 2 estão fechadas.** Próximo passo natural:
+**Fase 2 e as 5 rodadas de polimento pós-Fase 2 estão fechadas.** Próximo passo natural:
 **Fase 3 — Funil comercial** (leads + agenda de contato, negociações, propostas, reservas com
 expiração automática, vendas). Ver [ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar
 início da Fase 3.
