@@ -71,6 +71,8 @@ Deno.serve(async (req: Request) => {
     full_name?: string
     role?: string
     permissions?: string[]
+    creci?: string
+    creci_state?: string
   }
   try {
     body = await req.json()
@@ -78,7 +80,7 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'corpo da requisição inválido' }, 400)
   }
 
-  const { email, password, full_name, role, permissions } = body
+  const { email, password, full_name, role, permissions, creci, creci_state } = body
   if (!email || !password || !role) {
     return json({ error: 'email, password e role são obrigatórios' }, 400)
   }
@@ -101,6 +103,22 @@ Deno.serve(async (req: Request) => {
       ? 'Já existe um usuário com esse e-mail.'
       : createError.message
     return json({ error: message }, 400)
+  }
+
+  // handle_new_user() (trigger de criação do profile) só lê tenant_id/role/
+  // full_name do metadata — creci/creci_state são preenchidos aqui depois,
+  // já que a linha do profile só existe a partir deste ponto.
+  if (creci || creci_state) {
+    const { error: creciError } = await adminClient
+      .from('profiles')
+      .update({ creci: creci || null, creci_state: creci_state || null })
+      .eq('id', created.user.id)
+    if (creciError) {
+      return json(
+        { error: `Usuário criado, mas falha ao salvar CRECI: ${creciError.message}` },
+        207,
+      )
+    }
   }
 
   if (permissions && permissions.length > 0) {

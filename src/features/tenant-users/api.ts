@@ -8,6 +8,7 @@ export type TenantUser = {
   full_name: string | null
   phone: string | null
   creci: string | null
+  creci_state: string | null
   role: AssignableRole | 'super_admin'
   is_active: boolean
   created_at: string
@@ -15,7 +16,7 @@ export type TenantUser = {
 }
 
 const TENANT_USER_COLUMNS =
-  'id, email, full_name, phone, creci, role, is_active, created_at, profile_permissions(permission_key)'
+  'id, email, full_name, phone, creci, creci_state, role, is_active, created_at, profile_permissions(permission_key)'
 
 export function useTenantUsers(tenantId: string | null | undefined) {
   return useQuery({
@@ -40,6 +41,8 @@ export type InviteUserInput = {
   full_name: string
   role: AssignableRole
   permissions: string[]
+  creci: string
+  creci_state: string
 }
 
 export function useInviteTenantUser(tenantId: string | null | undefined) {
@@ -54,6 +57,8 @@ export function useInviteTenantUser(tenantId: string | null | undefined) {
           full_name: input.full_name || null,
           role: input.role,
           permissions: input.permissions,
+          creci: input.creci || null,
+          creci_state: input.creci_state || null,
         },
       })
 
@@ -82,6 +87,7 @@ export type UpdateTenantUserInput = {
   full_name: string
   phone: string
   creci: string
+  creci_state: string
   role: AssignableRole
   is_active: boolean
   permissions: string[]
@@ -99,6 +105,7 @@ export function useUpdateTenantUser(tenantId: string | null | undefined) {
           full_name: input.full_name || null,
           phone: input.phone || null,
           creci: input.creci || null,
+          creci_state: input.creci_state || null,
           role: input.role,
           is_active: input.is_active,
         })
@@ -123,6 +130,35 @@ export function useUpdateTenantUser(tenantId: string | null | undefined) {
           .in('permission_key', toRemove)
         if (error) throw error
       }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-users', tenantId] })
+    },
+  })
+}
+
+export function useUpdateTenantUserEmail(tenantId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ user_id, email }: { user_id: string; email: string }) => {
+      const { data, error } = await supabase.functions.invoke('update-tenant-user-email', {
+        body: { user_id, email },
+      })
+
+      if (error) {
+        let message = error.message
+        try {
+          const body = await error.context?.json()
+          if (body?.error) message = body.error
+        } catch {
+          // sem corpo JSON legível — mantém error.message
+        }
+        throw new Error(message)
+      }
+      if (data?.error) throw new Error(data.error)
+
+      return data.user as { id: string; email: string }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant-users', tenantId] })

@@ -17,10 +17,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { BR_STATES } from '@/features/brokers/labels'
 import { capitalizeName } from '@/lib/capitalize'
 import { useInviteTenantUser } from './api'
 import { PermissionCheckboxes } from './permission-checkboxes'
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type AssignableRole } from './permissions'
+
+const NONE = '__none__'
 
 const schema = z
   .object({
@@ -29,6 +32,8 @@ const schema = z
     password: z.string().min(8, 'A senha precisa ter pelo menos 8 caracteres.'),
     confirmPassword: z.string(),
     role: z.enum(ASSIGNABLE_ROLES),
+    creci: z.string(),
+    creci_state: z.string(),
   })
   .refine((v) => v.password === v.confirmPassword, {
     message: 'As senhas não coincidem.',
@@ -43,6 +48,8 @@ const emptyValues: FormValues = {
   password: '',
   confirmPassword: '',
   role: 'broker',
+  creci: '',
+  creci_state: NONE,
 }
 
 export function InviteUserDialog({
@@ -75,7 +82,12 @@ export function InviteUserDialog({
 
   async function onSubmit(values: FormValues) {
     try {
-      const created = await invite.mutateAsync({ ...values, full_name: values.fullName, permissions })
+      const created = await invite.mutateAsync({
+        ...values,
+        full_name: values.fullName,
+        creci_state: values.creci_state === NONE ? '' : values.creci_state,
+        permissions,
+      })
       toast.success(`Usuário criado: ${created.email}`)
       onOpenChange(false)
     } catch (error) {
@@ -142,6 +154,31 @@ export function InviteUserDialog({
               {errors.confirmPassword && (
                 <p className="text-destructive text-sm">{errors.confirmPassword.message}</p>
               )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[1fr_auto] gap-4">
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="invite-creci" hint="Registro profissional, se este usuário for corretor. Opcional.">
+                CRECI
+              </FieldLabel>
+              <Input id="invite-creci" {...register('creci')} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel>UF</FieldLabel>
+              <Select value={watch('creci_state')} onValueChange={(v) => setValue('creci_state', v)}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>—</SelectItem>
+                  {BR_STATES.map((uf) => (
+                    <SelectItem key={uf} value={uf}>
+                      {uf}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

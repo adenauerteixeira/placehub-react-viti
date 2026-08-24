@@ -20,15 +20,20 @@ import {
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { BR_STATES } from '@/features/brokers/labels'
 import { capitalizeName } from '@/lib/capitalize'
-import { useUpdateTenantUser, type TenantUser } from './api'
+import { useUpdateTenantUser, useUpdateTenantUserEmail, type TenantUser } from './api'
 import { PermissionCheckboxes } from './permission-checkboxes'
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type AssignableRole } from './permissions'
 
+const NONE = '__none__'
+
 const schema = z.object({
   fullName: z.string(),
+  email: z.email('E-mail inválido.'),
   phone: z.string(),
   creci: z.string(),
+  creci_state: z.string(),
   role: z.enum(ASSIGNABLE_ROLES),
   isActive: z.boolean(),
 })
@@ -47,9 +52,18 @@ export function EditUserDialog({
   user: TenantUser
 }) {
   const update = useUpdateTenantUser(tenantId)
+  const updateEmail = useUpdateTenantUserEmail(tenantId)
   const [permissions, setPermissions] = useState<string[]>([])
 
-  const { register, control, handleSubmit, reset, setValue, watch } = useForm<FormValues>({
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(schema),
   })
 
@@ -57,8 +71,10 @@ export function EditUserDialog({
     if (!open) return
     reset({
       fullName: user.full_name ?? '',
+      email: user.email,
       phone: user.phone ?? '',
       creci: user.creci ?? '',
+      creci_state: user.creci_state ?? NONE,
       role: (user.role as AssignableRole) ?? 'broker',
       isActive: user.is_active,
     })
@@ -67,11 +83,15 @@ export function EditUserDialog({
 
   async function onSubmit(values: FormValues) {
     try {
+      if (values.email !== user.email) {
+        await updateEmail.mutateAsync({ user_id: user.id, email: values.email })
+      }
       await update.mutateAsync({
         id: user.id,
         full_name: values.fullName,
         phone: values.phone,
         creci: values.creci,
+        creci_state: values.creci_state === NONE ? '' : values.creci_state,
         role: values.role,
         is_active: values.isActive,
         permissions,
@@ -87,6 +107,7 @@ export function EditUserDialog({
   }
 
   const nameField = register('fullName')
+  const submitting = update.isPending || updateEmail.isPending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -113,6 +134,14 @@ export function EditUserDialog({
             />
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel htmlFor="edit-user-email" hint="Usado pra fazer login — precisa ser único na plataforma inteira.">
+              E-mail
+            </FieldLabel>
+            <Input id="edit-user-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
+            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="edit-user-phone">Telefone</FieldLabel>
@@ -124,11 +153,32 @@ export function EditUserDialog({
                 )}
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="edit-user-creci" hint="Registro profissional, se este usuário for corretor.">
-                CRECI
-              </FieldLabel>
-              <Input id="edit-user-creci" {...register('creci')} />
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel htmlFor="edit-user-creci" hint="Registro profissional, se este usuário for corretor.">
+                  CRECI
+                </FieldLabel>
+                <Input id="edit-user-creci" {...register('creci')} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>UF</FieldLabel>
+                <Select
+                  value={watch('creci_state')}
+                  onValueChange={(v) => setValue('creci_state', v)}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>—</SelectItem>
+                    {BR_STATES.map((uf) => (
+                      <SelectItem key={uf} value={uf}>
+                        {uf}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -175,8 +225,8 @@ export function EditUserDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={update.isPending}>
-              {update.isPending && <Loader2 className="animate-spin" />}
+            <Button type="submit" disabled={submitting}>
+              {submitting && <Loader2 className="animate-spin" />}
               Salvar
             </Button>
           </DialogFooter>

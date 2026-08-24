@@ -5,6 +5,21 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (3ª rodada de melhorias pós-Fase 2, 2026-08-23)
+
+- Edição de usuário do tenant agora permite corrigir o **e-mail de login** (antes só dava pra
+  ver, não editar) via nova Edge Function `update-tenant-user-email` (usa `auth.admin.
+  updateUserById`, já que `auth.users.email` não pode ser alterado pelo client direto — a
+  policy é a mesma de `invite-tenant-user`: só `tenant_admin`, e só dentro do próprio tenant).
+- Convite de novo usuário do tenant agora aceita **CRECI e UF do CRECI** (antes só dava pra
+  informar depois, editando um corretor separadamente) — `profiles` ganhou a coluna
+  `creci_state` (migration `20260823140000_add_creci_state_to_profiles.sql`), que faltava (só
+  `brokers.creci_state` existia).
+- Definido o fluxo de branches por fase: durante o desenvolvimento de uma fase, os commits
+  continuam indo direto pra `trunk`; ao concluir a fase, cria-se uma branch de snapshot
+  (`fase-N-nome-curto`) a partir do commit final da trunk, sem trocar de branch de trabalho.
+  `fase-2-catalogo` já criada a partir do estado da Fase 2 completa.
+
 ### Adicionado (2ª rodada de melhorias pós-Fase 2, 2026-08-23)
 
 - **Mais padrões novos pra todo o sistema:**

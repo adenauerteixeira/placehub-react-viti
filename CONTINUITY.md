@@ -10,10 +10,11 @@
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260823120000_create_announcements.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
-  autenticado neste ambiente — ver nota abaixo). Duas Edge Functions no ar: `create-tenant-admin`
-  e `invite-tenant-user`. Buckets: `tenant-branding` (logos/favicon do tenant) e `catalog-media`
-  (fotos de corretor + galeria de anúncio, novo na Fase 2).
+  `20260823140000_add_creci_state_to_profiles.sql` aplicadas com sucesso via SQL Editor (CLI
+  ainda não autenticado neste ambiente — ver nota abaixo). Três Edge Functions no ar:
+  `create-tenant-admin`, `invite-tenant-user` e `update-tenant-user-email` (nova). Buckets:
+  `tenant-branding` (logos/favicon do tenant) e `catalog-media` (fotos de corretor + galeria de
+  anúncio, novo na Fase 2).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
   ficaram no banco (empreendimento/parceiro/proprietário/corretor/anúncio "QA Teste") — não são
@@ -75,14 +76,28 @@
     não abre mais edição sozinha (só o ícone) — evita clique acidental.
   - Badges de Destaque/Promoção visíveis pro visitante (card público) e na listagem interna.
   - Link "Voltar para anúncios" → só "Voltar".
+- **3ª rodada de polimento pós-Fase 2 (2026-08-23), a pedido do usuário — 2 pontos, testados
+  ponta a ponta contra o Supabase real via automação de navegador:**
+  - Edição de usuário do tenant agora permite corrigir o e-mail de login (Edge Function nova
+    `update-tenant-user-email`, mesmo padrão de auth de `invite-tenant-user`: só `tenant_admin`,
+    só dentro do próprio tenant, usa `auth.admin.updateUserById` porque `auth.users.email` não
+    é editável pelo client). Convite de usuário passou a aceitar CRECI/UF também (faltava —
+    `profiles.creci_state` não existia, só `brokers.creci_state`; migration nova cobriu isso).
+  - Investigado (e descartado) um status "Inativo" inesperado observado num teste anterior:
+    dois testes isolados (só telefone, só e-mail) confirmaram que `EditUserDialog` preserva
+    `is_active` corretamente ao salvar — foi artefato de um script de QA anterior clicando no
+    elemento errado, não um bug real.
+  - Definido o fluxo de branch por fase: `trunk` continua recebendo commits durante o
+    desenvolvimento; ao fechar uma fase, cria-se uma branch de snapshot (`fase-N-nome-curto`) a
+    partir do commit final, sem trocar a branch de trabalho. `fase-2-catalogo` já criada.
 - `npm run build` e `npm run lint` limpos.
 
 ## Próximos passos imediatos
 
-**Fase 2 e a rodada de polimento pós-Fase 2 estão fechadas.** Próximo passo natural: **Fase 3 —
-Funil comercial** (leads + agenda de contato, negociações, propostas, reservas com expiração
-automática, vendas). Ver [ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar início da
-Fase 3.
+**Fase 2 e as 3 rodadas de polimento pós-Fase 2 estão fechadas.** Próximo passo natural:
+**Fase 3 — Funil comercial** (leads + agenda de contato, negociações, propostas, reservas com
+expiração automática, vendas). Ver [ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar
+início da Fase 3.
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
 (ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar).
