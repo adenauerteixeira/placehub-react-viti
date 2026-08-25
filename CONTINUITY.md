@@ -5,17 +5,20 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-08-23
+## Estado atual — 2026-08-25
 
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260823140000_add_creci_state_to_profiles.sql` aplicadas com sucesso via SQL Editor (CLI
-  ainda não autenticado neste ambiente — ver nota abaixo). Quatro Edge Functions no ar:
+  `20260824100000_create_commercial_funnel.sql` aplicadas com sucesso via SQL Editor (CLI ainda
+  não autenticado neste ambiente — ver nota abaixo). Quatro Edge Functions no ar:
   `create-tenant-admin`, `invite-tenant-user`, `update-tenant-user-email` e
-  `reset-tenant-user-password` (nova). Buckets:
-  `tenant-branding` (logos/favicon do tenant) e `catalog-media` (fotos de corretor + galeria de
-  anúncio, novo na Fase 2).
+  `reset-tenant-user-password`. Buckets: `tenant-branding`, `catalog-media` (Fase 2); bucket
+  `sale-documents` (Fase 3, comprovantes de pagamento) ainda não criado — vem junto com o passo
+  de Vendas.
+- **Fase 3 — Funil comercial: EM ANDAMENTO.** Fundação do banco (8 tabelas, triggers, RLS) e
+  Leads + Agenda prontos e testados. Ver bloco "Fase 3" logo abaixo e
+  [Próximos passos imediatos](#próximos-passos-imediatos).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
   ficaram no banco (empreendimento/parceiro/proprietário/corretor/anúncio "QA Teste") — não são
@@ -106,16 +109,42 @@
     `tenant_admin` redefinir a senha de um usuário que esqueceu (nova Edge Function
     `reset-tenant-user-password`, mesmo padrão de auth das outras duas).
 - `npm run build` e `npm run lint` limpos.
+- **Fase 3 — Funil comercial (2026-08-24/25), em andamento, plano aprovado em
+  `C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` (pesquisa do sistema
+  Laravel antigo + decisões de arquitetura documentadas lá — vale reler antes de continuar):**
+  - **Fundação do banco** pronta (migration única): `leads`, `lead_follow_ups`, `negotiations`,
+    `proposals`, `sales`, `sale_entry_installments`, `sale_payment_assets`, `reservations` — com
+    triggers de sincronismo (lead↔negociação, proposta↔negociação, follow-up concluído avança o
+    lead), trava financeira de venda concluída, RLS com corretor restrito aos próprios registros
+    (leads: também vê os não atribuídos, fila de autoatribuição). Reservas/vendas ainda sem
+    função SQL de escrita (`reserve_announcement`/`create_sale_from_proposal`/etc.) — vêm nos
+    passos 5/6 do plano.
+  - **Leads + Agenda pronto e testado ponta a ponta** (`/leads`, `/leads/:id`): CRUD de leads,
+    follow-ups (agendar/concluir com resultado/reagendar), aba "Agenda" (worklist do tenant,
+    filtros em aberto/atrasados/concluídos/todos).
+  - **Bug real encontrado e corrigido durante o teste**: `LeadDetailPage` chamava `useForm` sem
+    `defaultValues` — no primeiro render (antes do `useEffect` rodar `reset()`), o campo `phone`
+    ficava `undefined` e o `PhoneInput` quebrava (`Cannot read properties of undefined (reading
+    'replace')`), derrubando a árvore React inteira (página em branco, sem erro visível no
+    console do navegador — só aparecia no log do próprio servidor Vite). Lição: **todo `useForm`
+    que renderiza um `PhoneInput`/`DocumentInput`/`CurrencyInput` via `Controller` precisa de
+    `defaultValues` síncronos** — nunca confiar só no `reset()` do `useEffect`, que roda depois
+    do primeiro commit.
+  - Próximo passo dentro da Fase 3: **Negociações** (`/negotiations`, `/negotiations/:id` como
+    hub) — passo 3 do plano.
 
 ## Próximos passos imediatos
 
-**Fase 2 e as 5 rodadas de polimento pós-Fase 2 estão fechadas.** Próximo passo natural:
-**Fase 3 — Funil comercial** (leads + agenda de contato, negociações, propostas, reservas com
-expiração automática, vendas). Ver [ROADMAP.md](./ROADMAP.md). Aguardando o usuário confirmar
-início da Fase 3.
+**Fase 3 em andamento.** Leads + Agenda prontos; continuar pelo passo 3 do plano
+(Negociações — CRUD + página de detalhe/hub, sem Propostas ainda). Ver o plano completo em
+`C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` antes de prosseguir —
+tem o desenho de schema das próximas etapas (propostas, reservas, vendas) e as decisões de
+arquitetura já fechadas com o usuário (ex.: onde Propostas aparece na navegação, expiração
+automática de proposta vencida).
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
-(ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar).
+(ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar; inclui agora também
+leads de teste "João Qa da Silva" criados durante o teste ponta a ponta da Fase 3).
 
 ## Notas técnicas para retomar
 
@@ -138,6 +167,14 @@ Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando
   grep :5173` pra achar o PID real e `taskkill //F //PID <pid>`. Já causou uma sessão inteira de
   debug perseguindo um "bug" que na verdade era um processo zumbi servindo a versão antiga do
   código.
+- **Uma página React em branco (0 elementos em `#root`, 0 erros no console do navegador
+  capturados pelo `browser-automation`) pode ser um crash real de render** — o overlay de erro do
+  Vite roda dentro de shadow DOM (`document.body.innerText` não alcança) e o console-listener do
+  Playwright às vezes não captura o "Unhandled error" que o Vite reporta via WebSocket pro
+  próprio terminal. **Quando a página some sem pista nenhuma no navegador, olhe o log do processo
+  do `npm run dev`** (rode-o redirecionando pra um arquivo, ex. `npm run dev >
+  /tmp/vite-dev.log 2>&1 &`, e dê `tail` nesse arquivo) — foi assim que se achou o bug real desta
+  sessão (`PhoneInput` recebendo `value=undefined` porque um `useForm` esqueceu `defaultValues`).
 - Credenciais de teste (ambiente de desenvolvimento, não são segredo de produção):
   `root@gmail.com` (super_admin) e `tenant.adm@gmail.com` (tenant_admin do Casah) — senhas não
   registradas aqui de propósito; pedir ao usuário se precisar re-testar.

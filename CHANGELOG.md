@@ -5,6 +5,21 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Fase 3 — Funil comercial, em andamento, 2026-08-24/25)
+
+- **Fundação do banco** (`20260824100000_create_commercial_funnel.sql`): 8 tabelas (`leads`,
+  `lead_follow_ups`, `negotiations`, `proposals`, `sales`, `sale_entry_installments`,
+  `sale_payment_assets`, `reservations`), enums de status, triggers de sincronismo entre elas
+  (lead↔negociação, proposta↔negociação, follow-up concluído avança o lead), trava financeira de
+  venda concluída, RLS com corretor restrito aos próprios registros. Pesquisado o sistema Laravel
+  antigo antes de desenhar — domínio já bem pensado lá, portado fielmente com duas garantias que
+  passam a viver no banco (antes só em código de aplicação): reserva ativa única por anúncio
+  (índice único parcial) e proposta aceita não pode ser excluída (trigger).
+- **Leads + Agenda** (`/leads`, `/leads/:id`): CRUD de leads, follow-ups de contato
+  (agendar/concluir com resultado/reagendar), aba "Agenda" com worklist do tenant inteiro
+  (em aberto/atrasados/concluídos/todos) — replica o `CommercialAgendaController` do sistema
+  antigo. Testado ponta a ponta.
+
 ### Adicionado (5ª rodada de melhorias pós-Fase 2, 2026-08-24)
 
 - Edição de usuário do tenant ganhou os campos **Nova senha**/**Confirmar nova senha**

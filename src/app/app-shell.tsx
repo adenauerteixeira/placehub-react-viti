@@ -8,6 +8,8 @@ import { AnnouncementFormPage } from '@/features/announcements/announcement-form
 import { AnnouncementsListPage } from '@/features/announcements/announcements-list-page'
 import { BrokersListPage } from '@/features/brokers/brokers-list-page'
 import { DevelopmentsListPage } from '@/features/developments/developments-list-page'
+import { LeadDetailPage } from '@/features/leads/lead-detail-page'
+import { LeadsListPage } from '@/features/leads/leads-list-page'
 import { OwnersListPage } from '@/features/owners/owners-list-page'
 import { PartnersListPage } from '@/features/partners/partners-list-page'
 import { PlatformLayout } from '@/features/platform/platform-layout'
@@ -120,6 +122,22 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequirePermission module="announcements">
               <AnnouncementFormPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/leads"
+          element={
+            <RequirePermission module="leads">
+              <LeadsListPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/leads/:id"
+          element={
+            <RequirePermission module="leads">
+              <LeadDetailPage />
             </RequirePermission>
           }
         />

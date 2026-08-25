@@ -96,7 +96,11 @@ Proprietários, Anúncios) e o portal público estão no ar.
 
 ## Fase 3 — Funil comercial
 
-- [ ] Leads + agenda de contato (`leads`, `lead_follow_ups`).
+- [x] Leads + agenda de contato (`leads`, `lead_follow_ups`) — CRUD (`/leads`), detalhe do lead
+      (`/leads/:id`) com follow-ups (agendar/concluir/reagendar), aba "Agenda" (worklist do
+      tenant inteiro, filtros em aberto/atrasados/concluídos/todos). Status do lead sincroniza
+      automaticamente (trigger no banco): concluir um follow-up avança `new` → `contacted`.
+      Testado ponta a ponta.
 - [ ] Negociações (`negotiations`).
 - [ ] Propostas (`proposals`).
 - [ ] Reservas de imóveis (`reservations`), com expiração automática (Edge Function +
