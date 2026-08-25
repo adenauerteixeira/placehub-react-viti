@@ -10,14 +10,14 @@
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260824100000_create_commercial_funnel.sql` aplicadas com sucesso via SQL Editor (CLI ainda
-  não autenticado neste ambiente — ver nota abaixo). Quatro Edge Functions no ar:
+  `20260825090000_fix_funnel_status_sync_casts.sql` aplicadas com sucesso via SQL Editor (CLI
+  ainda não autenticado neste ambiente — ver nota abaixo). Quatro Edge Functions no ar:
   `create-tenant-admin`, `invite-tenant-user`, `update-tenant-user-email` e
   `reset-tenant-user-password`. Buckets: `tenant-branding`, `catalog-media` (Fase 2); bucket
   `sale-documents` (Fase 3, comprovantes de pagamento) ainda não criado — vem junto com o passo
   de Vendas.
-- **Fase 3 — Funil comercial: EM ANDAMENTO.** Fundação do banco (8 tabelas, triggers, RLS) e
-  Leads + Agenda prontos e testados. Ver bloco "Fase 3" logo abaixo e
+- **Fase 3 — Funil comercial: EM ANDAMENTO.** Fundação do banco (8 tabelas, triggers, RLS), Leads
+  + Agenda e Negociações prontos e testados. Ver bloco "Fase 3" logo abaixo e
   [Próximos passos imediatos](#próximos-passos-imediatos).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
@@ -130,17 +130,31 @@
     que renderiza um `PhoneInput`/`DocumentInput`/`CurrencyInput` via `Controller` precisa de
     `defaultValues` síncronos** — nunca confiar só no `reset()` do `useEffect`, que roda depois
     do primeiro commit.
-  - Próximo passo dentro da Fase 3: **Negociações** (`/negotiations`, `/negotiations/:id` como
-    hub) — passo 3 do plano.
+  - **Negociações pronto e testado ponta a ponta** (`/negotiations`, `/negotiations/:id` como
+    hub): CRUD, troca de status, sincronismo automático pro lead (trigger). Ainda sem Propostas
+    dentro do hub (próximo passo).
+  - **Bug real encontrado e corrigido durante o teste**: um `CASE` com múltiplos ramos de string
+    literal resolve pro tipo `text` (não `unknown`, que um literal único casta implicitamente) —
+    Postgres rejeitava `set status = (case ...)` numa coluna enum
+    (`column "status" is of type lead_status but expression is of type text`). Achado nas duas
+    funções de sincronismo (lead↔negociação, negociação↔proposta); corrigido com cast explícito
+    `::public.lead_status`/`::public.negotiation_status`
+    (`20260825090000_fix_funnel_status_sync_casts.sql`). **Lição pro resto da Fase 3**: qualquer
+    `UPDATE ... SET status = (CASE ...)` em coluna enum precisa desse cast explícito — vale
+    revisar isso já ao escrever as próximas funções (reservas/vendas), não só descobrir testando.
+  - Próximo passo dentro da Fase 3: **Propostas** dentro do hub de Negociação (sem rota própria,
+    decisão já tomada com o usuário) — passo 4 do plano.
 
 ## Próximos passos imediatos
 
-**Fase 3 em andamento.** Leads + Agenda prontos; continuar pelo passo 3 do plano
-(Negociações — CRUD + página de detalhe/hub, sem Propostas ainda). Ver o plano completo em
-`C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` antes de prosseguir —
-tem o desenho de schema das próximas etapas (propostas, reservas, vendas) e as decisões de
-arquitetura já fechadas com o usuário (ex.: onde Propostas aparece na navegação, expiração
-automática de proposta vencida).
+**Fase 3 em andamento.** Leads + Agenda e Negociações prontos; continuar pelo passo 4 do plano
+(Propostas — CRUD inline dentro do hub de `/negotiations/:id`, sem rota/página própria). Ver o
+plano completo em `C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` antes de
+prosseguir — tem o desenho de schema das próximas etapas (reservas, vendas) e as decisões de
+arquitetura já fechadas com o usuário (ex.: expiração automática de proposta vencida). **Atenção
+ao escrever as funções de reservas/vendas**: aplicar de cara o cast explícito
+`::public.<enum>` em qualquer `UPDATE ... SET status = (CASE ...)` — bug já encontrado duas vezes
+nesta fase (ver acima).
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
 (ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar; inclui agora também

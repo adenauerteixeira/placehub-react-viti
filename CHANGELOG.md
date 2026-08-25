@@ -19,6 +19,13 @@ formato AAAA-MM-DD.
   (agendar/concluir com resultado/reagendar), aba "Agenda" com worklist do tenant inteiro
   (em aberto/atrasados/concluídos/todos) — replica o `CommercialAgendaController` do sistema
   antigo. Testado ponta a ponta.
+- **Negociações** (`/negotiations`, `/negotiations/:id` como hub): CRUD, troca de status com
+  sincronismo automático pro lead (trigger no banco). Corrigido um bug real de tipo encontrado no
+  teste: `CASE` com múltiplos ramos de string resolve pro tipo `text`, não pro `unknown` que um
+  literal único casta implicitamente — Postgres rejeitava a atribuição a uma coluna enum (`column
+  "status" is of type lead_status but expression is of type text`). Corrigido nas duas funções de
+  sincronismo com cast explícito (`20260825090000_fix_funnel_status_sync_casts.sql`). Testado
+  ponta a ponta.
 
 ### Adicionado (5ª rodada de melhorias pós-Fase 2, 2026-08-24)
 

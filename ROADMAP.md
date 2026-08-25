@@ -101,7 +101,10 @@ Proprietários, Anúncios) e o portal público estão no ar.
       tenant inteiro, filtros em aberto/atrasados/concluídos/todos). Status do lead sincroniza
       automaticamente (trigger no banco): concluir um follow-up avança `new` → `contacted`.
       Testado ponta a ponta.
-- [ ] Negociações (`negotiations`).
+- [x] Negociações (`negotiations`) — CRUD (`/negotiations`), página de detalhe/hub
+      (`/negotiations/:id`) com troca de status, anúncio/corretor/próximo contato editáveis.
+      Status sincroniza com o lead automaticamente (trigger). Ainda sem Propostas dentro do hub
+      (próximo passo). Testado ponta a ponta.
 - [ ] Propostas (`proposals`).
 - [ ] Reservas de imóveis (`reservations`), com expiração automática (Edge Function +
       `pg_cron`) e conversão para venda num fluxo único e transacional.

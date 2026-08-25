@@ -10,6 +10,8 @@ import { BrokersListPage } from '@/features/brokers/brokers-list-page'
 import { DevelopmentsListPage } from '@/features/developments/developments-list-page'
 import { LeadDetailPage } from '@/features/leads/lead-detail-page'
 import { LeadsListPage } from '@/features/leads/leads-list-page'
+import { NegotiationDetailPage } from '@/features/negotiations/negotiation-detail-page'
+import { NegotiationsListPage } from '@/features/negotiations/negotiations-list-page'
 import { OwnersListPage } from '@/features/owners/owners-list-page'
 import { PartnersListPage } from '@/features/partners/partners-list-page'
 import { PlatformLayout } from '@/features/platform/platform-layout'
@@ -138,6 +140,22 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequirePermission module="leads">
               <LeadDetailPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/negotiations"
+          element={
+            <RequirePermission module="negotiations">
+              <NegotiationsListPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/negotiations/:id"
+          element={
+            <RequirePermission module="negotiations">
+              <NegotiationDetailPage />
             </RequirePermission>
           }
         />
