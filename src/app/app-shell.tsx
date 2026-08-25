@@ -20,6 +20,7 @@ import { SaleDetailPage } from '@/features/sales/sale-detail-page'
 import { SalesListPage } from '@/features/sales/sales-list-page'
 import { PartnersListPage } from '@/features/partners/partners-list-page'
 import { PlatformLayout } from '@/features/platform/platform-layout'
+import { ReportsPage } from '@/features/reports/reports-page'
 import { TenantsListPage } from '@/features/platform/tenants-list-page'
 import { PublicAnnouncementDetailPage } from '@/features/tenant/public-announcement-detail-page'
 import { PublicBrokerDetailPage } from '@/features/tenant/public-broker-detail-page'
@@ -201,6 +202,14 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequirePermission module="commissions">
               <CommissionDetailPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <RequirePermission module="reports">
+              <ReportsPage />
             </RequirePermission>
           }
         />

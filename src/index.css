@@ -144,3 +144,25 @@
   background-size: 10px 10px;
   background-position: 0 0, 0 5px, 5px -5px, -5px 0;
 }
+
+/* Impressão de relatórios (window.print()): o AppShell usa header/footer
+   fixos e um <main> com altura/rolagem travadas pra caber na viewport —
+   nada disso faz sentido em papel, então libera o layout normal do fluxo
+   e some com o cabeçalho/rodapé da aplicação. Elementos específicos da
+   tela (filtros, botões) usam a variante `print:hidden` do Tailwind. */
+@media print {
+  header,
+  footer {
+    display: none !important;
+  }
+  main {
+    position: static !important;
+    inset: auto !important;
+    overflow: visible !important;
+  }
+  body,
+  html {
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
