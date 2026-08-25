@@ -5,6 +5,47 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Fase 4 — Comissões, relatórios e dashboard, completa, 2026-08-27/25)
+
+- **Comissões e repasses** (`commissions`, `commission_installments`,
+  `20260827090000_commissions_and_audit.sql`): comissão nasce junto com a venda — a função
+  `create_sale_from_proposal` (Fase 3) ganhou o parâmetro `p_commission_percentage` (default 5%),
+  calcula o corte do corretor via `min(brokers.commission_percentage, percentual total)`, distribui
+  bruto/corretor/imobiliária pro-rata nas parcelas de entrada (último item absorve o resto do
+  arredondamento). Ciclo de repasse com confirmação do corretor, replicando o sistema antigo:
+  `register_broker_commission_payment` (só `tenant_admin`, exige que a entrada já tenha sido
+  recebida do cliente) → `confirm_broker_commission_receipt` (só o próprio corretor, via
+  `current_broker_id()`). `/commissions`, `/commissions/:id` com ação contextual por papel e
+  upload de comprovante (bucket `sale-documents` reaproveitado, policies ampliadas pra aceitar
+  `commissions` além de `sales`). Corrigidos dois problemas reais durante a aplicação da migration:
+  cache do PostgREST desatualizado (`notify pgrst, 'reload schema'`) e o mesmo bug de alias
+  ambíguo em `plpgsql` já visto na Fase 3 (`v_item` colidindo com a variável declarada), desta vez
+  na soma dos bens dados como parte de pagamento. Testado ponta a ponta com valores conferidos em
+  cada etapa: venda de R$1.000.000, comissão total 10%, corte do corretor 5% (R$50.000 pra cada
+  lado), RLS confirmada (corretor só vê a própria comissão).
+- **Auditoria** (`audit_logs`): `write_audit_log()` (`security definer`, escrita só via função)
+  chamado por todas as funções de venda/comissão (`sale_created`, `sale_cancelled`,
+  `entry_received`, `broker_payment_registered`, `broker_receipt_confirmed`). Seção "Atividades"
+  em `/sales/:id`, mais recente primeiro. Testado ponta a ponta.
+- **Dashboard real** (`/dashboard`, `src/features/tenant/dashboard-api.ts`): substitui o
+  placeholder da Fase 1. Filtro de período (mês atual/anterior/ano atual/personalizado, mesmo
+  `resolvePeriod()` do sistema antigo replicado em JS), cards administrativos por permissão,
+  métricas comerciais (leads, negociações ativas, propostas, vendas, comissão) — sem filtro manual
+  de corretor no client: a RLS já restringe `leads`/`negotiations`/`proposals`/`sales`/`commissions`
+  aos próprios registros do corretor, então a mesma query naturalmente retorna dados diferentes por
+  papel. Próximos contatos (atrasado/hoje/em breve), atividades recentes, ranking de corretores por
+  valor vendido (Recharts, gráfico de barras simples). Testado ponta a ponta como `tenant_admin`.
+- **Relatórios** (`/reports`, `src/features/reports/`): porta o `ReportController` do sistema
+  antigo — 5 tipos (Vendas, Comissões, Recebimentos, Corretores, Leads), cada um com filtro de
+  período/corretor/status e cards de resumo (mesma lógica de `summary()` do antigo). Impressão via
+  `window.print()` + CSS `@media print` em vez de rota/view separada (simplificação deliberada
+  numa SPA — mesmo resultado visual, sem duplicar tela): esconde nav/filtros/botões do `AppShell`
+  fixo e libera o `<main>` pro fluxo normal de página impressa. Testado ponta a ponta nos 5 tipos,
+  dados conferidos contra os mesmos registros de QA usados no dashboard e nas comissões.
+
+**Fase 4 completa** — comissões (com confirmação do corretor), auditoria, dashboard real e
+relatórios com impressão funcionando ponta a ponta contra o Supabase real.
+
 ### Adicionado (Fase 3 — Funil comercial, completa, 2026-08-24/26)
 
 - **Fundação do banco** (`20260824100000_create_commercial_funnel.sql`): 8 tabelas (`leads`,

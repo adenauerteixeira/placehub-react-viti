@@ -100,6 +100,18 @@ leitura pública), `property-photos` (leitura pública), `sale-documents` (compr
   `cancel_reservation`) também são funções SQL `security definer` — únicas portas de escrita da
   tabela `reservations` (sem policy de INSERT/UPDATE via RLS), garantindo atomicidade entre a
   reserva e o `announcements.status` (published ⇄ reserved) na mesma transação.
+- Comissão nasce junto com a venda, não num fluxo separado (Fase 4): `create_sale_from_proposal`
+  ganhou `p_commission_percentage` e calcula/insere `commissions` + `commission_installments`
+  (pro-rata nas parcelas de entrada) na mesma transação da venda. Repasse ao corretor precisa de
+  duas confirmações independentes, ambas via função `security definer` (nunca UPDATE direto):
+  `register_broker_commission_payment` (só `tenant_admin`, exige que a parcela já tenha sido
+  recebida do cliente) e `confirm_broker_commission_receipt` (só o próprio corretor). Toda
+  escrita relevante de venda/comissão passa por `write_audit_log()`, gravando em `audit_logs`
+  (tabela imutável, sem `UPDATE`/`updated_at`).
+- Dashboard e Relatórios (Fase 4) não filtram corretor manualmente no client — a RLS já restringe
+  `leads`/`negotiations`/`proposals`/`sales`/`commissions`/`sale_entry_installments` aos próprios
+  registros de um `broker` (ver policies da Fase 3), então a mesma query devolve dados diferentes
+  por papel sem `if (isBroker) query.eq('broker_id', ...)` espalhado pela UI.
 
 ## Tema claro/escuro e identidade visual do tenant
 

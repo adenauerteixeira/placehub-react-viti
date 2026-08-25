@@ -131,11 +131,30 @@ corrigidos durante os testes (cast de enum em `CASE`, alias de coluna ambíguo e
 
 ## Fase 4 — Comissões, relatórios e dashboard
 
-- [ ] Comissões e repasses (`commissions`, `commission_installments`), com confirmação do
-      corretor.
-- [ ] Auditoria (`audit_logs`) visível na tela de detalhes da venda.
-- [ ] Dashboard com filtro de período e indicadores (leads, conversões, vendas, comissões).
-- [ ] Relatórios (vendas, comissões, recebimentos, corretores, leads) com exportação/impressão.
+- [x] Comissões e repasses (`commissions`, `commission_installments`) — comissão nasce junto com
+      a venda (`create_sale_from_proposal` estendida com `p_commission_percentage`, corte do
+      corretor via `min(brokers.commission_percentage, percentual total)`), distribuída pro-rata
+      nas parcelas de entrada. Ciclo de repasse com confirmação do corretor:
+      `register_broker_commission_payment` (só `tenant_admin`, exige entrada já recebida do
+      cliente) → `confirm_broker_commission_receipt` (só o próprio corretor). `/commissions`,
+      `/commissions/:id`, upload de comprovante (bucket `sale-documents` reaproveitado). Testado
+      ponta a ponta com valores conferidos em cada etapa (venda de R$1.000.000, comissão 10%,
+      corte do corretor 5%).
+- [x] Auditoria (`audit_logs`) visível na tela de detalhes da venda — `write_audit_log()`
+      chamado por `create_sale_from_proposal`/`cancel_sale`/`receive_installment`/repasse/
+      confirmação, seção "Atividades" em `/sales/:id`. Testado ponta a ponta.
+- [x] Dashboard com filtro de período (mês atual/anterior/ano/personalizado) e indicadores
+      (leads, negociações ativas, propostas, vendas, comissão — corretor vê só os próprios
+      números via RLS, sem filtro manual no client), próximos contatos, atividades recentes,
+      ranking de corretores (Recharts). Substitui o placeholder da Fase 1. Testado ponta a ponta
+      como `tenant_admin`.
+- [x] Relatórios (vendas, comissões, recebimentos, corretores, leads) com filtro de
+      período/corretor/status, cards de resumo, impressão via `window.print()` + CSS
+      `@media print` (sem rota separada). Testado ponta a ponta nos 5 tipos, dados conferidos
+      contra os mesmos registros de QA usados no dashboard e nas comissões.
+
+Fase 4 completa — comissões (com confirmação do corretor), auditoria, dashboard real e
+relatórios com impressão funcionando ponta a ponta contra o Supabase real.
 
 ## Fase 5 — E-mail e notificações
 

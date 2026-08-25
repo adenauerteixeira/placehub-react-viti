@@ -5,20 +5,25 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-08-26
+## Estado atual — 2026-08-25
 
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260826090000_sales_functions.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
+  `20260827090000_commissions_and_audit.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
   autenticado neste ambiente — ver nota abaixo). Extensão **pg_cron habilitada** (passo manual do
   usuário no painel, Database → Extensions) — job `funnel-expirations` rodando a cada minuto.
   Quatro Edge Functions no ar: `create-tenant-admin`, `invite-tenant-user`,
   `update-tenant-user-email` e `reset-tenant-user-password`. Buckets: `tenant-branding`,
-  `catalog-media` (Fase 2), `sale-documents` (Fase 3, comprovantes de pagamento, privado).
+  `catalog-media` (Fase 2), `sale-documents` (Fase 3/4, comprovantes de pagamento e de repasse de
+  comissão, privado).
 - **Fase 3 — Funil comercial: COMPLETA.** Leads + Agenda, Negociações, Propostas, Reservas e
-  Vendas — todas testadas ponta a ponta contra o Supabase real. Ver bloco "Fase 3" logo abaixo e
-  [Próximos passos imediatos](#próximos-passos-imediatos).
+  Vendas — todas testadas ponta a ponta contra o Supabase real. Branch de snapshot
+  `fase-3-funil-comercial` criada. Ver bloco "Fase 3" logo abaixo.
+- **Fase 4 — Comissões, relatórios e dashboard: COMPLETA.** Comissões com confirmação do
+  corretor, auditoria na tela de venda, dashboard real (`/dashboard`) e relatórios (`/reports`,
+  5 tipos, impressão via `window.print()`) — todos testados ponta a ponta contra o Supabase real.
+  Ver bloco "Fase 4" logo abaixo e [Próximos passos imediatos](#próximos-passos-imediatos).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
   ficaram no banco (empreendimento/parceiro/proprietário/corretor/anúncio "QA Teste") — não são
@@ -178,21 +183,65 @@
     (`funnel-expirations`, a cada minuto) — revisado no código, mas nunca observado expirando uma
     reserva/proposta de verdade (exigiria inserir um registro com data já vencida via SQL Editor).
 
+- **Fase 4 — Comissões, relatórios e dashboard (2026-08-27/25), completa, plano aprovado em
+  `C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` (reescrito por cima do
+  plano da Fase 3 — pesquisa do `CommissionController`/`DashboardController`/`ReportController`
+  antigos + decisões de arquitetura documentadas lá):**
+  - **Comissões e auditoria prontas e testadas ponta a ponta** (`commissions`,
+    `commission_installments`, `audit_logs`, `20260827090000_commissions_and_audit.sql`):
+    `create_sale_from_proposal` (Fase 3) ganhou `p_commission_percentage` (default 5%) — calcula o
+    corte do corretor via `min(brokers.commission_percentage, percentual total)`, insere a
+    comissão e distribui bruto/corretor/imobiliária pro-rata nas parcelas de entrada. Ciclo de
+    repasse com confirmação do corretor: `register_broker_commission_payment` (só `tenant_admin`,
+    exige entrada já recebida do cliente) → `confirm_broker_commission_receipt` (só o próprio
+    corretor). `write_audit_log()` chamado por todas as funções de venda/comissão, seção
+    "Atividades" em `/sales/:id`. `/commissions`, `/commissions/:id` com ação contextual por
+    papel. QA ponta a ponta com valores conferidos em cada etapa (venda de R$1.000.000, comissão
+    10%, corte do corretor 5% → R$50.000 pra cada lado), incluindo login real como o corretor de
+    teste pra confirmar o próprio recebimento — RLS confirmada (corretor só vê a própria comissão).
+  - **Dois problemas de infraestrutura na aplicação da migration** (mesma classe dos já vistos na
+    Fase 3, registrados pra não perder tempo se acontecer de novo): cache do PostgREST
+    desatualizado (`notify pgrst, 'reload schema';`) e alias `elem` (`jsonb_array_elements`)
+    colidindo com variável `plpgsql` de mesmo nome na soma dos bens dados como parte de pagamento
+    — mesma causa do bug do `v_item` da Fase 3, corrigido do mesmo jeito (renomear o alias).
+  - **Dashboard real pronto e testado** (`/dashboard`, `src/features/tenant/dashboard-api.ts`):
+    substitui o placeholder da Fase 1. Filtro de período (mês atual/anterior/ano/personalizado),
+    cards administrativos por permissão, métricas comerciais, próximos contatos, atividades
+    recentes, ranking de corretores (Recharts — sem `components/ui/chart.tsx` no projeto ainda,
+    usado Recharts puro: `ResponsiveContainer`/`BarChart`/`Bar`/etc. diretamente). **Decisão
+    importante**: nenhuma query filtra corretor manualmente no client — a RLS já restringe
+    `leads`/`negotiations`/`proposals`/`sales`/`commissions` aos próprios registros do corretor
+    (policies da Fase 3), então a mesma query devolve dados diferentes por papel sozinha. Testado
+    ponta a ponta como `tenant_admin` (visão de corretor não teve login de teste dedicado nesta
+    sessão — os ramos condicionais por papel são triviais e já passam no typecheck; considerar
+    testar com um login de corretor numa próxima sessão se algo parecer errado na prática).
+  - **Relatórios prontos e testados** (`/reports`, `src/features/reports/`): porta o
+    `ReportController` do sistema antigo — 5 tipos (Vendas, Comissões, Recebimentos, Corretores,
+    Leads), filtro de período/corretor/status, cards de resumo, impressão via `window.print()` +
+    CSS `@media print` (`src/index.css`, esconde `header`/`footer` fixos do `AppShell` e libera o
+    `<main>` pro fluxo normal de página). Testado nos 5 tipos com dados conferidos contra os
+    mesmos registros de QA do dashboard/comissões, e a emulação de mídia `print` do Playwright
+    confirmou nav/filtros/botão "Imprimir" escondidos e o título de impressão visível.
+  - **Fase 4 fechada.** Comissões (com confirmação do corretor), auditoria, dashboard real e
+    relatórios — todos testados ponta a ponta contra o Supabase real.
+
 ## Próximos passos imediatos
 
-**Fase 3 está fechada.** Antes de avançar pra Fase 4 (Comissões, relatórios e dashboard — ver
-ROADMAP.md), vale considerar dois itens em aberto, sem bloquear o início da próxima fase:
-- Testar de verdade o job de expiração automática (`funnel-expirations`) — nunca foi observado
-  expirando algo de fato, só revisado no código.
-- Perguntar ao usuário se quer criar a branch de snapshot `fase-3-funil-comercial` a partir do
-  commit atual da `trunk`, seguindo o fluxo de branch por fase já estabelecido (ver rodada de
-  polimento pós-Fase 2, 3ª rodada).
+**Fase 4 está fechada.** Antes de avançar pra Fase 5 (E-mail e notificações — ver ROADMAP.md),
+vale considerar os itens em aberto abaixo, nenhum bloqueante:
+- Criar a branch de snapshot `fase-4-comissoes-dashboard` a partir do commit atual da `trunk`,
+  seguindo o fluxo de branch por fase já estabelecido.
+- Testar de verdade o job de expiração automática (`funnel-expirations`, Fase 3) — ainda nunca foi
+  observado expirando algo de fato, só revisado no código.
+- Testar o dashboard/relatórios logado como `broker` de verdade (só foi testado como
+  `tenant_admin` nesta sessão) — os ramos condicionais por papel são simples e já passam no
+  typecheck, então o risco é baixo, mas vale confirmar visualmente numa próxima sessão.
 
-Aguardando o usuário confirmar início da Fase 4.
+Aguardando o usuário confirmar início da Fase 5.
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
-(ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar; inclui agora também
-leads de teste "João Qa da Silva" criados durante o teste ponta a ponta da Fase 3).
+(ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar; inclui agora também os
+registros "QA Comissao" criados testando comissões na Fase 4).
 
 ## Notas técnicas para retomar
 
@@ -239,7 +288,11 @@ leads de teste "João Qa da Silva" criados durante o teste ponta a ponta da Fase
   Vista Verde", parceiro "Imobiliária Parceira QA", proprietário "Maria Proprietária QA", corretor
   "Corretor QA Teste", anúncios "Casa QA Teste 3 quartos" e "Apto QA Toast Teste" — todos do
   tenant Casah, `delete from public.announcements/brokers/owners/partners/developments where name
-  ilike '%qa%' or title ilike '%qa%'` cobre a maioria). Nada disso é destrutivo deixar.
+  ilike '%qa%' or title ilike '%qa%'` cobre a maioria). Da Fase 3/4: leads "João Qa da Silva" e
+  "Cliente Qa Comissao"/"Cliente Qa Comissao 2", corretor "Corretor Qa Comissao" (vinculado ao
+  login `creci.qa.isolate@example.com`, usado pra testar a confirmação de recebimento do
+  corretor) e as vendas/comissões geradas a partir deles (cascade ao apagar os leads via
+  negociação → venda → comissão). Nada disso é destrutivo deixar.
 
 ## Decisões em aberto / para revisitar
 
@@ -249,5 +302,6 @@ leads de teste "João Qa da Silva" criados durante o teste ponta a ponta da Fase
 ## Notas úteis
 
 - O clone de inspeção do sistema Laravel antigo está em
-  `c:\Desenv\VSCode\ProjetosReact\placehub_temp` (fora do repo novo, só para consulta pontual
-  ao domínio de negócio original; pode ser removido quando não for mais necessário).
+  `c:\Desenv\VSCode\ProjetosLaravel\placehub` (fora do repo novo, só para consulta pontual ao
+  domínio de negócio original — controllers relevantes já lidos: `CommissionController`,
+  `SaleController`, `DashboardController`, `ReportController`).
