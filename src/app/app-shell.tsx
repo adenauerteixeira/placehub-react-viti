@@ -8,6 +8,8 @@ import { AnnouncementFormPage } from '@/features/announcements/announcement-form
 import { AnnouncementsListPage } from '@/features/announcements/announcements-list-page'
 import { BrokersListPage } from '@/features/brokers/brokers-list-page'
 import { DevelopmentsListPage } from '@/features/developments/developments-list-page'
+import { CommissionDetailPage } from '@/features/commissions/commission-detail-page'
+import { CommissionsListPage } from '@/features/commissions/commissions-list-page'
 import { LeadDetailPage } from '@/features/leads/lead-detail-page'
 import { LeadsListPage } from '@/features/leads/leads-list-page'
 import { NegotiationDetailPage } from '@/features/negotiations/negotiation-detail-page'
@@ -183,6 +185,22 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequirePermission module="sales">
               <SaleDetailPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/commissions"
+          element={
+            <RequirePermission module="commissions">
+              <CommissionsListPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/commissions/:id"
+          element={
+            <RequirePermission module="commissions">
+              <CommissionDetailPage />
             </RequirePermission>
           }
         />

@@ -44,6 +44,7 @@ const schema = z.object({
   financing_source: z.string(),
   payment_notes: z.string(),
   notes: z.string(),
+  commission_percentage: z.string(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -56,6 +57,7 @@ const emptyValues: FormValues = {
   financing_source: '',
   payment_notes: '',
   notes: '',
+  commission_percentage: '5',
 }
 
 export function SaleFormDialog({
@@ -95,6 +97,8 @@ export function SaleFormDialog({
     [watchedAssets],
   )
   const financingPreview = Math.max(proposal.amount - watchedDownPayment - assetsSum, 0)
+  const watchedCommissionPct = Number(watch('commission_percentage')) || 0
+  const commissionPreview = (proposal.amount * watchedCommissionPct) / 100
 
   async function onSubmit(values: FormValues) {
     if (values.entry_installments.length > 0 && Math.abs(installmentsSum - (values.down_payment_amount ?? 0)) > 0.01) {
@@ -120,6 +124,7 @@ export function SaleFormDialog({
         payment_notes: values.payment_notes,
         notes: values.notes,
         reservation_id: reservationId ?? null,
+        commission_percentage: values.commission_percentage ? Number(values.commission_percentage) : 0,
       })
       toast.success('Venda registrada.')
       onOpenChange(false)
@@ -263,6 +268,29 @@ export function SaleFormDialog({
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="sale-financing-source">Instituição financiadora</FieldLabel>
               <Input id="sale-financing-source" {...register('financing_source')} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel htmlFor="sale-commission-percentage" hint="Percentual total da comissão sobre o valor da venda. O corte do corretor é o menor entre este percentual e a comissão cadastrada nele.">
+                Comissão (%)
+              </FieldLabel>
+              <Input
+                id="sale-commission-percentage"
+                type="number"
+                min="0"
+                step="0.01"
+                {...register('commission_percentage')}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel hint="Calculado no servidor, dividido entre corretor e imobiliária conforme a comissão cadastrada no corretor.">
+                Comissão total (estimada)
+              </FieldLabel>
+              <p className="text-muted-foreground flex h-9 items-center text-sm">
+                {formatPrice(commissionPreview)}
+              </p>
             </div>
           </div>
 

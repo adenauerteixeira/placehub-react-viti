@@ -154,6 +154,7 @@ export type CreateSaleInput = {
   payment_notes: string
   notes: string
   reservation_id: string | null
+  commission_percentage: number
 }
 
 export function useCreateSaleFromProposal(tenantId: string) {
@@ -171,6 +172,7 @@ export function useCreateSaleFromProposal(tenantId: string) {
         p_payment_notes: input.payment_notes || null,
         p_notes: input.notes || null,
         p_reservation_id: input.reservation_id,
+        p_commission_percentage: input.commission_percentage,
       })
 
       if (error) throw error
@@ -183,6 +185,7 @@ export function useCreateSaleFromProposal(tenantId: string) {
       queryClient.invalidateQueries({ queryKey: ['negotiations', tenantId] })
       queryClient.invalidateQueries({ queryKey: ['announcements', tenantId] })
       queryClient.invalidateQueries({ queryKey: ['reservations', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['commissions', tenantId] })
     },
   })
 }
@@ -201,6 +204,7 @@ export function useCancelSale(tenantId: string) {
       queryClient.invalidateQueries({ queryKey: ['sale', sale.id] })
       queryClient.invalidateQueries({ queryKey: ['negotiation', sale.negotiation_id] })
       queryClient.invalidateQueries({ queryKey: ['announcements', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['commissions', tenantId] })
     },
   })
 }
@@ -244,6 +248,38 @@ export function useReceiveInstallment(saleId: string, tenantId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sale-installments', saleId] })
+      queryClient.invalidateQueries({ queryKey: ['commissions', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['commission-by-sale', saleId] })
+    },
+  })
+}
+
+export type AuditLog = {
+  id: string
+  tenant_id: string
+  sale_id: string
+  event_type: string
+  title: string
+  description: string | null
+  old_values: Record<string, unknown> | null
+  new_values: Record<string, unknown> | null
+  user_id: string | null
+  created_at: string
+}
+
+export function useSaleAuditLogs(saleId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['audit-logs', saleId],
+    enabled: !!saleId,
+    queryFn: async (): Promise<AuditLog[]> => {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('id, tenant_id, sale_id, event_type, title, description, old_values, new_values, user_id, created_at')
+        .eq('sale_id', saleId!)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data
     },
   })
 }

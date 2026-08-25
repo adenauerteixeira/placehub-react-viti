@@ -9,12 +9,15 @@ import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-st
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
+import { useCommissionBySale } from '@/features/commissions/api'
+import { COMMISSION_STATUS_LABELS, COMMISSION_STATUS_VARIANT } from '@/features/commissions/labels'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { errorMessage } from '@/lib/errors'
 import {
   receiptSignedUrl,
   useCancelSale,
   useSale,
+  useSaleAuditLogs,
   useSaleInstallments,
   useSalePaymentAssets,
   type SaleEntryInstallment,
@@ -41,6 +44,8 @@ export function SaleDetailPage() {
   const { data: assets } = useSalePaymentAssets(id)
   const { data: announcements } = useAnnouncements(tenant.id)
   const { data: brokers } = useBrokers(tenant.id)
+  const { data: commission } = useCommissionBySale(id)
+  const { data: auditLogs } = useSaleAuditLogs(id)
   const cancelSale = useCancelSale(tenant.id)
 
   if (isLoading) return <FullscreenSpinner />
@@ -214,6 +219,48 @@ export function SaleDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {commission && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Comissão</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Badge variant={COMMISSION_STATUS_VARIANT[commission.status]}>
+                {COMMISSION_STATUS_LABELS[commission.status]}
+              </Badge>
+              <span className="text-sm">{formatPrice(commission.gross_amount)}</span>
+            </div>
+            <Link to={`/commissions/${commission.id}`} className="text-primary text-sm hover:underline">
+              Ver comissão →
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Atividades</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!auditLogs || auditLogs.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Nenhuma atividade registrada ainda.</p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {auditLogs.map((log) => (
+                <li key={log.id} className="border-border border-l-2 pl-3 text-sm">
+                  <p className="font-medium">{log.title}</p>
+                  {log.description && <p className="text-muted-foreground">{log.description}</p>}
+                  <p className="text-muted-foreground text-xs">
+                    {new Date(log.created_at).toLocaleString('pt-BR')}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       {receiving && (
         <ReceiveInstallmentDialog
