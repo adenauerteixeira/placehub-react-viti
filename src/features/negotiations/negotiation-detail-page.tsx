@@ -1,10 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { CalendarPlus, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,6 +17,8 @@ import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
 import { useLead } from '@/features/leads/api'
 import { ProposalList } from '@/features/proposals/proposal-list'
+import { useActiveReservationForAnnouncement } from '@/features/reservations/api'
+import { ReserveDialog } from '@/features/reservations/reserve-dialog'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { errorMessage } from '@/lib/errors'
 import { useNegotiation, useUpdateNegotiation, type NegotiationStatus } from './api'
@@ -44,11 +46,13 @@ type FormValues = z.infer<typeof schema>
 export function NegotiationDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { tenant } = useTenantOutletContext()
+  const [reserving, setReserving] = useState(false)
 
   const { data: negotiation, isLoading, isError } = useNegotiation(id)
   const { data: lead } = useLead(negotiation?.lead_id)
   const { data: announcements } = useAnnouncements(tenant.id)
   const { data: brokers } = useBrokers(tenant.id)
+  const { data: activeReservation } = useActiveReservationForAnnouncement(negotiation?.announcement_id)
   const updateNegotiation = useUpdateNegotiation(tenant.id)
 
   const {
@@ -134,19 +138,32 @@ export function NegotiationDetailPage() {
             {NEGOTIATION_STATUS_LABELS[negotiation.status]}
           </Badge>
         </div>
-        <Select value={negotiation.status} onValueChange={(v) => handleStatusChange(v as NegotiationStatus)}>
-          <SelectTrigger className="w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUSES.map((status) => (
-              <SelectItem key={status} value={status}>
-                {NEGOTIATION_STATUS_LABELS[status]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          {negotiation.announcement_id && !activeReservation && (
+            <Button variant="outline" onClick={() => setReserving(true)}>
+              <CalendarPlus className="size-4" /> Reservar imóvel
+            </Button>
+          )}
+          <Select value={negotiation.status} onValueChange={(v) => handleStatusChange(v as NegotiationStatus)}>
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUSES.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {NEGOTIATION_STATUS_LABELS[status]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {activeReservation && (
+        <p className="text-muted-foreground text-sm">
+          Imóvel reservado até {new Date(activeReservation.expires_at).toLocaleString('pt-BR')}.
+        </p>
+      )}
 
       {negotiation.status === 'lost' && negotiation.lost_reason && (
         <p className="text-destructive text-sm">Motivo da perda: {negotiation.lost_reason}</p>
@@ -218,6 +235,16 @@ export function NegotiationDetailPage() {
       </Card>
 
       <ProposalList negotiationId={negotiation.id} />
+
+      {negotiation.announcement_id && (
+        <ReserveDialog
+          open={reserving}
+          onOpenChange={setReserving}
+          announcementId={negotiation.announcement_id}
+          leadId={negotiation.lead_id}
+          brokerId={negotiation.broker_id ?? undefined}
+        />
+      )}
     </div>
   )
 }

@@ -10,14 +10,16 @@
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260825090000_fix_funnel_status_sync_casts.sql` aplicadas com sucesso via SQL Editor (CLI
-  ainda não autenticado neste ambiente — ver nota abaixo). Quatro Edge Functions no ar:
-  `create-tenant-admin`, `invite-tenant-user`, `update-tenant-user-email` e
-  `reset-tenant-user-password`. Buckets: `tenant-branding`, `catalog-media` (Fase 2); bucket
-  `sale-documents` (Fase 3, comprovantes de pagamento) ainda não criado — vem junto com o passo
-  de Vendas.
+  `20260825100000_reservations_functions.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
+  autenticado neste ambiente — ver nota abaixo). Extensão **pg_cron habilitada** (passo manual do
+  usuário no painel, Database → Extensions) — job `funnel-expirations` rodando a cada minuto.
+  Quatro Edge Functions no ar: `create-tenant-admin`, `invite-tenant-user`,
+  `update-tenant-user-email` e `reset-tenant-user-password`. Buckets: `tenant-branding`,
+  `catalog-media` (Fase 2); bucket `sale-documents` (Fase 3, comprovantes de pagamento) ainda não
+  criado — vem junto com o passo de Vendas.
 - **Fase 3 — Funil comercial: EM ANDAMENTO.** Fundação do banco (8 tabelas, triggers, RLS), Leads
-  + Agenda e Negociações prontos e testados. Ver bloco "Fase 3" logo abaixo e
+  + Agenda, Negociações, Propostas e Reservas prontos e testados. Falta só **Vendas** (último
+  passo do plano). Ver bloco "Fase 3" logo abaixo e
   [Próximos passos imediatos](#próximos-passos-imediatos).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
@@ -146,23 +148,32 @@
     de Negociação via `ProposalList`, sem rota própria — decisão já tomada com o usuário). Aceitar
     uma proposta sincroniza a negociação automaticamente (confirma que o fix do cast de enum vale
     pras duas funções).
-  - Próximo passo dentro da Fase 3: **Reservas** — funções SQL
-    (`reserve_announcement`/`cancel_reservation`/`expire_reservations`), `/reservations`, ação
-    "Reservar" no hub de Negociação e em `/announcements`, migration do `pg_cron` (passo manual
-    do usuário: habilitar a extensão antes) — passo 5 do plano.
+  - **Reservas prontas e testadas ponta a ponta** (`src/features/reservations/`): funções SQL
+    `reserve_announcement`/`cancel_reservation` (únicas portas de escrita, sem policy de
+    INSERT/UPDATE via RLS), `/reservations`, ação "Reservar" em `/announcements` e no hub de
+    Negociação. `pg_cron` habilitado pelo usuário e job `funnel-expirations` agendado (a cada
+    minuto, chama `run_funnel_expirations()` que expira reservas e propostas vencidas) —
+    **mecanismo de expiração em si não foi testado ponta a ponta** (só revisado no código; testar
+    de verdade exigiria inserir uma reserva/proposta com data já vencida via SQL Editor e esperar
+    o cron rodar, ou chamar a função direto — não feito ainda por tempo).
+  - Próximo (e último) passo da Fase 3: **Vendas** — bucket `sale-documents`, funções SQL
+    (`create_sale_from_proposal`/`cancel_sale`/`receive_installment`), trigger de trava
+    financeira (já criado na migration de fundação), `/sales`, `/sales/:id`, ação "Fechar venda"
+    no hub de Negociação (habilitada só com proposta `accepted`) — passo 6 do plano. Depois disso,
+    falta só atualizar ARCHITECTURE.md/ROADMAP.md/CHANGELOG.md/CONTINUITY.md com o fechamento
+    completo da fase (passo 8) e considerar criar a branch de snapshot `fase-3-funil-comercial`.
 
 ## Próximos passos imediatos
 
-**Fase 3 em andamento.** Leads + Agenda, Negociações e Propostas prontos; continuar pelo passo 5
-do plano (Reservas — funções SQL transacionais, índice único parcial já criado na fundação,
-`pg_cron` pra expiração automática). Ver o plano completo em
-`C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` antes de prosseguir — tem
-o desenho de schema das próximas etapas (reservas, vendas) e as decisões de arquitetura já
-fechadas com o usuário (ex.: expiração automática de proposta vencida, pg_cron chamando função
-SQL direto em vez de Edge Function). **Atenção
-ao escrever as funções de reservas/vendas**: aplicar de cara o cast explícito
-`::public.<enum>` em qualquer `UPDATE ... SET status = (CASE ...)` — bug já encontrado duas vezes
-nesta fase (ver acima).
+**Fase 3 em andamento — só falta Vendas.** Continuar pelo passo 6 do plano (a última entidade):
+bucket `sale-documents`, as 3 funções SQL de venda, trigger de trava financeira, `/sales`,
+`/sales/:id`, e a ação "Fechar venda" no hub de Negociação. Ver o plano completo em
+`C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` antes de prosseguir. **Ao
+escrever as funções de venda**: aplicar de cara o cast explícito `::public.<enum>` em qualquer
+`UPDATE ... SET status = (CASE ...)` — bug já encontrado duas vezes nesta fase (ver acima). Depois
+de Vendas: testar o mecanismo de expiração automática de verdade (reserva/proposta com data
+vencida), fechar a fase nos documentos, e perguntar ao usuário se quer criar a branch de snapshot
+`fase-3-funil-comercial`.
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
 (ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar; inclui agora também

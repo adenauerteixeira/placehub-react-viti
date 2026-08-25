@@ -87,8 +87,15 @@ leitura pública), `property-photos` (leitura pública), `sale-documents` (compr
 - Conversão de reserva em venda é uma função Postgres transacional
   (`convert_reservation_to_sale`, a implementar na Fase 3) — não duplica criação de
   parcelas/comissões mesmo que chamada de mais de um lugar.
-- Expiração de reservas roda via `pg_cron` + Edge Function, não depende de alguém acessar o
-  sistema no momento da expiração.
+- Expiração de reservas (e de propostas vencidas) roda via `pg_cron` chamando uma função SQL
+  direto (`run_funnel_expirations()`, a cada minuto) — não depende de alguém acessar o sistema no
+  momento da expiração. Decisão revisada em relação ao "pg_cron + Edge Function" especulado antes
+  de qualquer desenho real (Fase 3): como a expiração é só mutação de dados, sem chamada externa
+  nenhuma, pg_cron → função `plpgsql` direto é mais simples e mais confiável que passar por
+  `pg_net`/HTTP dentro do banco pra acionar uma Edge Function. Reservas em si (`reserve_announcement`/
+  `cancel_reservation`) também são funções SQL `security definer` — únicas portas de escrita da
+  tabela `reservations` (sem policy de INSERT/UPDATE via RLS), garantindo atomicidade entre a
+  reserva e o `announcements.status` (published ⇄ reserved) na mesma transação.
 
 ## Tema claro/escuro e identidade visual do tenant
 

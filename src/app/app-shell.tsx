@@ -13,6 +13,7 @@ import { LeadsListPage } from '@/features/leads/leads-list-page'
 import { NegotiationDetailPage } from '@/features/negotiations/negotiation-detail-page'
 import { NegotiationsListPage } from '@/features/negotiations/negotiations-list-page'
 import { OwnersListPage } from '@/features/owners/owners-list-page'
+import { ReservationsListPage } from '@/features/reservations/reservations-list-page'
 import { PartnersListPage } from '@/features/partners/partners-list-page'
 import { PlatformLayout } from '@/features/platform/platform-layout'
 import { TenantsListPage } from '@/features/platform/tenants-list-page'
@@ -156,6 +157,14 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequirePermission module="negotiations">
               <NegotiationDetailPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/reservations"
+          element={
+            <RequirePermission module="reservations">
+              <ReservationsListPage />
             </RequirePermission>
           }
         />

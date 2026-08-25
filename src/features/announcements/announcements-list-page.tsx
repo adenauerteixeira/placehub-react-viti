@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { CalendarPlus, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { errorMessage } from '@/lib/errors'
+import { ReserveDialog } from '@/features/reservations/reserve-dialog'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useAnnouncements, useDeleteAnnouncement, type AnnouncementStatus } from './api'
 import { ANNOUNCEMENT_STATUS_LABELS, ANNOUNCEMENT_STATUS_VARIANT, PROPERTY_TYPE_LABELS } from './labels'
@@ -21,6 +22,7 @@ export function AnnouncementsListPage() {
   const { data: announcements, isLoading, isError } = useAnnouncements(tenant.id)
   const deleteAnnouncement = useDeleteAnnouncement(tenant.id)
   const [statusFilter, setStatusFilter] = useState(ALL)
+  const [reserving, setReserving] = useState<string | null>(null)
 
   async function handleDelete(e: React.MouseEvent, id: string, title: string) {
     e.stopPropagation()
@@ -107,6 +109,16 @@ export function AnnouncementsListPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
+                      {announcement.status === 'published' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Reservar"
+                          onClick={() => setReserving(announcement.id)}
+                        >
+                          <CalendarPlus className="size-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -132,6 +144,14 @@ export function AnnouncementsListPage() {
           </Table>
         )}
       </CardContent>
+
+      {reserving && (
+        <ReserveDialog
+          open={!!reserving}
+          onOpenChange={(open) => !open && setReserving(null)}
+          announcementId={reserving}
+        />
+      )}
     </Card>
   )
 }

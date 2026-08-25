@@ -109,8 +109,12 @@ Proprietários, Anúncios) e o portal público estão no ar.
       design: no sistema antigo nunca tinha uma tela de detalhe real). Status sincroniza com a
       negociação automaticamente (trigger). Testado ponta a ponta, incluindo o fluxo completo
       proposta aceita → negociação sincronizada.
-- [ ] Reservas de imóveis (`reservations`), com expiração automática (Edge Function +
-      `pg_cron`) e conversão para venda num fluxo único e transacional.
+- [x] Reservas de imóveis (`reservations`) — funções SQL transacionais
+      (`reserve_announcement`/`cancel_reservation`, sem INSERT/UPDATE direto pelo client),
+      `/reservations`, ação "Reservar" em Anúncios e no hub de Negociação. Expiração automática
+      via `pg_cron` chamando função SQL direto (mais simples que o Edge Function especulado
+      originalmente — sem salto HTTP a mais). Testado ponta a ponta (reservar → status do
+      anúncio muda → cancelar → reverte). Conversão pra venda vem junto do próximo item.
 - [ ] Vendas (`sales`, `sale_entry_installments`, `sale_payment_assets`), com trava de
       campos financeiros após conclusão.
 

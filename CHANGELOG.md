@@ -29,6 +29,15 @@ formato AAAA-MM-DD.
 - **Propostas**: CRUD embutido no hub de Negociação (`src/features/proposals/proposal-list.tsx`,
   sem rota própria — decisão de produto). Aceitar uma proposta sincroniza a negociação
   automaticamente (trigger); confirmado ponta a ponta.
+- **Reservas** (`/reservations`, ação "Reservar" em Anúncios e no hub de Negociação): funções SQL
+  transacionais `reserve_announcement`/`cancel_reservation` (únicas portas de escrita — sem
+  INSERT/UPDATE direto pelo client), mantendo `announcements.status` sincronizado
+  (published ⇄ reserved) sempre dentro da mesma transação. Expiração automática via `pg_cron`
+  chamando `run_funnel_expirations()` a cada minuto — decisão de arquitetura revisada: função SQL
+  direto em vez do "pg_cron + Edge Function" especulado antes de qualquer desenho real (um salto
+  a menos, sem depender de HTTP dentro do banco); a mesma migration já cobre a expiração
+  automática de propostas vencidas também (`20260825100000_reservations_functions.sql`). Testado
+  ponta a ponta.
 
 ### Adicionado (5ª rodada de melhorias pós-Fase 2, 2026-08-24)
 
