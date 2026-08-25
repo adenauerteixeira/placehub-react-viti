@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
 import { useLead } from '@/features/leads/api'
+import { ProposalList } from '@/features/proposals/proposal-list'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { errorMessage } from '@/lib/errors'
 import { useNegotiation, useUpdateNegotiation, type NegotiationStatus } from './api'
@@ -215,6 +216,8 @@ export function NegotiationDetailPage() {
           </form>
         </CardContent>
       </Card>
+
+      <ProposalList negotiationId={negotiation.id} />
     </div>
   )
 }

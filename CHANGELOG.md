@@ -26,6 +26,9 @@ formato AAAA-MM-DD.
   "status" is of type lead_status but expression is of type text`). Corrigido nas duas funções de
   sincronismo com cast explícito (`20260825090000_fix_funnel_status_sync_casts.sql`). Testado
   ponta a ponta.
+- **Propostas**: CRUD embutido no hub de Negociação (`src/features/proposals/proposal-list.tsx`,
+  sem rota própria — decisão de produto). Aceitar uma proposta sincroniza a negociação
+  automaticamente (trigger); confirmado ponta a ponta.
 
 ### Adicionado (5ª rodada de melhorias pós-Fase 2, 2026-08-24)
 

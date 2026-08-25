@@ -142,16 +142,24 @@
     (`20260825090000_fix_funnel_status_sync_casts.sql`). **Lição pro resto da Fase 3**: qualquer
     `UPDATE ... SET status = (CASE ...)` em coluna enum precisa desse cast explícito — vale
     revisar isso já ao escrever as próximas funções (reservas/vendas), não só descobrir testando.
-  - Próximo passo dentro da Fase 3: **Propostas** dentro do hub de Negociação (sem rota própria,
-    decisão já tomada com o usuário) — passo 4 do plano.
+  - **Propostas prontas e testadas ponta a ponta** (`src/features/proposals/`, embutidas no hub
+    de Negociação via `ProposalList`, sem rota própria — decisão já tomada com o usuário). Aceitar
+    uma proposta sincroniza a negociação automaticamente (confirma que o fix do cast de enum vale
+    pras duas funções).
+  - Próximo passo dentro da Fase 3: **Reservas** — funções SQL
+    (`reserve_announcement`/`cancel_reservation`/`expire_reservations`), `/reservations`, ação
+    "Reservar" no hub de Negociação e em `/announcements`, migration do `pg_cron` (passo manual
+    do usuário: habilitar a extensão antes) — passo 5 do plano.
 
 ## Próximos passos imediatos
 
-**Fase 3 em andamento.** Leads + Agenda e Negociações prontos; continuar pelo passo 4 do plano
-(Propostas — CRUD inline dentro do hub de `/negotiations/:id`, sem rota/página própria). Ver o
-plano completo em `C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` antes de
-prosseguir — tem o desenho de schema das próximas etapas (reservas, vendas) e as decisões de
-arquitetura já fechadas com o usuário (ex.: expiração automática de proposta vencida). **Atenção
+**Fase 3 em andamento.** Leads + Agenda, Negociações e Propostas prontos; continuar pelo passo 5
+do plano (Reservas — funções SQL transacionais, índice único parcial já criado na fundação,
+`pg_cron` pra expiração automática). Ver o plano completo em
+`C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` antes de prosseguir — tem
+o desenho de schema das próximas etapas (reservas, vendas) e as decisões de arquitetura já
+fechadas com o usuário (ex.: expiração automática de proposta vencida, pg_cron chamando função
+SQL direto em vez de Edge Function). **Atenção
 ao escrever as funções de reservas/vendas**: aplicar de cara o cast explícito
 `::public.<enum>` em qualquer `UPDATE ... SET status = (CASE ...)` — bug já encontrado duas vezes
 nesta fase (ver acima).

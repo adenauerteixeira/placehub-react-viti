@@ -105,7 +105,10 @@ Proprietários, Anúncios) e o portal público estão no ar.
       (`/negotiations/:id`) com troca de status, anúncio/corretor/próximo contato editáveis.
       Status sincroniza com o lead automaticamente (trigger). Ainda sem Propostas dentro do hub
       (próximo passo). Testado ponta a ponta.
-- [ ] Propostas (`proposals`).
+- [x] Propostas (`proposals`) — CRUD dentro do hub de Negociação (sem rota/página própria, por
+      design: no sistema antigo nunca tinha uma tela de detalhe real). Status sincroniza com a
+      negociação automaticamente (trigger). Testado ponta a ponta, incluindo o fluxo completo
+      proposta aceita → negociação sincronizada.
 - [ ] Reservas de imóveis (`reservations`), com expiração automática (Edge Function +
       `pg_cron`) e conversão para venda num fluxo único e transacional.
 - [ ] Vendas (`sales`, `sale_entry_installments`, `sale_payment_assets`), com trava de
