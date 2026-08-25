@@ -234,7 +234,7 @@ export function NegotiationDetailPage() {
         </CardContent>
       </Card>
 
-      <ProposalList negotiationId={negotiation.id} />
+      <ProposalList negotiationId={negotiation.id} reservationId={activeReservation?.id} />
 
       {negotiation.announcement_id && (
         <ReserveDialog

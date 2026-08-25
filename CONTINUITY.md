@@ -5,21 +5,19 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-08-25
+## Estado atual — 2026-08-26
 
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260825100000_reservations_functions.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
+  `20260826090000_sales_functions.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
   autenticado neste ambiente — ver nota abaixo). Extensão **pg_cron habilitada** (passo manual do
   usuário no painel, Database → Extensions) — job `funnel-expirations` rodando a cada minuto.
   Quatro Edge Functions no ar: `create-tenant-admin`, `invite-tenant-user`,
   `update-tenant-user-email` e `reset-tenant-user-password`. Buckets: `tenant-branding`,
-  `catalog-media` (Fase 2); bucket `sale-documents` (Fase 3, comprovantes de pagamento) ainda não
-  criado — vem junto com o passo de Vendas.
-- **Fase 3 — Funil comercial: EM ANDAMENTO.** Fundação do banco (8 tabelas, triggers, RLS), Leads
-  + Agenda, Negociações, Propostas e Reservas prontos e testados. Falta só **Vendas** (último
-  passo do plano). Ver bloco "Fase 3" logo abaixo e
+  `catalog-media` (Fase 2), `sale-documents` (Fase 3, comprovantes de pagamento, privado).
+- **Fase 3 — Funil comercial: COMPLETA.** Leads + Agenda, Negociações, Propostas, Reservas e
+  Vendas — todas testadas ponta a ponta contra o Supabase real. Ver bloco "Fase 3" logo abaixo e
   [Próximos passos imediatos](#próximos-passos-imediatos).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
@@ -156,24 +154,41 @@
     **mecanismo de expiração em si não foi testado ponta a ponta** (só revisado no código; testar
     de verdade exigiria inserir uma reserva/proposta com data já vencida via SQL Editor e esperar
     o cron rodar, ou chamar a função direto — não feito ainda por tempo).
-  - Próximo (e último) passo da Fase 3: **Vendas** — bucket `sale-documents`, funções SQL
-    (`create_sale_from_proposal`/`cancel_sale`/`receive_installment`), trigger de trava
-    financeira (já criado na migration de fundação), `/sales`, `/sales/:id`, ação "Fechar venda"
-    no hub de Negociação (habilitada só com proposta `accepted`) — passo 6 do plano. Depois disso,
-    falta só atualizar ARCHITECTURE.md/ROADMAP.md/CHANGELOG.md/CONTINUITY.md com o fechamento
-    completo da fase (passo 8) e considerar criar a branch de snapshot `fase-3-funil-comercial`.
+  - **Vendas prontas e testadas ponta a ponta** (`src/features/sales/`): função SQL transacional
+    `create_sale_from_proposal` (a partir de proposta `accepted`, no hub de Negociação) — calcula
+    financiamento no servidor, valida parcelas de entrada, converte reserva ativa em
+    `converted`. `cancel_sale` (só `tenant_admin`) reverte negociação/anúncio.
+    `receive_installment` marca parcela recebida, com upload de comprovante pro bucket privado
+    `sale-documents` (leitura via `createSignedUrl()`). Trigger de trava financeira já existia
+    desde a fundação. `/sales`, `/sales/:id`.
+  - **Dois problemas de infraestrutura encontrados ao aplicar a migration de vendas** (não são
+    bugs de código, registrados aqui pra não perder tempo se acontecer de novo): (1) o cache de
+    esquema do PostgREST não atualizou sozinho depois de criar as funções novas — resolvido com
+    `notify pgrst, 'reload schema';` no SQL Editor (ou painel: Settings → API → "Reload schema
+    cache"); (2) a migration rodou como uma transação só e um erro no meio (bucket já existindo
+    de uma tentativa anterior) reverteu tudo silenciosamente, inclusive as funções — a versão
+    final do arquivo já está idempotente (`on conflict do nothing` no bucket, `drop policy if
+    exists` antes de cada policy), segura de rodar de novo.
+  - **Terceiro bug real de SQL encontrado durante o teste**: alias `v_item` num
+    `FROM jsonb_array_elements(...) v_item` colidia com a variável `plpgsql` declarada com o
+    mesmo nome (`column reference "v_item" is ambiguous`) — corrigido renomeando o alias pra
+    `elem` (`20260826090000_sales_functions.sql`).
+  - **Fase 3 fechada.** Fundação, Leads+Agenda, Negociações, Propostas, Reservas e Vendas — todas
+    testadas ponta a ponta. Único item não testado de verdade: o job de expiração automática
+    (`funnel-expirations`, a cada minuto) — revisado no código, mas nunca observado expirando uma
+    reserva/proposta de verdade (exigiria inserir um registro com data já vencida via SQL Editor).
 
 ## Próximos passos imediatos
 
-**Fase 3 em andamento — só falta Vendas.** Continuar pelo passo 6 do plano (a última entidade):
-bucket `sale-documents`, as 3 funções SQL de venda, trigger de trava financeira, `/sales`,
-`/sales/:id`, e a ação "Fechar venda" no hub de Negociação. Ver o plano completo em
-`C:\Users\Adenauer Teixeira\.claude\plans\refactored-seeking-orbit.md` antes de prosseguir. **Ao
-escrever as funções de venda**: aplicar de cara o cast explícito `::public.<enum>` em qualquer
-`UPDATE ... SET status = (CASE ...)` — bug já encontrado duas vezes nesta fase (ver acima). Depois
-de Vendas: testar o mecanismo de expiração automática de verdade (reserva/proposta com data
-vencida), fechar a fase nos documentos, e perguntar ao usuário se quer criar a branch de snapshot
-`fase-3-funil-comercial`.
+**Fase 3 está fechada.** Antes de avançar pra Fase 4 (Comissões, relatórios e dashboard — ver
+ROADMAP.md), vale considerar dois itens em aberto, sem bloquear o início da próxima fase:
+- Testar de verdade o job de expiração automática (`funnel-expirations`) — nunca foi observado
+  expirando algo de fato, só revisado no código.
+- Perguntar ao usuário se quer criar a branch de snapshot `fase-3-funil-comercial` a partir do
+  commit atual da `trunk`, seguindo o fluxo de branch por fase já estabelecido (ver rodada de
+  polimento pós-Fase 2, 3ª rodada).
+
+Aguardando o usuário confirmar início da Fase 4.
 
 Sem pendência bloqueante. Limpeza de dados de teste no Supabase fica pra quando for conveniente
 (ver "Notas técnicas" abaixo — não é urgente, nenhum é destrutivo deixar; inclui agora também

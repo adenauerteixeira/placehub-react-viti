@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Handshake, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { errorMessage } from '@/lib/errors'
+import { useSaleByNegotiation } from '@/features/sales/api'
+import { SaleFormDialog } from '@/features/sales/sale-form-dialog'
 import { useDeleteProposal, useProposalsByNegotiation, type Proposal } from './api'
 import { PROPOSAL_STATUS_LABELS, PROPOSAL_STATUS_VARIANT } from './labels'
 import { ProposalFormDialog } from './proposal-form-dialog'
@@ -20,11 +22,19 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleDateString('pt-BR')
 }
 
-export function ProposalList({ negotiationId }: { negotiationId: string }) {
+export function ProposalList({
+  negotiationId,
+  reservationId,
+}: {
+  negotiationId: string
+  reservationId?: string | null
+}) {
   const { data: proposals, isLoading, isError } = useProposalsByNegotiation(negotiationId)
+  const { data: existingSale } = useSaleByNegotiation(negotiationId)
   const deleteProposal = useDeleteProposal(negotiationId)
   const [createOpen, setCreateOpen] = useState(false)
   const [editing, setEditing] = useState<Proposal | null>(null)
+  const [closingSaleFor, setClosingSaleFor] = useState<Proposal | null>(null)
 
   async function handleDelete(proposal: Proposal) {
     if (!window.confirm('Excluir esta proposta?')) return
@@ -74,6 +84,11 @@ export function ProposalList({ negotiationId }: { negotiationId: string }) {
                   <TableCell className="text-muted-foreground">{formatDate(proposal.valid_until)}</TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
+                      {proposal.status === 'accepted' && !existingSale && (
+                        <Button size="sm" onClick={() => setClosingSaleFor(proposal)}>
+                          <Handshake className="size-4" /> Fechar venda
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -106,6 +121,14 @@ export function ProposalList({ negotiationId }: { negotiationId: string }) {
           onOpenChange={(open) => !open && setEditing(null)}
           negotiationId={negotiationId}
           proposal={editing}
+        />
+      )}
+      {closingSaleFor && (
+        <SaleFormDialog
+          open={!!closingSaleFor}
+          onOpenChange={(open) => !open && setClosingSaleFor(null)}
+          proposal={closingSaleFor}
+          reservationId={reservationId}
         />
       )}
     </Card>

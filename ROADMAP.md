@@ -115,8 +115,19 @@ Proprietários, Anúncios) e o portal público estão no ar.
       via `pg_cron` chamando função SQL direto (mais simples que o Edge Function especulado
       originalmente — sem salto HTTP a mais). Testado ponta a ponta (reservar → status do
       anúncio muda → cancelar → reverte). Conversão pra venda vem junto do próximo item.
-- [ ] Vendas (`sales`, `sale_entry_installments`, `sale_payment_assets`), com trava de
-      campos financeiros após conclusão.
+- [x] Vendas (`sales`, `sale_entry_installments`, `sale_payment_assets`) — função SQL
+      transacional `create_sale_from_proposal` (a partir de uma proposta aceita, no hub de
+      Negociação): calcula financiamento no servidor, valida soma das parcelas de entrada contra
+      o valor da entrada, converte a reserva ativa em `converted` quando houver. `cancel_sale`
+      (só `tenant_admin`) reverte negociação/anúncio. `receive_installment` marca parcela como
+      recebida com upload de comprovante (bucket `sale-documents`, privado, leitura via signed
+      URL). Trava de campos financeiros de venda concluída via trigger (`sales_guard_financial_lock`,
+      criado na migration de fundação). `/sales`, `/sales/:id`. Testado ponta a ponta, incluindo
+      cálculo de financiamento, recebimento de parcela e cancelamento com reversão.
+
+Fase 3 completa — funil comercial (leads → negociação → proposta → reserva → venda) funcionando
+de ponta a ponta contra o Supabase real, com dois bugs reais de sintaxe SQL encontrados e
+corrigidos durante os testes (cast de enum em `CASE`, alias de coluna ambíguo em `plpgsql`).
 
 ## Fase 4 — Comissões, relatórios e dashboard
 

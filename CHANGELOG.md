@@ -5,7 +5,7 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
-### Adicionado (Fase 3 — Funil comercial, em andamento, 2026-08-24/25)
+### Adicionado (Fase 3 — Funil comercial, completa, 2026-08-24/26)
 
 - **Fundação do banco** (`20260824100000_create_commercial_funnel.sql`): 8 tabelas (`leads`,
   `lead_follow_ups`, `negotiations`, `proposals`, `sales`, `sale_entry_installments`,
@@ -38,6 +38,20 @@ formato AAAA-MM-DD.
   a menos, sem depender de HTTP dentro do banco); a mesma migration já cobre a expiração
   automática de propostas vencidas também (`20260825100000_reservations_functions.sql`). Testado
   ponta a ponta.
+- **Vendas** (`/sales`, `/sales/:id`, ação "Fechar venda" no hub de Negociação a partir de uma
+  proposta aceita): função SQL transacional `create_sale_from_proposal` — calcula financiamento
+  no servidor (nunca aceito do client), valida soma das parcelas de entrada, converte a reserva
+  ativa em `converted` quando houver. `cancel_sale` (só `tenant_admin`) reverte
+  negociação/anúncio. `receive_installment` marca parcela recebida com upload de comprovante
+  (bucket privado `sale-documents`, leitura via signed URL). Trava de campos financeiros de venda
+  concluída via trigger (já existia desde a fundação). Corrigido mais um bug real de SQL
+  encontrado no teste: alias `v_item` da cláusula `FROM jsonb_array_elements(...)` colidia com a
+  variável `plpgsql` de mesmo nome (`column reference "v_item" is ambiguous`) — renomeado o alias
+  (`20260826090000_sales_functions.sql`). Testado ponta a ponta: fechar venda, cálculo de
+  financiamento, receber parcela, cancelar com reversão completa.
+
+**Fase 3 completa** — funil comercial (leads → negociação → proposta → reserva → venda)
+funcionando de ponta a ponta contra o Supabase real.
 
 ### Adicionado (5ª rodada de melhorias pós-Fase 2, 2026-08-24)
 

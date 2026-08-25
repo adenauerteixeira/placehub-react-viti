@@ -83,10 +83,14 @@ leitura pública), `property-photos` (leitura pública), `sale-documents` (compr
 ## Regras de negócio que viram constraint/trigger, não só validação de UI
 
 - Venda concluída (`status = 'completed'`) trava campos financeiros via trigger `BEFORE
-  UPDATE` — não é só uma checagem de formulário.
-- Conversão de reserva em venda é uma função Postgres transacional
-  (`convert_reservation_to_sale`, a implementar na Fase 3) — não duplica criação de
-  parcelas/comissões mesmo que chamada de mais de um lugar.
+  UPDATE` (`sales_guard_financial_lock`) — não é só uma checagem de formulário; só a transição
+  pra `cancelled` (e os campos de cancelamento) passa.
+- Fechar uma venda é uma função Postgres transacional (`create_sale_from_proposal`, Fase 3 — o
+  nome final ficou esse, não `convert_reservation_to_sale` como especulado antes do desenho real):
+  cria a venda + parcelas de entrada + bens dados como parte de pagamento, sincroniza
+  negociação/anúncio, e converte a reserva ativa (se houver) — tudo numa transação só, sem
+  duplicar nada mesmo que chamada de mais de um lugar. Financiamento é sempre calculado dentro da
+  função (nunca aceito do client).
 - Expiração de reservas (e de propostas vencidas) roda via `pg_cron` chamando uma função SQL
   direto (`run_funnel_expirations()`, a cada minuto) — não depende de alguém acessar o sistema no
   momento da expiração. Decisão revisada em relação ao "pg_cron + Edge Function" especulado antes
