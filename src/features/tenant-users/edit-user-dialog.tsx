@@ -8,8 +8,11 @@ import { Button } from '@/components/ui/button'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PasswordInput } from '@/components/password-input'
+import { PasswordRequirements } from '@/components/password-requirements'
 import { PhoneInput } from '@/components/phone-input'
 import { errorMessage } from '@/lib/errors'
+import { isStrongPassword } from '@/lib/password'
 import {
   Dialog,
   DialogContent,
@@ -45,8 +48,8 @@ const schema = z
     newPassword: z.string(),
     confirmNewPassword: z.string(),
   })
-  .refine((v) => v.newPassword === '' || v.newPassword.length >= 8, {
-    message: 'A senha precisa ter pelo menos 8 caracteres.',
+  .refine((v) => v.newPassword === '' || isStrongPassword(v.newPassword), {
+    message: 'A senha não atende aos requisitos mínimos.',
     path: ['newPassword'],
   })
   .refine((v) => v.newPassword === v.confirmNewPassword, {
@@ -169,20 +172,17 @@ export function EditUserDialog({
               <FieldLabel htmlFor="edit-user-new-password" hint="Deixe em branco pra manter a senha atual. Preencha só se o usuário esqueceu a senha e precisa de uma nova.">
                 Nova senha
               </FieldLabel>
-              <Input
+              <PasswordInput
                 id="edit-user-new-password"
-                type="password"
                 autoComplete="new-password"
                 {...register('newPassword')}
                 aria-invalid={!!errors.newPassword}
               />
-              {errors.newPassword && <p className="text-destructive text-sm">{errors.newPassword.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="edit-user-confirm-new-password">Confirmar nova senha</FieldLabel>
-              <Input
+              <PasswordInput
                 id="edit-user-confirm-new-password"
-                type="password"
                 autoComplete="new-password"
                 {...register('confirmNewPassword')}
                 aria-invalid={!!errors.confirmNewPassword}
@@ -192,6 +192,7 @@ export function EditUserDialog({
               )}
             </div>
           </div>
+          {watch('newPassword') !== '' && <PasswordRequirements value={watch('newPassword')} />}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">

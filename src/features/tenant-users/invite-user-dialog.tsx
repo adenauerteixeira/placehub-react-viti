@@ -7,7 +7,10 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/password-input'
+import { PasswordRequirements } from '@/components/password-requirements'
 import { errorMessage } from '@/lib/errors'
+import { strongPasswordSchema } from '@/lib/password'
 import {
   Dialog,
   DialogContent,
@@ -29,7 +32,7 @@ const schema = z
   .object({
     fullName: z.string(),
     email: z.email('E-mail inválido.'),
-    password: z.string().min(8, 'A senha precisa ter pelo menos 8 caracteres.'),
+    password: strongPasswordSchema,
     confirmPassword: z.string(),
     role: z.enum(ASSIGNABLE_ROLES),
     creci: z.string(),
@@ -135,19 +138,18 @@ export function InviteUserDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="invite-password">Senha</FieldLabel>
-              <Input
+              <PasswordInput
                 id="invite-password"
-                type="password"
+                autoComplete="new-password"
                 {...register('password')}
                 aria-invalid={!!errors.password}
               />
-              {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <FieldLabel htmlFor="invite-confirm-password">Confirmar senha</FieldLabel>
-              <Input
+              <PasswordInput
                 id="invite-confirm-password"
-                type="password"
+                autoComplete="new-password"
                 {...register('confirmPassword')}
                 aria-invalid={!!errors.confirmPassword}
               />
@@ -156,6 +158,7 @@ export function InviteUserDialog({
               )}
             </div>
           </div>
+          <PasswordRequirements value={watch('password')} />
 
           <div className="grid grid-cols-[1fr_auto] gap-4">
             <div className="flex flex-col gap-1.5">

@@ -5,6 +5,27 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (6ª rodada de melhorias, pós-Fase 4, 2026-08-25)
+
+- **Menu aninhado em "Comercial" e "Administração"** (`src/features/tenant/tenant-layout.tsx`),
+  replicando a estrutura do sistema anterior (`layouts/navigation.blade.php`): o cabeçalho não
+  tinha mais espaço pra uma opção de menu por módulo (13 módulos possíveis num tenant com tudo
+  liberado). "Painel" e "Anúncios" continuam soltos no topo (como no sistema antigo); Comercial
+  agrupa Leads/Reservas/Negociações/Vendas/Comissões/Relatórios; Administração agrupa
+  Empreendimentos/Parceiros/Corretores/Proprietários/Usuários/Identidade visual (Proprietários
+  entra aqui — não existia no sistema antigo). Cada grupo só aparece se o usuário tiver permissão
+  pra pelo menos um item dentro dele; o botão do grupo fica em destaque quando a rota atual
+  pertence a ele.
+- **Ver/ocultar senha** (`src/components/password-input.tsx`, componente `PasswordInput`) em
+  todo campo de senha do sistema: login, criar usuário, editar usuário (nova senha), vincular
+  administrador de tenant.
+- **Regras de formação de senha com checklist ao vivo**
+  (`src/lib/password.ts` + `src/components/password-requirements.tsx`): mínimo 8 caracteres, uma
+  minúscula, uma maiúscula, um número, um caractere especial — cada regra "tica" conforme o
+  usuário digita. Aplicado nos 3 formulários que criam/alteram senha (criar usuário, vincular
+  administrador, nova senha na edição de usuário — neste último só quando o campo não está em
+  branco, já que em branco significa manter a senha atual).
+
 ### Adicionado (Fase 4 — Comissões, relatórios e dashboard, completa, 2026-08-27/25)
 
 - **Comissões e repasses** (`commissions`, `commission_installments`,

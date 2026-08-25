@@ -23,7 +23,16 @@
 - **Fase 4 — Comissões, relatórios e dashboard: COMPLETA.** Comissões com confirmação do
   corretor, auditoria na tela de venda, dashboard real (`/dashboard`) e relatórios (`/reports`,
   5 tipos, impressão via `window.print()`) — todos testados ponta a ponta contra o Supabase real.
-  Ver bloco "Fase 4" logo abaixo e [Próximos passos imediatos](#próximos-passos-imediatos).
+  Ver bloco "Fase 4" logo abaixo.
+- **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
+  ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
+  "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,
+  dropdown do shadcn) — não cabiam mais 13 módulos soltos no cabeçalho, mesma estrutura de
+  agrupamento do sistema anterior; botão ver/ocultar em todo campo de senha
+  (`src/components/password-input.tsx`); checklist ao vivo de regras de senha
+  (`src/lib/password.ts`, `src/components/password-requirements.tsx` — 8 caracteres, minúscula,
+  maiúscula, número, especial) nos 3 formulários que criam/alteram senha. Ver
+  [Próximos passos imediatos](#próximos-passos-imediatos).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
   ficaram no banco (empreendimento/parceiro/proprietário/corretor/anúncio "QA Teste") — não são
@@ -227,10 +236,10 @@
 
 ## Próximos passos imediatos
 
-**Fase 4 está fechada.** Antes de avançar pra Fase 5 (E-mail e notificações — ver ROADMAP.md),
-vale considerar os itens em aberto abaixo, nenhum bloqueante:
-- Criar a branch de snapshot `fase-4-comissoes-dashboard` a partir do commit atual da `trunk`,
-  seguindo o fluxo de branch por fase já estabelecido.
+**Fase 4 está fechada** (branch de snapshot `fase-4-comissoes-dashboard` já criada) **e a 6ª
+rodada de melhorias pós-Fase 4 (menu aninhado, ver/ocultar senha, regras de senha) também.**
+Antes de avançar pra Fase 5 (E-mail e notificações — ver ROADMAP.md), vale considerar os itens em
+aberto abaixo, nenhum bloqueante:
 - Testar de verdade o job de expiração automática (`funnel-expirations`, Fase 3) — ainda nunca foi
   observado expirando algo de fato, só revisado no código.
 - Testar o dashboard/relatórios logado como `broker` de verdade (só foi testado como

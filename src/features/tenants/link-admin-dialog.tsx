@@ -7,6 +7,8 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/password-input'
+import { PasswordRequirements } from '@/components/password-requirements'
 import {
   Dialog,
   DialogContent,
@@ -16,6 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { capitalizeName } from '@/lib/capitalize'
+import { strongPasswordSchema } from '@/lib/password'
 import { supabase } from '@/lib/supabase'
 import type { Tenant } from '@/features/tenants/api'
 
@@ -23,7 +26,7 @@ const schema = z
   .object({
     fullName: z.string(),
     email: z.email('E-mail inválido.'),
-    password: z.string().min(8, 'A senha precisa ter pelo menos 8 caracteres.'),
+    password: strongPasswordSchema,
     confirmPassword: z.string(),
   })
   .refine((v) => v.password === v.confirmPassword, {
@@ -48,6 +51,7 @@ export function LinkAdminDialog({
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -122,20 +126,19 @@ export function LinkAdminDialog({
 
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="admin-password">Senha</FieldLabel>
-            <Input
+            <PasswordInput
               id="admin-password"
-              type="password"
+              autoComplete="new-password"
               {...register('password')}
               aria-invalid={!!errors.password}
             />
-            {errors.password && <p className="text-destructive text-sm">{errors.password.message}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="admin-confirm-password">Confirmar senha</FieldLabel>
-            <Input
+            <PasswordInput
               id="admin-confirm-password"
-              type="password"
+              autoComplete="new-password"
               {...register('confirmPassword')}
               aria-invalid={!!errors.confirmPassword}
             />
@@ -143,6 +146,8 @@ export function LinkAdminDialog({
               <p className="text-destructive text-sm">{errors.confirmPassword.message}</p>
             )}
           </div>
+
+          <PasswordRequirements value={watch('password')} />
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
