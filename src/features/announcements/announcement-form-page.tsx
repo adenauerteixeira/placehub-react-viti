@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { Calculator } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,6 +27,7 @@ import { useTenantUsers } from '@/features/tenant-users/api'
 import { errorMessage } from '@/lib/errors'
 import { slugWithRandomSuffix } from '@/lib/slugify'
 import { lookupCep } from '@/lib/viacep'
+import { AgioCalculatorDialog } from './agio-calculator-dialog'
 import { AmenityCheckboxes } from './amenity-checkboxes'
 import { AnnouncementGallery } from './announcement-gallery'
 import {
@@ -143,6 +145,7 @@ export function AnnouncementFormPage() {
   const navigate = useNavigate()
   const { tenant } = useTenantOutletContext()
   const [cepLoading, setCepLoading] = useState(false)
+  const [agioDialogOpen, setAgioDialogOpen] = useState(false)
 
   const { data: announcement, isLoading } = useAnnouncement(isEdit ? id : null)
   const { data: amenities } = useAnnouncementAmenities(isEdit ? id : null)
@@ -388,21 +391,35 @@ export function AnnouncementFormPage() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <FieldLabel hint="Categoria usada pra agrupar os anúncios no portal público.">Tipo de imóvel</FieldLabel>
-                    <Select
-                      value={watch('property_type')}
-                      onValueChange={(v) => setValue('property_type', v as PropertyType)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PROPERTY_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {PROPERTY_TYPE_LABELS[type]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-1.5">
+                      <Select
+                        value={watch('property_type')}
+                        onValueChange={(v) => setValue('property_type', v as PropertyType)}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PROPERTY_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {PROPERTY_TYPE_LABELS[type]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {watch('property_type') === 'assignment' && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          aria-label="Calculadora de ágio"
+                          title="Calculadora de ágio"
+                          onClick={() => setAgioDialogOpen(true)}
+                        >
+                          <Calculator className="size-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <FieldLabel hint="Se o imóvel é pra vender ou alugar.">Transação</FieldLabel>
@@ -754,6 +771,12 @@ export function AnnouncementFormPage() {
           </Button>
         </div>
       </form>
+
+      <AgioCalculatorDialog
+        open={agioDialogOpen}
+        onOpenChange={setAgioDialogOpen}
+        onApply={(value) => setValue('price', value)}
+      />
     </div>
   )
 }

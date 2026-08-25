@@ -31,7 +31,17 @@
   agrupamento do sistema anterior; botão ver/ocultar em todo campo de senha
   (`src/components/password-input.tsx`); checklist ao vivo de regras de senha
   (`src/lib/password.ts`, `src/components/password-requirements.tsx` — 8 caracteres, minúscula,
-  maiúscula, número, especial) nos 3 formulários que criam/alteram senha. Ver
+  maiúscula, número, especial) nos 3 formulários que criam/alteram senha.
+- **Calculadora de ágio (2026-08-25), a pedido do usuário — testada ponta a ponta:** botão ao
+  lado de "Tipo de imóvel" no formulário de anúncio, visível só quando o tipo é "Cessão"
+  (confirmado com o usuário: no sistema Laravel anterior esse mesmo campo era rotulado
+  literalmente "Ágio" — aqui os dois termos descrevem a mesma categoria). Abre
+  `src/features/announcements/agio-calculator-dialog.tsx`: pergunta valor original do contrato,
+  valor já pago, saldo devedor, valor de mercado atual e custos de transferência, calcula ágio
+  sugerido = (pago + valorização − custos) × (1 + margem%) — escopo (financiamento
+  bancário/construtora) e fórmula confirmados com o usuário antes de implementar, já que o
+  sistema anterior não tinha nada equivalente (era só rótulo de categoria). "Usar este valor no
+  preço" aplica direto no campo Preço do anúncio. Ver
   [Próximos passos imediatos](#próximos-passos-imediatos).
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2

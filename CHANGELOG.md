@@ -5,6 +5,22 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Calculadora de ágio, 2026-08-25)
+
+- **Calculadora de ágio** (`src/features/announcements/agio-calculator-dialog.tsx`): botão ao
+  lado do campo "Tipo de imóvel" no formulário de anúncio, visível só quando o tipo é "Cessão"
+  (`property_type = 'assignment'` — o mesmo campo que no sistema Laravel anterior era rotulado
+  literalmente "Ágio"; aqui os dois termos descrevem a mesma categoria de anúncio: imóvel
+  financiado em banco/construtora, repassado mediante ágio). Abre um diálogo com as perguntas
+  necessárias — valor original do contrato, valor já pago, saldo devedor restante, valor de
+  mercado atual (opcional) e custos de transferência (opcional), mais uma margem % desejada — e
+  calcula ao vivo: valorização estimada, base de cálculo, ágio sugerido e valor total da
+  transação. Botão "Usar este valor no preço" aplica o ágio sugerido direto no campo Preço do
+  anúncio. Fórmula e escopo (financiamento bancário/construtora, não consórcio) confirmados com o
+  usuário antes de implementar — não existia nada equivalente no sistema anterior (lá era só um
+  rótulo de categoria, sem cálculo nenhum). Testado ponta a ponta com valores conferidos
+  manualmente.
+
 ### Adicionado (6ª rodada de melhorias, pós-Fase 4, 2026-08-25)
 
 - **Menu aninhado em "Comercial" e "Administração"** (`src/features/tenant/tenant-layout.tsx`),
