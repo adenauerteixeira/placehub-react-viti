@@ -5,7 +5,7 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
-### Adicionado (Fase 5 — e-mails transacionais via Resend, 2026-08-26, aguardando deploy/teste)
+### Adicionado (Fase 5 — e-mails transacionais via Resend, 2026-08-26, testado ponta a ponta)
 
 - **Edge Function `send-notification-email`** (`supabase/functions/send-notification-email/`):
   4 tipos de e-mail — boas-vindas (conta criada), nova reserva confirmada (cliente), comissão
@@ -24,9 +24,17 @@ formato AAAA-MM-DD.
   liberada) e `useReceiveInstallment` (recibo de pagamento) chamam
   `supabase.functions.invoke('send-notification-email', ...)` no `onSuccess`, sem bloquear nem
   travar a UI se o envio falhar (`.catch(() => {})`).
-- **Ainda não testado ponta a ponta** — falta o usuário colar as 3 functions no painel do Supabase
-  (`send-notification-email` nova, `create-tenant-admin`/`invite-tenant-user` atualizadas) e
-  configurar os secrets, já que o CLI não está autenticado neste ambiente.
+- **Testado ponta a ponta contra o Resend real**, dirigindo o navegador com um login de
+  `tenant_admin` de teste: reservar um anúncio com e-mail de cliente preenchido (nova reserva),
+  registrar/reenviar aviso de uma parcela de comissão de um corretor com e-mail cadastrado
+  (comissão liberada), receber uma parcela de venda cujo lead tinha e-mail (recibo de pagamento),
+  e criar um usuário novo (boas-vindas, disparada server-to-server de dentro de
+  `invite-tenant-user` — não aparece na network do browser, só validada pelo e-mail recebido). Os
+  4 e-mails confirmados recebidos pelo usuário. No caminho, dois problemas de configuração (não de
+  código) apareceram e foram corrigidos: a `RESEND_API_KEY` inicial estava inválida (401 do
+  Resend), e o remetente `RESEND_FROM_EMAIL` estava configurado com o domínio `placehub.app`
+  (não verificado no Resend) em vez do domínio realmente verificado do tenant de teste,
+  `casah.imb.br`.
 
 ### Adicionado (Taxa de transferência % e auto-atualização de saldo na calculadora de ágio, 2026-08-26)
 

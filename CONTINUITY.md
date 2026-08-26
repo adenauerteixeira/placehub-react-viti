@@ -14,8 +14,12 @@
   ainda não autenticado neste ambiente — ver nota abaixo). Extensão **pg_cron habilitada** (passo
   manual do usuário no painel, Database → Extensions) — job `funnel-expirations` rodando a cada
   minuto.
-  Quatro Edge Functions no ar: `create-tenant-admin`, `invite-tenant-user`,
-  `update-tenant-user-email` e `reset-tenant-user-password`. Buckets: `tenant-branding`,
+  Cinco Edge Functions no ar: `create-tenant-admin`, `invite-tenant-user`,
+  `update-tenant-user-email`, `reset-tenant-user-password` e `send-notification-email` (nova,
+  Fase 5). Secrets configurados nela: `RESEND_API_KEY`, `RESEND_FROM_EMAIL` =
+  `naoresponda@casah.imb.br` (domínio verificado no Resend é o do tenant de teste Casah,
+  `casah.imb.br` — **não** `placehub.app`, que ainda não foi verificado lá; ver nota em "Notas
+  técnicas" abaixo sobre a implicação disso pra multi-tenant). Buckets: `tenant-branding`,
   `catalog-media` (Fase 2), `sale-documents` (Fase 3/4, comprovantes de pagamento e de repasse de
   comissão, privado).
 - **Fase 3 — Funil comercial: COMPLETA.** Leads + Agenda, Negociações, Propostas, Reservas e
@@ -25,6 +29,10 @@
   corretor, auditoria na tela de venda, dashboard real (`/dashboard`) e relatórios (`/reports`,
   5 tipos, impressão via `window.print()`) — todos testados ponta a ponta contra o Supabase real.
   Ver bloco "Fase 4" logo abaixo.
+- **Fase 5 — E-mail e notificações: COMPLETA.** Edge Function `send-notification-email` com os 4
+  tipos (boas-vindas, nova reserva, comissão liberada, recibo de pagamento), testados ponta a
+  ponta contra o Resend real dirigindo o navegador com login de teste — os 4 e-mails confirmados
+  recebidos pelo usuário. Branch de snapshot `fase-5-notificacoes` criada.
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,
@@ -284,31 +292,36 @@
 
 ## Próximos passos imediatos
 
-**BLOQUEANTE — Fase 5 iniciada, aguardando deploy manual (2026-08-26).** Código escrito e
-`tsc`/`oxlint` limpos, mas **nada testado ponta a ponta** — falta o usuário colar 3 Edge Functions
-no painel do Supabase (CLI segue sem auth neste ambiente):
-1. **Nova function `send-notification-email`** (`supabase/functions/send-notification-email/index.ts`)
-   — criar do zero no painel, colar o conteúdo do arquivo, **desligar "Enforce JWT Verification"**
-   nas configurações da function (mesmo motivo das outras 4: ela faz a própria checagem de auth
-   internamente, e com o JWT verification ligado o preflight CORS quebra — ver
-   [[feedback_edge_function_deploy]]).
-2. **Atualizar `create-tenant-admin`** e **`invite-tenant-user`** — cada uma ganhou um `fetch` pro
-   `send-notification-email` (tipo `welcome`) logo após criar o usuário. **Selecionar tudo e
-   substituir** o conteúdo do editor no painel (não colar por cima/do lado), depois deploy.
-3. **Configurar secrets da function** `send-notification-email` (painel → Edge Functions →
-   Secrets, ou aba de secrets de cada function): `RESEND_API_KEY` e `RESEND_FROM_EMAIL` — o
-   usuário já validou o domínio no Resend e colou os dois valores nesta sessão (removidos de
-   `.env.local` porque não é o lugar certo — só variáveis `VITE_*` do frontend ficam lá; segredo de
-   function fica só nos secrets do Supabase, nunca no repo). `ROOT_DOMAIN` é opcional (default
-   `placehub.app` já bate com o domínio real).
-4. Depois do deploy: testar os 4 gatilhos meio a meio — criar um tenant_admin novo (boas-vindas),
-   reservar um anúncio com e-mail de cliente preenchido (nova reserva), registrar um repasse de
-   comissão pra um corretor com e-mail cadastrado (comissão liberada), e receber uma parcela de
-   venda cujo lead tenha e-mail (recibo de pagamento). Confere no dashboard do Resend se os 4
-   chegaram, e que nenhum gatilho quebrou a ação principal quando o destinatário não tinha e-mail
-   cadastrado (deve retornar `{sent:false, reason:...}` sem erro pro usuário).
+**Fase 5 fechada (2026-08-26).** As 3 Edge Functions foram coladas no painel pelo usuário
+(`send-notification-email` nova, `create-tenant-admin`/`invite-tenant-user` atualizadas, JWT
+verification desligada na nova) e os 4 tipos de e-mail testados ponta a ponta dirigindo o
+navegador com login de `tenant_admin` de teste (`tenant.adm@gmail.com`, tenant Casah). Dois
+problemas de configuração apareceram e foram corrigidos no caminho (não eram bugs de código):
+- `RESEND_API_KEY` inicial era inválida (401 do Resend) — usuário gerou uma key nova.
+- `RESEND_FROM_EMAIL` estava `naoresponda@placehub.app`, mas o domínio verificado no Resend é
+  **`casah.imb.br`** (do tenant de teste), não `placehub.app` — corrigido pra
+  `naoresponda@casah.imb.br`. **Implicação pra quando houver mais de um tenant**: hoje só existe
+  um sender verificado no Resend, então todo e-mail do sistema (de qualquer tenant) sai como
+  `casah.imb.br`, não do domínio do tenant dono da ação — aceitável agora (single-tenant de
+  fato), mas vira backlog real assim que houver um segundo tenant em produção precisando de
+  identidade própria no remetente (exigiria verificar o domínio de cada tenant no Resend e
+  escolher o `from` dinamicamente por `tenant_id` dentro da function, em vez do secret fixo
+  atual).
 
-Depois disso, Fase 5 fecha (só faltam os 2 itens acima — não tem mais nada planejado nela).
+Resíduo de dados de teste no Supabase desta sessão (mesmo padrão de "não urgente, nada
+destrutivo" já usado nas fases anteriores — ver "Notas técnicas" abaixo):
+- Broker "Corretor Qa Comissao" ganhou e-mail `adenauerteixeira@gmail.com` (estava vazio) pra
+  testar "comissão liberada".
+- Lead "Cliente Qa Comissao 2" ganhou e-mail `adenauerteixeira@gmail.com` (estava vazio) pra
+  testar "recibo de pagamento".
+- Usuário novo criado no tenant Casah: "Qa Teste Boas Vindas" / `adenauerteixeira+welcome@gmail.com`
+  (papel Corretor, sem permissões) — testa "boas-vindas". Tem login de verdade (senha
+  `TesteQa#2026`), considerar desativar/excluir quando fizer a limpeza geral.
+- Reserva "QA Teste Notificacao 2" (cancelada) no anúncio "Casa QA Teste 3 quartos".
+
+Aguardando o usuário indicar o que fazer a seguir (nada mais planejado explicitamente — Fases 0
+(infra: Vercel/domínio/CI/Resend — Resend em si já resolvido por esta fase) e 6 (testes,
+observabilidade) são as únicas pendências restantes do roadmap).
 
 **Melhorias na calculadora de ágio implementadas (2026-08-26)**
 (`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão
