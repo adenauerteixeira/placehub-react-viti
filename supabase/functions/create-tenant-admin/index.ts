@@ -100,5 +100,21 @@ Deno.serve(async (req: Request) => {
     return json({ error: message }, 400)
   }
 
+  // Best-effort — o e-mail de boas-vindas nunca deve impedir a criação da
+  // conta, que já aconteceu com sucesso acima.
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/send-notification-email`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type: 'welcome', user_id: created.user.id }),
+    })
+  } catch {
+    // ignora — a conta já foi criada
+  }
+
   return json({ user: { id: created.user.id, email: created.user.email } })
 })

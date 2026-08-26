@@ -5,6 +5,29 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Fase 5 — e-mails transacionais via Resend, 2026-08-26, aguardando deploy/teste)
+
+- **Edge Function `send-notification-email`** (`supabase/functions/send-notification-email/`):
+  4 tipos de e-mail — boas-vindas (conta criada), nova reserva confirmada (cliente), comissão
+  liberada (corretor confirmar recebimento) e recibo de pagamento (parcela de venda recebida).
+  Envelope HTML único (`emailShell()`) com a cor primária e o logo do tenant, chamando a API do
+  Resend (`RESEND_API_KEY`/`RESEND_FROM_EMAIL` como secrets da function, nunca no repo). Envio
+  sempre best-effort — nenhum dos 4 gatilhos pode falhar a ação principal (criar conta, reservar,
+  registrar repasse, receber parcela) por causa de erro no e-mail.
+- **Autorização por tipo**: "boas-vindas" só é aceito quando o chamador é o próprio projeto
+  (Authorization = service role key, comparado por string) — é disparado de dentro de
+  `create-tenant-admin`/`invite-tenant-user` antes de existir sessão do novo usuário. Os outros 3
+  tipos exigem sessão de usuário comum cujo `tenant_id` bate com o tenant dono do registro
+  referenciado (reserva/parcela de comissão/parcela de venda), pra um usuário de um tenant não
+  conseguir ler dados ou disparar e-mail usando o id de um registro de outro tenant.
+- **Gatilhos**: `useReserveAnnouncement` (nova reserva), `useRegisterBrokerPayment` (comissão
+  liberada) e `useReceiveInstallment` (recibo de pagamento) chamam
+  `supabase.functions.invoke('send-notification-email', ...)` no `onSuccess`, sem bloquear nem
+  travar a UI se o envio falhar (`.catch(() => {})`).
+- **Ainda não testado ponta a ponta** — falta o usuário colar as 3 functions no painel do Supabase
+  (`send-notification-email` nova, `create-tenant-admin`/`invite-tenant-user` atualizadas) e
+  configurar os secrets, já que o CLI não está autenticado neste ambiente.
+
 ### Adicionado (Taxa de transferência % e auto-atualização de saldo na calculadora de ágio, 2026-08-26)
 
 - **Taxa de transferência em %** (`src/features/announcements/agio-calculator-dialog.tsx`): campo

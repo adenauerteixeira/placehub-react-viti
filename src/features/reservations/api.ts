@@ -96,6 +96,11 @@ export function useReserveAnnouncement(tenantId: string) {
       queryClient.invalidateQueries({ queryKey: ['active-reservation', reservation.announcement_id] })
       queryClient.invalidateQueries({ queryKey: ['announcements', tenantId] })
       queryClient.invalidateQueries({ queryKey: ['announcement', reservation.announcement_id] })
+      // Best-effort — falha no e-mail de confirmação não deve incomodar quem
+      // acabou de reservar com sucesso.
+      supabase.functions
+        .invoke('send-notification-email', { body: { type: 'new_reservation', reservation_id: reservation.id } })
+        .catch(() => {})
     },
   })
 }

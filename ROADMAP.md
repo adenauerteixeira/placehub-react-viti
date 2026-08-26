@@ -158,9 +158,16 @@ relatórios com impressão funcionando ponta a ponta contra o Supabase real.
 
 ## Fase 5 — E-mail e notificações
 
-- [ ] Edge Function `send-email` (Resend) para: boas-vindas, nova reserva, comissão liberada,
-      recibo de pagamento.
-- [ ] Templates de e-mail com a identidade visual do tenant.
+- [ ] Edge Function `send-notification-email` (Resend) para: boas-vindas (disparada de dentro de
+      `create-tenant-admin`/`invite-tenant-user` via service role), nova reserva (disparada do
+      client após `reserve_announcement`), comissão liberada (após
+      `register_broker_commission_payment`) e recibo de pagamento (após `receive_installment`).
+      Envio best-effort — falha no e-mail nunca derruba a ação principal. **Código escrito, ainda
+      NÃO testado ponta a ponta** — falta o usuário colar as 3 functions no painel (CLI sem auth
+      neste ambiente) e confirmar recebimento real via Resend.
+- [ ] Templates de e-mail com a identidade visual do tenant — envelope HTML único
+      (`emailShell()`) usando `primary_color`/`logo_light_path` do tenant, reaproveitado pelos 4
+      tipos. Mesma ressalva acima: escrito, não testado visualmente ainda.
 
 ## Fase 6 — Polimento e observabilidade
 

@@ -163,6 +163,11 @@ export function useRegisterBrokerPayment(tenantId: string) {
       queryClient.invalidateQueries({ queryKey: ['commission-installments', variables.commission_id] })
       queryClient.invalidateQueries({ queryKey: ['commission', variables.commission_id] })
       queryClient.invalidateQueries({ queryKey: ['commissions', tenantId] })
+      // Best-effort — falha no aviso por e-mail não deve incomodar quem
+      // acabou de registrar o repasse com sucesso.
+      supabase.functions
+        .invoke('send-notification-email', { body: { type: 'commission_released', installment_id: variables.id } })
+        .catch(() => {})
     },
   })
 }

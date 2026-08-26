@@ -284,6 +284,32 @@
 
 ## Próximos passos imediatos
 
+**BLOQUEANTE — Fase 5 iniciada, aguardando deploy manual (2026-08-26).** Código escrito e
+`tsc`/`oxlint` limpos, mas **nada testado ponta a ponta** — falta o usuário colar 3 Edge Functions
+no painel do Supabase (CLI segue sem auth neste ambiente):
+1. **Nova function `send-notification-email`** (`supabase/functions/send-notification-email/index.ts`)
+   — criar do zero no painel, colar o conteúdo do arquivo, **desligar "Enforce JWT Verification"**
+   nas configurações da function (mesmo motivo das outras 4: ela faz a própria checagem de auth
+   internamente, e com o JWT verification ligado o preflight CORS quebra — ver
+   [[feedback_edge_function_deploy]]).
+2. **Atualizar `create-tenant-admin`** e **`invite-tenant-user`** — cada uma ganhou um `fetch` pro
+   `send-notification-email` (tipo `welcome`) logo após criar o usuário. **Selecionar tudo e
+   substituir** o conteúdo do editor no painel (não colar por cima/do lado), depois deploy.
+3. **Configurar secrets da function** `send-notification-email` (painel → Edge Functions →
+   Secrets, ou aba de secrets de cada function): `RESEND_API_KEY` e `RESEND_FROM_EMAIL` — o
+   usuário já validou o domínio no Resend e colou os dois valores nesta sessão (removidos de
+   `.env.local` porque não é o lugar certo — só variáveis `VITE_*` do frontend ficam lá; segredo de
+   function fica só nos secrets do Supabase, nunca no repo). `ROOT_DOMAIN` é opcional (default
+   `placehub.app` já bate com o domínio real).
+4. Depois do deploy: testar os 4 gatilhos meio a meio — criar um tenant_admin novo (boas-vindas),
+   reservar um anúncio com e-mail de cliente preenchido (nova reserva), registrar um repasse de
+   comissão pra um corretor com e-mail cadastrado (comissão liberada), e receber uma parcela de
+   venda cujo lead tenha e-mail (recibo de pagamento). Confere no dashboard do Resend se os 4
+   chegaram, e que nenhum gatilho quebrou a ação principal quando o destinatário não tinha e-mail
+   cadastrado (deve retornar `{sent:false, reason:...}` sem erro pro usuário).
+
+Depois disso, Fase 5 fecha (só faltam os 2 itens acima — não tem mais nada planejado nela).
+
 **Melhorias na calculadora de ágio implementadas (2026-08-26)**
 (`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão
 anterior:

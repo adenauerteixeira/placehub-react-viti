@@ -246,10 +246,15 @@ export function useReceiveInstallment(saleId: string, tenantId: string) {
       if (error) throw error
       return data
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sale-installments', saleId] })
       queryClient.invalidateQueries({ queryKey: ['commissions', tenantId] })
       queryClient.invalidateQueries({ queryKey: ['commission-by-sale', saleId] })
+      // Best-effort — falha no recibo por e-mail não deve incomodar quem
+      // acabou de registrar o recebimento com sucesso.
+      supabase.functions
+        .invoke('send-notification-email', { body: { type: 'payment_receipt', installment_id: variables.id } })
+        .catch(() => {})
     },
   })
 }
