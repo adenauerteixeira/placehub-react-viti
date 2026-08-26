@@ -449,7 +449,7 @@ export function AnnouncementFormPage() {
                     <FieldLabel hint="Se o imóvel é pra vender ou alugar.">Transação</FieldLabel>
                     {watch('property_type') === 'assignment' ? (
                       <div className="border-input bg-input/30 text-muted-foreground flex h-8 items-center rounded-lg border px-2.5 text-sm">
-                        Venda (cessão é sempre venda)
+                        Cessão é sempre Venda
                       </div>
                     ) : (
                       <Select

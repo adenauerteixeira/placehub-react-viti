@@ -5,14 +5,15 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-08-25
+## Estado atual — 2026-08-26
 
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260827090000_commissions_and_audit.sql` aplicadas com sucesso via SQL Editor (CLI ainda não
-  autenticado neste ambiente — ver nota abaixo). Extensão **pg_cron habilitada** (passo manual do
-  usuário no painel, Database → Extensions) — job `funnel-expirations` rodando a cada minuto.
+  `20260825120000_announcement_agio_calculation.sql` aplicadas com sucesso via SQL Editor (CLI
+  ainda não autenticado neste ambiente — ver nota abaixo). Extensão **pg_cron habilitada** (passo
+  manual do usuário no painel, Database → Extensions) — job `funnel-expirations` rodando a cada
+  minuto.
   Quatro Edge Functions no ar: `create-tenant-admin`, `invite-tenant-user`,
   `update-tenant-user-email` e `reset-tenant-user-password`. Buckets: `tenant-branding`,
   `catalog-media` (Fase 2), `sale-documents` (Fase 3/4, comprovantes de pagamento e de repasse de
@@ -282,6 +283,39 @@
     relatórios — todos testados ponta a ponta contra o Supabase real.
 
 ## Próximos passos imediatos
+
+**Pedido do usuário ainda NÃO implementado (2026-08-26) — melhorar a calculadora de ágio**
+(`src/features/announcements/agio-calculator-dialog.tsx`), dois pontos, verbatim do que foi
+pedido pra não perder nuance na próxima sessão:
+1. **Taxa de transferência em %, não só valor fixo.** O custo de transferência geralmente é
+   calculado como um percentual sobre o valor atualizado do contrato (o usuário citou o exemplo
+   real: "Taxa de transferência: Deve ser pago o valor de 2% do valor atualizado do contrato para
+   cobrir despesas de cadastro e administrativas"). Adicionar um campo de percentual (0,00%, já
+   que cada empreendimento aplica uma taxa diferente) calculado em cima do campo **"Valor de
+   mercado atual"** — não o valor original. Esse campo de % deve **dividir o espaço com o campo
+   "Custos de transferência"** já existente (mesma linha/grid) — ao informar a taxa, o campo de
+   custo é preenchido automaticamente (calculado), com tratamento pro caso de algum valor
+   necessário (valor de mercado atual) ainda não ter sido informado (não pode quebrar/mostrar
+   NaN).
+2. **Campos de prestação (valor + dia/mês de vencimento) pra manter "saldo devedor restante" e
+   "já pago até agora" atualizados automaticamente.** Adicionar um campo pro valor da prestação
+   mensal e outro pro dia/mês de vencimento dela. O sistema deve comparar a data atual com esse
+   dia/mês (considerando o mesmo ano) — se já passou, **recalcular** somando mais uma prestação
+   em "já pago até agora" e subtraindo do "saldo devedor restante" — mantendo os valores
+   atualizados automaticamente enquanto a venda não foi fechada ("até que se 'ganhe' essa
+   venda"). Precisa pensar em: quantas prestações "vencidas" desde a última atualização (pode ser
+   mais de uma se o anúncio ficar tempo sem edição), e onde esse estado incremental fica
+   persistido (os campos novos entram no `agio_calculation` jsonb já existente, junto com uma
+   referência de "a partir de quando" contar, tipo a data em que os valores base foram
+   informados).
+
+Nenhuma linha de código escrita pra isso ainda — a mensagem do usuário foi interrompida antes de
+eu poder implementar, e ele pediu pra fechar a sessão. Reler esse item com calma antes de
+desenhar (talvez valha uma rodada de perguntas de esclarecimento sobre o comportamento exato do
+recálculo, ex.: o que acontece se o usuário abrir a calculadora bem depois de várias prestações
+vencidas — soma todas de uma vez? Editar manualmente depois quebra o auto-cálculo?).
+
+---
 
 **Fase 4 está fechada** (branch de snapshot `fase-4-comissoes-dashboard` já criada) **e a 6ª
 rodada de melhorias pós-Fase 4 (menu aninhado, ver/ocultar senha, regras de senha) também.**
