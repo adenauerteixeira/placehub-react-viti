@@ -54,11 +54,13 @@ export function PartnerFormDialog({
   onOpenChange,
   tenantId,
   partner,
+  onCreated,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   tenantId: string
   partner?: Partner
+  onCreated?: (partner: Partner) => void
 }) {
   const isEdit = !!partner
   const createPartner = useCreatePartner(tenantId)
@@ -97,8 +99,9 @@ export function PartnerFormDialog({
         await updatePartner.mutateAsync({ id: partner.id, ...values })
         toast.success('Parceiro atualizado.')
       } else {
-        await createPartner.mutateAsync(values)
+        const created = await createPartner.mutateAsync(values)
         toast.success('Parceiro criado.')
+        onCreated?.(created)
       }
       onOpenChange(false)
     } catch (error) {

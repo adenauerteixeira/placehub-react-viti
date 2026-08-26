@@ -7,7 +7,7 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
   farm: 'Chácara/Fazenda',
   commercial: 'Comercial',
   launch: 'Lançamento',
-  assignment: 'Cessão',
+  assignment: 'Cessão (Ágio)',
 }
 
 export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {

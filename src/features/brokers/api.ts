@@ -161,7 +161,13 @@ export function useCreateBroker(tenantId: string) {
       if (error) throw error
       return data
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
+      // Ver comentário equivalente em useCreateOwner (features/owners/api.ts) —
+      // evita o Radix Select "corrigir" o value pra vazio antes do cache ter
+      // o item novo.
+      queryClient.setQueryData<Broker[]>(['brokers', tenantId], (old) =>
+        old ? [...old, created].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) : [created],
+      )
       queryClient.invalidateQueries({ queryKey: ['brokers', tenantId] })
       queryClient.invalidateQueries({ queryKey: ['eligible-broker-profiles', tenantId] })
     },

@@ -32,17 +32,54 @@
   (`src/components/password-input.tsx`); checklist ao vivo de regras de senha
   (`src/lib/password.ts`, `src/components/password-requirements.tsx` — 8 caracteres, minúscula,
   maiúscula, número, especial) nos 3 formulários que criam/alteram senha.
-- **Calculadora de ágio (2026-08-25), a pedido do usuário — testada ponta a ponta:** botão ao
-  lado de "Tipo de imóvel" no formulário de anúncio, visível só quando o tipo é "Cessão"
-  (confirmado com o usuário: no sistema Laravel anterior esse mesmo campo era rotulado
-  literalmente "Ágio" — aqui os dois termos descrevem a mesma categoria). Abre
-  `src/features/announcements/agio-calculator-dialog.tsx`: pergunta valor original do contrato,
-  valor já pago, saldo devedor, valor de mercado atual e custos de transferência, calcula ágio
-  sugerido = (pago + valorização − custos) × (1 + margem%) — escopo (financiamento
-  bancário/construtora) e fórmula confirmados com o usuário antes de implementar, já que o
-  sistema anterior não tinha nada equivalente (era só rótulo de categoria). "Usar este valor no
-  preço" aplica direto no campo Preço do anúncio. Ver
-  [Próximos passos imediatos](#próximos-passos-imediatos).
+- **Calculadora de ágio + cadastro rápido nos vínculos do anúncio (2026-08-25/26), a pedido do
+  usuário — testado ponta a ponta em vários formulários:**
+  - Label renomeado pra **"Cessão (Ágio)"** (`PROPERTY_TYPE_LABELS.assignment`) — no sistema
+    Laravel anterior esse mesmo campo era rotulado literalmente "Ágio"; aqui os dois termos
+    descrevem a mesma categoria.
+  - `src/features/announcements/agio-calculator-dialog.tsx`: botão ao lado de "Tipo de imóvel",
+    visível só quando "Cessão (Ágio)" selecionado. Pergunta valor original do contrato, valor já
+    pago, saldo devedor, valor de mercado atual, custos de transferência; calcula ágio sugerido =
+    (pago + valorização − custos) × (1 + margem%) — escopo (financiamento bancário/construtora,
+    não consórcio) e fórmula confirmados com o usuário antes de implementar, já que o sistema
+    anterior não tinha nada equivalente (era só rótulo de categoria). "Aplicar" grava o valor no
+    campo Preço **e persiste os dados da calculadora** em `announcements.agio_calculation`
+    (jsonb novo, `20260825120000_announcement_agio_calculation.sql`) — reabrir a calculadora numa
+    edição futura já vem preenchida, testado com um ciclo completo de salvar + recarregar a
+    página de edição.
+  - Coerência de formulário: com "Cessão (Ágio)" selecionado, o campo Transação vira texto fixo
+    "Venda (cessão é sempre venda)" em vez de select, e o valor é forçado pra `sale`.
+  - Botão "+" ao lado de Empreendimento/Parceiro/Proprietário/Corretor no formulário de anúncio
+    abre o dialog de criação de cada um (prop `onCreated` nova nesses 4 componentes) sem sair da
+    tela — o registro novo é selecionado automaticamente. As 4 mutações de criação
+    (`useCreateOwner`/`useCreatePartner`/`useCreateDevelopment`/`useCreateBroker`) passaram a
+    fazer `setQueryData` (além do `invalidateQueries` de sempre) pra evitar uma corrida onde o
+    item novo ainda não está na lista no momento da seleção.
+  - **Bug real de plataforma achado e corrigido** (não só desta feature — afetava qualquer tela
+    de edição do sistema, silenciosamente, desde sempre): o `<Select>` compartilhado
+    (`src/components/ui/select.tsx`), quando aninhado num `<form>` (praticamente todo lugar),
+    mantém um `<select>` nativo oculto (`SelectBubbleInput`, mecanismo interno do Radix) pra
+    compatibilidade de formulário. Quando o value controlado muda pra algo cujo `SelectItem`
+    nunca foi renderizado com o dropdown aberto — o caso normal de `reset()` carregando um
+    registro existente pra editar, ou de selecionar algo recém-criado — esse `<select>` nativo
+    não acha a `<option>` correspondente, o navegador reseta o valor dele pra `""` e o Radix
+    repassa isso como `onValueChange("")`, sobrescrevendo o valor real sem erro nenhum visível.
+    Achado ao testar o botão "+" (o registro recém-criado desaparecia do campo ao ser
+    selecionado), mas ao investigar percebi que o MESMO bug corrompia silenciosamente `property_type`
+    ao **editar qualquer anúncio "Cessão (Ágio)" existente** — e por extensão, qualquer select de
+    qualquer tela cujo valor carregado (via `reset()`) difere do valor padrão do formulário vazio.
+    Corrigido uma vez só, globalmente, no wrapper `Select` (ignora `onValueChange("")`, já que
+    nenhuma tela do app usa string vazia como valor legítimo). Verificado depois da correção em
+    dois formulários bem diferentes (anúncio e corretor) sem regressão.
+  - **Debugging note pra próxima sessão**: `page.evaluate()`/`console.log` neste ambiente de
+    automação de navegador (patchright via extensão VS Code) rodam num **isolated world**
+    separado do `window` real da página — escrever/ler `window.__DEBUG__` ou até `console.log`
+    de dentro do código React **não aparece** pro script de teste, mesmo funcionando
+    perfeitamente. Isso custou um bom tempo tentando entender por que um `console.log` no topo
+    de um componente "não rodava" quando na verdade rodava, só não era visível dali. O jeito
+    confiável de depurar estado do React nesse ambiente: renderizar o valor num elemento DOM
+    visível (`<p data-testid="...">{JSON.stringify(valor)}</p>`) e ler via `page.locator(...).
+    innerText()` — DOM e requisições de rede são compartilhados entre os worlds, `window` não é.
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
   ficaram no banco (empreendimento/parceiro/proprietário/corretor/anúncio "QA Teste") — não são
@@ -291,6 +328,24 @@ registros "QA Comissao" criados testando comissões na Fase 4).
   do `npm run dev`** (rode-o redirecionando pra um arquivo, ex. `npm run dev >
   /tmp/vite-dev.log 2>&1 &`, e dê `tail` nesse arquivo) — foi assim que se achou o bug real desta
   sessão (`PhoneInput` recebendo `value=undefined` porque um `useForm` esqueceu `defaultValues`).
+- **`page.evaluate()`/`console.log` no `browser-automation` deste ambiente rodam num isolated
+  world separado do `window` real da página** (típico de automação via extensão de navegador) —
+  escrever `window.__DEBUG__ = x` de dentro do código React e depois ler
+  `page.evaluate(() => window.__DEBUG__)` no script de teste **sempre retorna `undefined`**,
+  mesmo quando o código React roda perfeitamente e a variável É definida (só que no `window` do
+  outro world). Já custou uma sessão inteira "provando" que um `console.log` no topo de um
+  componente não executava, quando na verdade executava. Pra depurar estado do React nesse
+  ambiente, **renderize o valor num elemento DOM visível e leia via `page.locator(...).
+  innerText()`** — DOM e requisições de rede são compartilhados entre os worlds, `window` não é.
+- **Radix Select (`src/components/ui/select.tsx`) perdia o valor silenciosamente em qualquer
+  edição** (bug de plataforma achado e corrigido em 2026-08-25/26, ver CHANGELOG) — qualquer
+  `<Select>` aninhado num `<form>` mantém um `<select>` nativo oculto pra bubbling; ao mudar o
+  value controlado pra algo cujo `SelectItem` nunca foi renderizado com o dropdown aberto (comum
+  em `reset()` carregando um registro existente), esse nativo não acha a `<option>`, o navegador
+  reseta pra `""` e o Radix repassa como `onValueChange("")`. Corrigido globalmente no wrapper
+  `Select`, ignorando esse evento fantasma — nenhuma tela do app usa string vazia como valor
+  legítimo. **Ao adicionar qualquer Select novo, não é preciso reaplicar nada — a correção já
+  protege todo mundo.**
 - Credenciais de teste (ambiente de desenvolvimento, não são segredo de produção):
   `root@gmail.com` (super_admin) e `tenant.adm@gmail.com` (tenant_admin do Casah) — senhas não
   registradas aqui de propósito; pedir ao usuário se precisar re-testar.
@@ -311,7 +366,10 @@ registros "QA Comissao" criados testando comissões na Fase 4).
   "Cliente Qa Comissao"/"Cliente Qa Comissao 2", corretor "Corretor Qa Comissao" (vinculado ao
   login `creci.qa.isolate@example.com`, usado pra testar a confirmação de recebimento do
   corretor) e as vendas/comissões geradas a partir deles (cascade ao apagar os leads via
-  negociação → venda → comissão). Nada disso é destrutivo deixar.
+  negociação → venda → comissão). Da calculadora de ágio/cadastro rápido: vários anúncios "Casa QA
+  Diag*"/"Casa QA Sanity*"/"Casa QA Final Combo" e os registros "Empreendimento/Parceiro/
+  Proprietario/Corretor Qa Final" criados testando o cadastro rápido — o mesmo `ilike '%qa%'`
+  acima cobre a maioria. Nada disso é destrutivo deixar.
 
 ## Decisões em aberto / para revisitar
 

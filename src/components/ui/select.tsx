@@ -5,9 +5,31 @@ import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
 function Select({
+  onValueChange,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />
+  return (
+    <SelectPrimitive.Root
+      data-slot="select"
+      onValueChange={(value) => {
+        // Radix Select mantém um <select> nativo oculto pra bubbling de
+        // formulário sempre que o Select está aninhado num <form> (nosso
+        // caso em todo lugar). Quando o value controlado muda pra algo cujo
+        // SelectItem nunca foi renderizado com o dropdown aberto — comum ao
+        // dar reset() com dados de um registro existente, ou ao selecionar
+        // um item recém-criado por um botão "+" — esse <select> nativo não
+        // acha a <option> correspondente, o browser reseta o valor dele pra
+        // "", e o Radix dispara onValueChange("") por causa disso. Nunca é
+        // uma escolha real do usuário (o app sempre usa um sentinel tipo
+        // "__none__" pra "nada selecionado", nunca string vazia), então
+        // ignorar esse evento fantasma aqui protege todo Select do app de
+        // uma vez, sem precisar lembrar disso em cada tela.
+        if (value === '') return
+        onValueChange?.(value)
+      }}
+      {...props}
+    />
+  )
 }
 
 function SelectGroup({

@@ -55,11 +55,13 @@ export function OwnerFormDialog({
   onOpenChange,
   tenantId,
   owner,
+  onCreated,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   tenantId: string
   owner?: Owner
+  onCreated?: (owner: Owner) => void
 }) {
   const isEdit = !!owner
   const createOwner = useCreateOwner(tenantId)
@@ -98,8 +100,9 @@ export function OwnerFormDialog({
         await updateOwner.mutateAsync({ id: owner.id, ...values })
         toast.success('Proprietário atualizado.')
       } else {
-        await createOwner.mutateAsync(values)
+        const created = await createOwner.mutateAsync(values)
         toast.success('Proprietário criado.')
+        onCreated?.(created)
       }
       onOpenChange(false)
     } catch (error) {

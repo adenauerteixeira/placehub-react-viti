@@ -7,6 +7,17 @@ export type PropertyType = 'lot' | 'house' | 'apartment' | 'farm' | 'commercial'
 export type TransactionType = 'sale' | 'rent'
 export type AnnouncementStatus = 'draft' | 'published' | 'reserved' | 'sold' | 'inactive'
 
+/** Dados usados na calculadora de ágio (anúncios do tipo Cessão) — persistidos
+ * pra poder reabrir a calculadora já preenchida numa edição futura. */
+export type AgioCalculation = {
+  valorOriginal: number | null
+  valorPago: number | null
+  saldoDevedor: number | null
+  valorMercado: number | null
+  custosTransferencia: number | null
+  margem: string
+}
+
 export type Announcement = {
   id: string
   tenant_id: string
@@ -44,6 +55,7 @@ export type Announcement = {
   owner_id: string | null
   broker_id: string | null
   responsible_profile_id: string | null
+  agio_calculation: AgioCalculation | null
   published_at: string | null
   created_at: string
   updated_at: string
@@ -59,7 +71,7 @@ export type AnnouncementImage = {
 }
 
 const ANNOUNCEMENT_COLUMNS =
-  'id, tenant_id, title, subtitle, slug, reference_code, description, property_type, transaction_type, status, price, promotional_price, featured, promotion, video_url, zip_code, street, address_number, complement, neighborhood, city, state, bedrooms, suites, bathrooms, parking_spaces, land_area, built_area, private_area, condominium_fee, iptu, development_id, partner_id, owner_id, broker_id, responsible_profile_id, published_at, created_at, updated_at'
+  'id, tenant_id, title, subtitle, slug, reference_code, description, property_type, transaction_type, status, price, promotional_price, featured, promotion, video_url, zip_code, street, address_number, complement, neighborhood, city, state, bedrooms, suites, bathrooms, parking_spaces, land_area, built_area, private_area, condominium_fee, iptu, development_id, partner_id, owner_id, broker_id, responsible_profile_id, agio_calculation, published_at, created_at, updated_at'
 
 export function announcementImageUrl(path: string): string {
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
@@ -237,6 +249,7 @@ export type AnnouncementInput = {
   owner_id: string | null
   broker_id: string | null
   responsible_profile_id: string | null
+  agio_calculation: AgioCalculation | null
 }
 
 function toRow(input: AnnouncementInput) {
@@ -273,6 +286,7 @@ function toRow(input: AnnouncementInput) {
     owner_id: input.owner_id,
     broker_id: input.broker_id,
     responsible_profile_id: input.responsible_profile_id,
+    agio_calculation: input.agio_calculation,
   }
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Calculator } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CurrencyInput } from '@/components/currency-input'
@@ -13,36 +13,46 @@ import {
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import type { AgioCalculation } from './api'
 
 function formatPrice(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-const initialState = {
-  valorOriginal: null as number | null,
-  valorPago: null as number | null,
-  saldoDevedor: null as number | null,
-  valorMercado: null as number | null,
-  custosTransferencia: null as number | null,
+const emptyData: AgioCalculation = {
+  valorOriginal: null,
+  valorPago: null,
+  saldoDevedor: null,
+  valorMercado: null,
+  custosTransferencia: null,
   margem: '10',
 }
 
 /** Calculadora de ágio pra imóveis em cessão (financiamento bancário ou direto
  * com a construtora): ajuda o corretor a chegar num valor sugerido a partir do
  * que já foi pago, da valorização estimada e dos custos de transferência —
- * não é um cálculo exato, é um ponto de partida pra negociação. */
+ * não é um cálculo exato, é um ponto de partida pra negociação. Os dados
+ * ficam com o formulário do anúncio (props `data`/`onApply`), não com o
+ * diálogo, pra persistir entre edições — o dono do imóvel pode querer
+ * atualizar alguma informação depois. */
 export function AgioCalculatorDialog({
   open,
   onOpenChange,
+  data,
   onApply,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onApply: (value: number) => void
+  data: AgioCalculation | null
+  onApply: (data: AgioCalculation, suggestedPrice: number) => void
 }) {
-  const [form, setForm] = useState(initialState)
+  const [form, setForm] = useState<AgioCalculation>(data ?? emptyData)
 
-  function set<K extends keyof typeof initialState>(key: K, value: (typeof initialState)[K]) {
+  useEffect(() => {
+    if (open) setForm(data ?? emptyData)
+  }, [open, data])
+
+  function set<K extends keyof AgioCalculation>(key: K, value: AgioCalculation[K]) {
     setForm((f) => ({ ...f, [key]: value }))
   }
 
@@ -56,18 +66,13 @@ export function AgioCalculatorDialog({
   const valorTotalTransacao = agioSugerido + (form.saldoDevedor ?? 0)
   const hasInput = form.valorPago != null && form.valorPago > 0
 
-  function handleClose(nextOpen: boolean) {
-    if (!nextOpen) setForm(initialState)
-    onOpenChange(nextOpen)
-  }
-
   function handleApply() {
-    onApply(Math.round(agioSugerido * 100) / 100)
-    handleClose(false)
+    onApply(form, Math.round(agioSugerido * 100) / 100)
+    onOpenChange(false)
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="sm:max-w-lg"
         onInteractOutside={(e) => e.preventDefault()}
@@ -77,7 +82,8 @@ export function AgioCalculatorDialog({
           <DialogTitle>Calculadora de ágio</DialogTitle>
           <DialogDescription>
             Responda o que souber sobre o financiamento pra chegar num valor de ágio sugerido.
-            Campos em branco entram como zero.
+            Campos em branco entram como zero — os dados ficam salvos com o anúncio pra você
+            reabrir e ajustar depois.
           </DialogDescription>
         </DialogHeader>
 
@@ -167,11 +173,11 @@ export function AgioCalculatorDialog({
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => handleClose(false)}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button type="button" onClick={handleApply} disabled={!hasInput}>
-            <Calculator className="size-4" /> Usar este valor no preço
+            <Calculator className="size-4" /> Aplicar
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -72,7 +72,15 @@ export function useCreateOwner(tenantId: string) {
       if (error) throw error
       return data
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
+      // Atualiza o cache na hora (não só invalida) — um <Select> de proprietário
+      // vinculado a este owner_id precisa do SelectItem já existir no mesmo
+      // render em que o valor muda, senão o Radix Select "corrige" o valor
+      // pra vazio por não achar a opção (visto num teste real: criar o
+      // proprietário direto do formulário de anúncio e selecioná-lo na hora).
+      queryClient.setQueryData<Owner[]>(['owners', tenantId], (old) =>
+        old ? [...old, created].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) : [created],
+      )
       queryClient.invalidateQueries({ queryKey: ['owners', tenantId] })
     },
   })

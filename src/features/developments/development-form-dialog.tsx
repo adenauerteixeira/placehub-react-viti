@@ -47,11 +47,13 @@ export function DevelopmentFormDialog({
   onOpenChange,
   tenantId,
   development,
+  onCreated,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   tenantId: string
   development?: Development
+  onCreated?: (development: Development) => void
 }) {
   const isEdit = !!development
   const createDevelopment = useCreateDevelopment(tenantId)
@@ -87,8 +89,12 @@ export function DevelopmentFormDialog({
         await updateDevelopment.mutateAsync({ id: development.id, ...values })
         toast.success('Empreendimento atualizado.')
       } else {
-        await createDevelopment.mutateAsync({ ...values, slug: slugWithRandomSuffix(values.name) })
+        const created = await createDevelopment.mutateAsync({
+          ...values,
+          slug: slugWithRandomSuffix(values.name),
+        })
         toast.success('Empreendimento criado.')
+        onCreated?.(created)
       }
       onOpenChange(false)
     } catch (error) {

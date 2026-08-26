@@ -69,11 +69,13 @@ export function BrokerFormDialog({
   onOpenChange,
   tenantId,
   broker,
+  onCreated,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   tenantId: string
   broker?: Broker
+  onCreated?: (broker: Broker) => void
 }) {
   const isEdit = !!broker
   const createBroker = useCreateBroker(tenantId)
@@ -146,6 +148,7 @@ export function BrokerFormDialog({
         })
         setJustCreated(created)
         toast.success('Corretor criado. Envie uma foto antes de fechar, se quiser.')
+        onCreated?.(created)
       }
     } catch (error) {
       toast.error('Não foi possível salvar', {

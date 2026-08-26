@@ -66,7 +66,12 @@ export function useCreateDevelopment(tenantId: string) {
       if (error) throw error
       return data
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
+      // Ver comentário equivalente em useCreateOwner — evita o Radix Select
+      // "corrigir" o value pra vazio antes do cache ter o item novo.
+      queryClient.setQueryData<Development[]>(['developments', tenantId], (old) =>
+        old ? [...old, created].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) : [created],
+      )
       queryClient.invalidateQueries({ queryKey: ['developments', tenantId] })
     },
   })

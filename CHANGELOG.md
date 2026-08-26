@@ -5,21 +5,54 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
-### Adicionado (Calculadora de ágio, 2026-08-25)
+### Corrigido (bug real de plataforma — Radix Select perdia valor em qualquer edição, 2026-08-25/26)
+
+- **Achado enquanto testava a calculadora de ágio, mas afetava toda edição do sistema**:
+  qualquer `<Select>` (shadcn/Radix) aninhado num `<form>` — ou seja, praticamente todo select do
+  app — perdia silenciosamente o valor sempre que esse valor mudava pra algo cujo `SelectItem`
+  nunca tinha sido renderizado com o dropdown aberto (o caso normal de `reset()` carregando um
+  registro existente pra editar, ou de selecionar um item recém-criado). Causa raiz: o Radix
+  Select mantém um `<select>` nativo oculto pra compatibilidade de formulário
+  (`SelectBubbleInput`) que tenta sincronizar o value controlado nele via
+  `nativeSelectElement.value = novoValor`; quando não existe uma `<option>` correspondente
+  (porque o `SelectItem` nunca foi montado), o navegador reseta o `<select>` nativo pra `""`
+  silenciosamente e dispara um evento `change`, que o Radix repassa como `onValueChange("")` —
+  sobrescrevendo o valor real com uma string vazia, sem nenhum erro visível. Corrigido uma vez só,
+  pra sempre, em `src/components/ui/select.tsx` (o wrapper `Select` compartilhado): ignora
+  qualquer `onValueChange("")`, já que nenhuma tela do sistema usa string vazia como valor
+  legítimo (sempre um sentinel tipo `"__none__"` pra "nada selecionado"). Achado e confirmado ao
+  testar o botão "+" de criação rápida (ver adição abaixo) — mas o mesmo bug afetava silenciosamente
+  o carregamento de **qualquer** tela de edição com Select preenchido por `reset()` (ex.: editar um
+  corretor com UF/conta vinculada já definidas). Testado ponta a ponta em dois formulários
+  completamente diferentes (anúncio e corretor) depois da correção, sem regressão.
+
+### Adicionado (Calculadora de ágio e cadastro rápido nos vínculos do anúncio, 2026-08-25/26)
 
 - **Calculadora de ágio** (`src/features/announcements/agio-calculator-dialog.tsx`): botão ao
-  lado do campo "Tipo de imóvel" no formulário de anúncio, visível só quando o tipo é "Cessão"
-  (`property_type = 'assignment'` — o mesmo campo que no sistema Laravel anterior era rotulado
-  literalmente "Ágio"; aqui os dois termos descrevem a mesma categoria de anúncio: imóvel
-  financiado em banco/construtora, repassado mediante ágio). Abre um diálogo com as perguntas
-  necessárias — valor original do contrato, valor já pago, saldo devedor restante, valor de
-  mercado atual (opcional) e custos de transferência (opcional), mais uma margem % desejada — e
-  calcula ao vivo: valorização estimada, base de cálculo, ágio sugerido e valor total da
-  transação. Botão "Usar este valor no preço" aplica o ágio sugerido direto no campo Preço do
-  anúncio. Fórmula e escopo (financiamento bancário/construtora, não consórcio) confirmados com o
-  usuário antes de implementar — não existia nada equivalente no sistema anterior (lá era só um
-  rótulo de categoria, sem cálculo nenhum). Testado ponta a ponta com valores conferidos
-  manualmente.
+  lado do campo "Tipo de imóvel" no formulário de anúncio, visível só quando o tipo é
+  **"Cessão (Ágio)"** (`property_type = 'assignment'` — renomeado de "Cessão" pra deixar clara a
+  equivalência com o sistema Laravel anterior, que rotulava esse mesmo campo literalmente
+  "Ágio"). Abre um diálogo com as perguntas necessárias — valor original do contrato, valor já
+  pago, saldo devedor restante, valor de mercado atual (opcional) e custos de transferência
+  (opcional), mais uma margem % desejada — e calcula ao vivo: valorização estimada, base de
+  cálculo, ágio sugerido e valor total da transação. Botão "Aplicar" grava o valor sugerido no
+  campo Preço **e persiste os dados da calculadora** (`announcements.agio_calculation`, coluna
+  jsonb nova — `20260825120000_announcement_agio_calculation.sql`) — reabrir a calculadora numa
+  edição futura já vem preenchida com o que foi usado da última vez, pro corretor ajustar quando
+  o proprietário mudar alguma informação. Fórmula e escopo (financiamento bancário/construtora,
+  não consórcio) confirmados com o usuário antes de implementar — não existia nada equivalente no
+  sistema anterior.
+- **Coerência Tipo de imóvel × Transação**: ao escolher "Cessão (Ágio)", o campo Transação vira
+  texto fixo "Venda (cessão é sempre venda)" em vez de select — cessão nunca é aluguel — e o valor
+  é forçado pra `sale` automaticamente.
+- **Cadastro rápido nos 4 vínculos do anúncio** (Empreendimento/Parceiro/Proprietário/Corretor):
+  botão "+" ao lado de cada select abre o mesmo diálogo de criação já usado nas respectivas
+  telas de cadastro (`onCreated` novo, opcional, nesses 4 componentes), sem sair do formulário de
+  anúncio — o novo registro é selecionado automaticamente assim que criado. As 4 mutações de
+  criação (`useCreateOwner`/`useCreatePartner`/`useCreateDevelopment`/`useCreateBroker`) passaram
+  a atualizar o cache do React Query na hora (`setQueryData`, além do `invalidateQueries` de
+  sempre) — não é só otimização, evita uma corrida onde o registro novo ainda não está na lista
+  no exato momento em que o formulário tenta selecioná-lo.
 
 ### Adicionado (6ª rodada de melhorias, pós-Fase 4, 2026-08-25)
 

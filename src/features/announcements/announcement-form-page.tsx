@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
-import { Calculator } from 'lucide-react'
+import { Calculator, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,11 +17,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useDevelopments } from '@/features/developments/api'
+import { useDevelopments, type Development } from '@/features/developments/api'
+import { DevelopmentFormDialog } from '@/features/developments/development-form-dialog'
 import { DEVELOPMENT_STATUS_LABELS } from '@/features/developments/labels'
-import { usePartners } from '@/features/partners/api'
-import { useOwners } from '@/features/owners/api'
-import { useBrokers } from '@/features/brokers/api'
+import { usePartners, type Partner } from '@/features/partners/api'
+import { PartnerFormDialog } from '@/features/partners/partner-form-dialog'
+import { useOwners, type Owner } from '@/features/owners/api'
+import { OwnerFormDialog } from '@/features/owners/owner-form-dialog'
+import { useBrokers, type Broker } from '@/features/brokers/api'
+import { BrokerFormDialog } from '@/features/brokers/broker-form-dialog'
 import { BR_STATES } from '@/features/brokers/labels'
 import { useTenantUsers } from '@/features/tenant-users/api'
 import { errorMessage } from '@/lib/errors'
@@ -37,6 +41,7 @@ import {
   useDeleteAnnouncement,
   useSetAmenities,
   useUpdateAnnouncement,
+  type AgioCalculation,
   type AnnouncementStatus,
   type PropertyType,
   type TransactionType,
@@ -146,6 +151,11 @@ export function AnnouncementFormPage() {
   const { tenant } = useTenantOutletContext()
   const [cepLoading, setCepLoading] = useState(false)
   const [agioDialogOpen, setAgioDialogOpen] = useState(false)
+  const [agioData, setAgioData] = useState<AgioCalculation | null>(null)
+  const [developmentDialogOpen, setDevelopmentDialogOpen] = useState(false)
+  const [partnerDialogOpen, setPartnerDialogOpen] = useState(false)
+  const [ownerDialogOpen, setOwnerDialogOpen] = useState(false)
+  const [brokerDialogOpen, setBrokerDialogOpen] = useState(false)
 
   const { data: announcement, isLoading } = useAnnouncement(isEdit ? id : null)
   const { data: amenities } = useAnnouncementAmenities(isEdit ? id : null)
@@ -207,7 +217,13 @@ export function AnnouncementFormPage() {
       broker_id: announcement.broker_id ?? NONE,
       responsible_profile_id: announcement.responsible_profile_id ?? NONE,
     })
+    setAgioData(announcement.agio_calculation)
   }, [announcement, reset])
+
+  function handlePropertyTypeChange(value: PropertyType) {
+    setValue('property_type', value)
+    if (value === 'assignment') setValue('transaction_type', 'sale')
+  }
 
   function toInput(values: FormValues) {
     return {
@@ -244,6 +260,7 @@ export function AnnouncementFormPage() {
       broker_id: values.broker_id === NONE ? null : values.broker_id,
       responsible_profile_id:
         values.responsible_profile_id === NONE ? null : values.responsible_profile_id,
+      agio_calculation: agioData,
     }
   }
 
@@ -290,6 +307,13 @@ export function AnnouncementFormPage() {
       toast.error('Não foi possível excluir', {
         description: errorMessage(error),
       })
+    }
+  }
+
+  function handleBrokerCreated(broker: Broker) {
+    setValue('broker_id', broker.id)
+    if (broker.profile_id && watch('responsible_profile_id') === NONE) {
+      setValue('responsible_profile_id', broker.profile_id)
     }
   }
 
@@ -394,7 +418,7 @@ export function AnnouncementFormPage() {
                     <div className="flex gap-1.5">
                       <Select
                         value={watch('property_type')}
-                        onValueChange={(v) => setValue('property_type', v as PropertyType)}
+                        onValueChange={(v) => handlePropertyTypeChange(v as PropertyType)}
                       >
                         <SelectTrigger className="flex-1">
                           <SelectValue />
@@ -423,21 +447,27 @@ export function AnnouncementFormPage() {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <FieldLabel hint="Se o imóvel é pra vender ou alugar.">Transação</FieldLabel>
-                    <Select
-                      value={watch('transaction_type')}
-                      onValueChange={(v) => setValue('transaction_type', v as TransactionType)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TRANSACTION_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {TRANSACTION_TYPE_LABELS[type]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {watch('property_type') === 'assignment' ? (
+                      <div className="border-input bg-input/30 text-muted-foreground flex h-8 items-center rounded-lg border px-2.5 text-sm">
+                        Venda (cessão é sempre venda)
+                      </div>
+                    ) : (
+                      <Select
+                        value={watch('transaction_type')}
+                        onValueChange={(v) => setValue('transaction_type', v as TransactionType)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TRANSACTION_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {TRANSACTION_TYPE_LABELS[type]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <FieldLabel htmlFor="ann-reference" hint="Código interno livre pra localizar o imóvel nos seus controles — não aparece pro visitante.">
@@ -526,67 +556,124 @@ export function AnnouncementFormPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <FieldLabel hint="Empreendimento ao qual este imóvel pertence, se houver.">Empreendimento</FieldLabel>
-                    <Select value={watch('development_id')} onValueChange={(v) => setValue('development_id', v)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NONE}>Nenhum</SelectItem>
-                        {developments?.map((d) => (
-                          <SelectItem key={d.id} value={d.id}>
-                            {d.name} ({DEVELOPMENT_STATUS_LABELS[d.status]})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-1.5">
+                      <Select
+                        value={watch('development_id')}
+                        onValueChange={(v) => setValue('development_id', v)}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE}>Nenhum</SelectItem>
+                          {developments?.map((d) => (
+                            <SelectItem key={d.id} value={d.id}>
+                              {d.name} ({DEVELOPMENT_STATUS_LABELS[d.status]})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Novo empreendimento"
+                        title="Novo empreendimento"
+                        onClick={() => setDevelopmentDialogOpen(true)}
+                      >
+                        <Plus className="size-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <FieldLabel hint="Imobiliária ou pessoa parceira envolvida neste negócio, se houver.">Parceiro</FieldLabel>
-                    <Select value={watch('partner_id')} onValueChange={(v) => setValue('partner_id', v)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NONE}>Nenhum</SelectItem>
-                        {partners?.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-1.5">
+                      <Select
+                        value={watch('partner_id')}
+                        onValueChange={(v) => setValue('partner_id', v)}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE}>Nenhum</SelectItem>
+                          {partners?.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Novo parceiro"
+                        title="Novo parceiro"
+                        onClick={() => setPartnerDialogOpen(true)}
+                      >
+                        <Plus className="size-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <FieldLabel hint="Dono do imóvel — informação interna, não aparece no anúncio público.">Proprietário</FieldLabel>
-                    <Select value={watch('owner_id')} onValueChange={(v) => setValue('owner_id', v)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NONE}>Nenhum</SelectItem>
-                        {owners?.map((o) => (
-                          <SelectItem key={o.id} value={o.id}>
-                            {o.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-1.5">
+                      <Select
+                        value={watch('owner_id')}
+                        onValueChange={(v) => setValue('owner_id', v)}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE}>Nenhum</SelectItem>
+                          {owners?.map((o) => (
+                            <SelectItem key={o.id} value={o.id}>
+                              {o.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Novo proprietário"
+                        title="Novo proprietário"
+                        onClick={() => setOwnerDialogOpen(true)}
+                      >
+                        <Plus className="size-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <FieldLabel hint="Corretor que aparece pro visitante como responsável pelo imóvel na página pública.">Corretor</FieldLabel>
-                    <Select value={watch('broker_id')} onValueChange={handleBrokerChange}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NONE}>Nenhum</SelectItem>
-                        {brokers?.map((b) => (
-                          <SelectItem key={b.id} value={b.id}>
-                            {b.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-1.5">
+                      <Select value={watch('broker_id')} onValueChange={handleBrokerChange}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE}>Nenhum</SelectItem>
+                          {brokers?.map((b) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Novo corretor"
+                        title="Novo corretor"
+                        onClick={() => setBrokerDialogOpen(true)}
+                      >
+                        <Plus className="size-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="col-span-2 flex flex-col gap-1.5">
                     <FieldLabel hint="Quem gerencia este registro internamente — controla quem pode ver/editar quando o corretor não tem acesso total.">
@@ -775,7 +862,35 @@ export function AnnouncementFormPage() {
       <AgioCalculatorDialog
         open={agioDialogOpen}
         onOpenChange={setAgioDialogOpen}
-        onApply={(value) => setValue('price', value)}
+        data={agioData}
+        onApply={(data, suggestedPrice) => {
+          setAgioData(data)
+          setValue('price', suggestedPrice)
+        }}
+      />
+      <DevelopmentFormDialog
+        open={developmentDialogOpen}
+        onOpenChange={setDevelopmentDialogOpen}
+        tenantId={tenant.id}
+        onCreated={(d: Development) => setValue('development_id', d.id)}
+      />
+      <PartnerFormDialog
+        open={partnerDialogOpen}
+        onOpenChange={setPartnerDialogOpen}
+        tenantId={tenant.id}
+        onCreated={(p: Partner) => setValue('partner_id', p.id)}
+      />
+      <OwnerFormDialog
+        open={ownerDialogOpen}
+        onOpenChange={setOwnerDialogOpen}
+        tenantId={tenant.id}
+        onCreated={(o: Owner) => setValue('owner_id', o.id)}
+      />
+      <BrokerFormDialog
+        open={brokerDialogOpen}
+        onOpenChange={setBrokerDialogOpen}
+        tenantId={tenant.id}
+        onCreated={handleBrokerCreated}
       />
     </div>
   )
