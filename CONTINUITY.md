@@ -284,36 +284,29 @@
 
 ## Próximos passos imediatos
 
-**Pedido do usuário ainda NÃO implementado (2026-08-26) — melhorar a calculadora de ágio**
-(`src/features/announcements/agio-calculator-dialog.tsx`), dois pontos, verbatim do que foi
-pedido pra não perder nuance na próxima sessão:
-1. **Taxa de transferência em %, não só valor fixo.** O custo de transferência geralmente é
-   calculado como um percentual sobre o valor atualizado do contrato (o usuário citou o exemplo
-   real: "Taxa de transferência: Deve ser pago o valor de 2% do valor atualizado do contrato para
-   cobrir despesas de cadastro e administrativas"). Adicionar um campo de percentual (0,00%, já
-   que cada empreendimento aplica uma taxa diferente) calculado em cima do campo **"Valor de
-   mercado atual"** — não o valor original. Esse campo de % deve **dividir o espaço com o campo
-   "Custos de transferência"** já existente (mesma linha/grid) — ao informar a taxa, o campo de
-   custo é preenchido automaticamente (calculado), com tratamento pro caso de algum valor
-   necessário (valor de mercado atual) ainda não ter sido informado (não pode quebrar/mostrar
-   NaN).
-2. **Campos de prestação (valor + dia/mês de vencimento) pra manter "saldo devedor restante" e
-   "já pago até agora" atualizados automaticamente.** Adicionar um campo pro valor da prestação
-   mensal e outro pro dia/mês de vencimento dela. O sistema deve comparar a data atual com esse
-   dia/mês (considerando o mesmo ano) — se já passou, **recalcular** somando mais uma prestação
-   em "já pago até agora" e subtraindo do "saldo devedor restante" — mantendo os valores
-   atualizados automaticamente enquanto a venda não foi fechada ("até que se 'ganhe' essa
-   venda"). Precisa pensar em: quantas prestações "vencidas" desde a última atualização (pode ser
-   mais de uma se o anúncio ficar tempo sem edição), e onde esse estado incremental fica
-   persistido (os campos novos entram no `agio_calculation` jsonb já existente, junto com uma
-   referência de "a partir de quando" contar, tipo a data em que os valores base foram
-   informados).
+**Melhorias na calculadora de ágio implementadas (2026-08-26)**
+(`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão
+anterior:
+1. **Taxa de transferência em %.** Campo "Taxa de transferência" (0,00%) dividindo a mesma célula
+   do grid com "Custos de transferência" — calcula em cima de "Valor de mercado atual" e preenche
+   o custo automaticamente (`useEffect` reagindo a `taxaTransferencia`/`valorMercado`); se o valor
+   de mercado ainda não foi informado, o efeito simplesmente não roda (sem NaN). Editar o custo
+   manualmente depois funciona normalmente — só é recalculado de novo se taxa ou valor de mercado
+   mudarem.
+2. **Prestação + vencimento com recálculo automático.** Campos "Valor da prestação" e "Dia de
+   vencimento", mais um campo interno `dataReferencia` (ISO, não editável na UI) que marca até
+   quando "já pago"/"saldo devedor" estão em dia. Ao abrir a calculadora, `countElapsedInstallments`
+   conta quantos vencimentos caíram entre `dataReferencia` (exclusive) e hoje (inclusive, mês a
+   mês — cobre qualquer intervalo, não só o mesmo ano) e soma/subtrai a prestação de "já pago"/
+   "saldo devedor" antes de exibir, mostrando um aviso âmbar com quantas parcelas venceram e desde
+   quando. `dataReferencia` avança pro último vencimento processado só quando o usuário clica
+   "Aplicar" (Cancelar não persiste o recálculo) — é setada automaticamente pra hoje na primeira
+   vez que ambos valor da prestação e dia de vencimento são preenchidos. Tudo dentro do
+   `agio_calculation` jsonb existente, sem migration nova.
 
-Nenhuma linha de código escrita pra isso ainda — a mensagem do usuário foi interrompida antes de
-eu poder implementar, e ele pediu pra fechar a sessão. Reler esse item com calma antes de
-desenhar (talvez valha uma rodada de perguntas de esclarecimento sobre o comportamento exato do
-recálculo, ex.: o que acontece se o usuário abrir a calculadora bem depois de várias prestações
-vencidas — soma todas de uma vez? Editar manualmente depois quebra o auto-cálculo?).
+Sem QA manual no navegador ainda (só `tsc --noEmit` limpo) — vale abrir um anúncio de Cessão com
+dados de teste e conferir: (a) taxa preenchendo o custo em tempo real; (b) o aviso de parcelas
+vencidas aparecendo ao reabrir a calculadora com uma `dataReferencia` antiga simulada no banco.
 
 ---
 

@@ -15,7 +15,13 @@ export type AgioCalculation = {
   saldoDevedor: number | null
   valorMercado: number | null
   custosTransferencia: number | null
+  taxaTransferencia: string
   margem: string
+  valorPrestacao: number | null
+  diaVencimento: number | null
+  /** Data (ISO yyyy-mm-dd) até a qual "valorPago"/"saldoDevedor" estão em dia —
+   * avança sozinha quando a calculadora detecta vencimentos passados. */
+  dataReferencia: string | null
 }
 
 export type Announcement = {

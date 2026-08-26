@@ -5,6 +5,25 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Taxa de transferência % e auto-atualização de saldo na calculadora de ágio, 2026-08-26)
+
+- **Taxa de transferência em %** (`src/features/announcements/agio-calculator-dialog.tsx`): campo
+  novo que divide o espaço do grid com "Custos de transferência" — cada empreendimento cobra uma
+  taxa diferente sobre o valor de mercado atual (ex.: "2% do valor atualizado do contrato"), então
+  em vez de digitar o custo fixo dá pra informar só o %, que preenche o campo de custo
+  automaticamente (`useEffect` reagindo a `taxaTransferencia`/`valorMercado`, sem quebrar/mostrar
+  NaN se o valor de mercado ainda não foi informado). O custo continua editável na mão depois — só
+  volta a ser recalculado se a taxa ou o valor de mercado mudarem de novo.
+- **Prestação + vencimento com recálculo automático de saldo**: campos "Valor da prestação" e "Dia
+  de vencimento", mais uma `dataReferencia` interna (não editável, persistida no
+  `agio_calculation` jsonb) marcando até quando "já pago"/"saldo devedor" estão em dia. Toda vez
+  que a calculadora é aberta, conta quantos vencimentos passaram desde a última atualização
+  (`countElapsedInstallments`, mês a mês, cobre qualquer intervalo — não só o mesmo ano) e já soma
+  a(s) prestação(ões) vencida(s) em "já pago" e desconta de "saldo devedor" antes de exibir, com um
+  aviso mostrando quantas parcelas venceram e desde quando. Mantém os valores em dia sozinho
+  enquanto o anúncio de Cessão fica parado sem edição, até a venda ser fechada. `dataReferencia` só
+  avança de fato quando o usuário clica "Aplicar" (Cancelar não persiste o recálculo).
+
 ### Corrigido (bug real de plataforma — Radix Select perdia valor em qualquer edição, 2026-08-25/26)
 
 - **Achado enquanto testava a calculadora de ágio, mas afetava toda edição do sistema**:
