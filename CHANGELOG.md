@@ -5,6 +5,24 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Alterado (Redesign profissional dos 4 templates de e-mail, 2026-08-26)
+
+- **Envelope visual novo** em `emailShell()` (`supabase/functions/send-notification-email/index.ts`),
+  reaproveitado pelos 4 tipos (boas-vindas, nova reserva, comissão liberada, recibo de
+  pagamento): cartão branco com cantos arredondados sobre fundo cinza-claro, faixa de destaque de
+  4px no topo na cor primária do tenant, cabeçalho com fundo branco trazendo a logo (tema claro)
+  ao lado do nome da imobiliária em destaque (33px, na cor primária do tenant), preheader oculto
+  pra melhorar a prévia na caixa de entrada, blocos de destaque cinza-claro pra valores/datos
+  chave (`highlightBox()`), botões de ação à prova de bugs em cliente de e-mail — cor de fundo no
+  `<td>`, não no `<a>` (`ctaButton()`) — e rodapé com aviso de "não responda" do tenant seguido do
+  slogan da PlaceHub ("Conectando imóveis, corretores e oportunidades"), reaproveitando o mesmo
+  texto do rodapé do próprio app. Desenhado e aprovado iterativamente com o usuário via prévia
+  publicada como Artifact (HTML real dentro de um iframe, com abas pra alternar entre os 4 tipos),
+  não só descrito — cada ajuste pedido (remover emoji do título, aumentar/recolorir o nome do
+  tenant) foi aplicado no artifact antes de ir pro código. Reimplantado e testado ponta a ponta de
+  novo contra o Resend real depois da mudança — os 4 e-mails confirmados recebidos com o novo
+  visual.
+
 ### Adicionado (Fase 5 — e-mails transacionais via Resend, 2026-08-26, testado ponta a ponta)
 
 - **Edge Function `send-notification-email`** (`supabase/functions/send-notification-email/`):

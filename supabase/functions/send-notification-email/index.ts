@@ -53,32 +53,93 @@ function loginUrl(slug: string) {
   return `https://${slug}.${rootDomain}/login`
 }
 
-function emailShell(tenant: TenantBranding, supabaseUrl: string, title: string, bodyHtml: string) {
+/** Bloco de destaque pra um par rótulo/valor (e-mail de acesso, valor de uma
+ * parcela, etc.) — mesmo cartão cinza-claro reaproveitado nos 4 tipos. */
+function highlightBox(label: string, value: string) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fb;border:1px solid #eef0f3;border-radius:10px;margin:0 0 28px;">
+    <tr>
+      <td style="padding:16px 20px;">
+        <p style="margin:0 0 2px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:#8b8f99;">${label}</p>
+        <p style="margin:0;font-size:15px;font-weight:600;color:#18181b;">${value}</p>
+      </td>
+    </tr>
+  </table>`
+}
+
+/** Botão à prova de bugs em cliente de e-mail: cor de fundo no <td>, não no
+ * <a> — Outlook/Gmail ignoram bordas arredondadas em <a> mas respeitam em
+ * <td>. */
+function ctaButton(label: string, url: string, color: string) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="border-radius:8px;background:${color};">
+        <a href="${url}" style="display:inline-block;padding:13px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${label}</a>
+      </td>
+    </tr>
+  </table>`
+}
+
+function emailShell(
+  tenant: TenantBranding,
+  supabaseUrl: string,
+  preheader: string,
+  title: string,
+  bodyHtml: string,
+) {
   const logoUrl = tenant.logo_light_path
     ? `${supabaseUrl}/storage/v1/object/public/tenant-branding/${tenant.logo_light_path}`
     : null
 
+  const logoCell = logoUrl
+    ? `<td style="background:#ffffff;border-radius:8px;" valign="middle">
+         <img src="${logoUrl}" alt="${tenant.name}" height="36" style="display:block;height:36px;width:auto;" />
+       </td>
+       <td style="width:14px;font-size:0;line-height:0;">&nbsp;</td>`
+    : ''
+
   return `<!doctype html>
 <html lang="pt-BR">
-  <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 0;">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>${title}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#eef0f3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${preheader}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef0f3;">
       <tr>
-        <td align="center">
-          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;">
+        <td align="center" style="padding:40px 16px;">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,0.08),0 1px 2px rgba(16,24,40,0.04);">
             <tr>
-              <td style="background:${tenant.primary_color};padding:20px 24px;">
-                ${logoUrl ? `<img src="${logoUrl}" alt="${tenant.name}" height="32" style="display:block;" />` : `<span style="color:#ffffff;font-size:18px;font-weight:bold;">${tenant.name}</span>`}
+              <td style="background:${tenant.primary_color};height:4px;line-height:4px;font-size:0;">&nbsp;</td>
+            </tr>
+            <tr>
+              <td style="background:#ffffff;padding:28px 40px;border-bottom:1px solid #eef0f3;">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    ${logoCell}
+                    <td valign="middle">
+                      <span style="font-size:33px;font-weight:700;color:${tenant.primary_color};letter-spacing:-0.01em;">${tenant.name}</span>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:24px;color:#18181b;">
-                <h1 style="font-size:18px;margin:0 0 16px;">${title}</h1>
+              <td style="padding:40px;">
+                <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;font-weight:700;color:#18181b;">${title}</h1>
                 ${bodyHtml}
               </td>
             </tr>
             <tr>
-              <td style="padding:16px 24px;color:#71717a;font-size:12px;border-top:1px solid #e4e4e7;">
-                ${tenant.name} — enviado automaticamente, não responda este e-mail.
+              <td style="padding:24px 40px;background:#f8f9fb;border-top:1px solid #eef0f3;">
+                <p style="margin:0 0 4px;font-size:12px;line-height:1.6;color:#8b8f99;">
+                  ${tenant.name} — este e-mail foi enviado automaticamente, não é preciso responder.
+                </p>
+                <p style="margin:0;font-size:12px;line-height:1.6;color:#a1a5ad;">
+                  Enviado via <strong style="color:#8b8f99;">PlaceHub</strong> — Conectando imóveis, corretores e oportunidades.
+                </p>
               </td>
             </tr>
           </table>
@@ -178,11 +239,13 @@ Deno.serve(async (req: Request) => {
     const html = emailShell(
       tenant,
       supabaseUrl,
+      `Sua conta na ${tenant.name} foi criada. Acesse com seu e-mail e a senha combinada.`,
       `Bem-vindo(a) à ${tenant.name}!`,
-      `<p>Olá${fullName ? `, ${fullName}` : ''}!</p>
-       <p>Sua conta foi criada com o e-mail <strong>${userData.user.email}</strong>.</p>
-       <p>A senha de acesso foi combinada com quem criou seu cadastro. Acesse o link abaixo pra entrar:</p>
-       <p><a href="${loginUrl(tenant.slug)}" style="color:${tenant.primary_color};">${loginUrl(tenant.slug)}</a></p>`,
+      `<p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#3f3f46;">Olá${fullName ? `, ${fullName}` : ''}!</p>
+       <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#3f3f46;">Sua conta foi criada com sucesso. A partir de agora você pode acessar o sistema da ${tenant.name} pra acompanhar tudo que precisar por lá.</p>
+       ${highlightBox('Seu e-mail de acesso', userData.user.email)}
+       <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#3f3f46;">A senha de acesso foi combinada com quem criou seu cadastro. Clique no botão abaixo pra entrar:</p>
+       ${ctaButton('Acessar minha conta', loginUrl(tenant.slug), tenant.primary_color)}`,
     )
 
     try {
@@ -250,11 +313,12 @@ Deno.serve(async (req: Request) => {
     const html = emailShell(
       tenant,
       supabaseUrl,
+      `Reserva confirmada — confira os detalhes e o prazo de validade.`,
       'Reserva confirmada',
-      `<p>Olá, ${reservation.customer_name}!</p>
-       <p>Sua reserva para <strong>${announcement?.title ?? 'o imóvel'}</strong> foi confirmada.</p>
-       <p>Reservado em ${formatDate(reservation.reserved_at)}, válido até ${formatDate(reservation.expires_at)}.</p>
-       <p>Em breve alguém da nossa equipe entra em contato pelos próximos passos.</p>`,
+      `<p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#3f3f46;">Olá, ${reservation.customer_name}!</p>
+       <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#3f3f46;">Sua reserva para <strong>${announcement?.title ?? 'o imóvel'}</strong> foi confirmada, feita em ${formatDate(reservation.reserved_at)}.</p>
+       ${highlightBox('Válido até', formatDate(reservation.expires_at))}
+       <p style="margin:0;font-size:15px;line-height:1.65;color:#3f3f46;">Em breve alguém da nossa equipe entra em contato pelos próximos passos.</p>`,
     )
 
     try {
@@ -303,13 +367,13 @@ Deno.serve(async (req: Request) => {
     const html = emailShell(
       tenant,
       supabaseUrl,
+      'Uma parcela da sua comissão foi registrada como paga.',
       'Comissão liberada',
-      `<p>Olá, ${broker.name}!</p>
-       <p>A parcela nº ${installment.number} da sua comissão, no valor de
-       <strong>${formatPrice(installment.broker_amount)}</strong>, foi registrada como paga
-       ${installment.broker_paid_at ? `em ${formatDate(installment.broker_paid_at)}` : ''}.</p>
-       <p>Acesse o sistema pra confirmar o recebimento:</p>
-       <p><a href="${loginUrl(tenant.slug)}" style="color:${tenant.primary_color};">${loginUrl(tenant.slug)}</a></p>`,
+      `<p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#3f3f46;">Olá, ${broker.name}!</p>
+       <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#3f3f46;">A parcela nº ${installment.number} da sua comissão foi registrada como paga${installment.broker_paid_at ? ` em ${formatDate(installment.broker_paid_at)}` : ''}.</p>
+       ${highlightBox('Valor da parcela', formatPrice(installment.broker_amount))}
+       <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#3f3f46;">Acesse o sistema pra confirmar o recebimento:</p>
+       ${ctaButton('Confirmar recebimento', loginUrl(tenant.slug), tenant.primary_color)}`,
     )
 
     try {
@@ -362,11 +426,12 @@ Deno.serve(async (req: Request) => {
     const html = emailShell(
       tenant,
       supabaseUrl,
+      'Recebemos o pagamento da parcela — confira o valor e a data.',
       'Recibo de pagamento',
-      `<p>Olá, ${lead.name}!</p>
-       <p>Confirmamos o recebimento da parcela nº ${installment.number}, no valor de
-       <strong>${formatPrice(installment.amount)}</strong>${installment.received_at ? `, em ${formatDate(installment.received_at)}` : ''}${installment.payment_method ? ` (${installment.payment_method})` : ''}.</p>
-       <p>Obrigado pela confiança!</p>`,
+      `<p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#3f3f46;">Olá, ${lead.name}!</p>
+       <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#3f3f46;">Confirmamos o recebimento da parcela nº ${installment.number}${installment.payment_method ? ` (${installment.payment_method})` : ''}.</p>
+       ${highlightBox('Valor recebido', formatPrice(installment.amount) + (installment.received_at ? ` — ${formatDate(installment.received_at)}` : ''))}
+       <p style="margin:0;font-size:15px;line-height:1.65;color:#3f3f46;">Obrigado pela confiança!</p>`,
     )
 
     try {

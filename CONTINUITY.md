@@ -30,9 +30,11 @@
   5 tipos, impressão via `window.print()`) — todos testados ponta a ponta contra o Supabase real.
   Ver bloco "Fase 4" logo abaixo.
 - **Fase 5 — E-mail e notificações: COMPLETA.** Edge Function `send-notification-email` com os 4
-  tipos (boas-vindas, nova reserva, comissão liberada, recibo de pagamento), testados ponta a
-  ponta contra o Resend real dirigindo o navegador com login de teste — os 4 e-mails confirmados
-  recebidos pelo usuário. Branch de snapshot `fase-5-notificacoes` criada.
+  tipos (boas-vindas, nova reserva, comissão liberada, recibo de pagamento), com envelope visual
+  profissional (logo + nome do tenant em destaque, cor primária, blocos de destaque, botões,
+  rodapé com slogan da PlaceHub) desenhado e aprovado iterativamente via prévia em Artifact —
+  testados ponta a ponta contra o Resend real duas vezes (antes e depois do redesign), os 4
+  e-mails confirmados recebidos pelo usuário. Branch de snapshot `fase-5-notificacoes` criada.
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,
@@ -292,11 +294,23 @@
 
 ## Próximos passos imediatos
 
-**Fase 5 fechada (2026-08-26).** As 3 Edge Functions foram coladas no painel pelo usuário
-(`send-notification-email` nova, `create-tenant-admin`/`invite-tenant-user` atualizadas, JWT
-verification desligada na nova) e os 4 tipos de e-mail testados ponta a ponta dirigindo o
-navegador com login de `tenant_admin` de teste (`tenant.adm@gmail.com`, tenant Casah). Dois
-problemas de configuração apareceram e foram corrigidos no caminho (não eram bugs de código):
+**Fase 5 fechada de vez (2026-08-26), incluindo o redesign visual dos 4 templates.** Depois do
+fechamento inicial (função + 4 gatilhos testados com o envelope simples), o usuário pediu um
+visual "moderno e profissional" pros e-mails: cabeçalho com logo em fundo branco + nome do tenant
+em destaque (33px, cor primária do tenant), faixa de cor no topo, blocos de destaque pra
+valores/datas, botões à prova de bugs em cliente de e-mail, rodapé com o slogan da PlaceHub.
+Processo: desenhei o template de boas-vindas primeiro como prévia (Artifact publicado com o HTML
+real de produção dentro de um iframe — não uma reinterpretação "bonita" da Artifact, o e-mail de
+verdade, pra aprovação ser sobre o que vai ser enviado), o usuário pediu 2 ajustes (tirar emoji do
+título, aumentar/recolorir o nome do tenant pra 33px/cor primária), aprovou, e só então repliquei
+o padrão pros outros 3 tipos numa página com abas. Código de produção
+(`supabase/functions/send-notification-email/index.ts`, funções `emailShell()`/`highlightBox()`/
+`ctaButton()`) atualizado, reimplantado pelo usuário no painel, e os 4 tipos retestados ponta a
+ponta contra o Resend real — confirmados recebidos com o novo visual. Branch de snapshot
+`fase-5-notificacoes` a criar neste commit.
+
+Dois problemas de configuração apareceram no primeiro fechamento e foram corrigidos (não eram
+bugs de código):
 - `RESEND_API_KEY` inicial era inválida (401 do Resend) — usuário gerou uma key nova.
 - `RESEND_FROM_EMAIL` estava `naoresponda@placehub.app`, mas o domínio verificado no Resend é
   **`casah.imb.br`** (do tenant de teste), não `placehub.app` — corrigido pra
@@ -314,14 +328,16 @@ destrutivo" já usado nas fases anteriores — ver "Notas técnicas" abaixo):
   testar "comissão liberada".
 - Lead "Cliente Qa Comissao 2" ganhou e-mail `adenauerteixeira@gmail.com` (estava vazio) pra
   testar "recibo de pagamento".
-- Usuário novo criado no tenant Casah: "Qa Teste Boas Vindas" / `adenauerteixeira+welcome@gmail.com`
-  (papel Corretor, sem permissões) — testa "boas-vindas". Tem login de verdade (senha
-  `TesteQa#2026`), considerar desativar/excluir quando fizer a limpeza geral.
-- Reserva "QA Teste Notificacao 2" (cancelada) no anúncio "Casa QA Teste 3 quartos".
+- Dois usuários novos criados no tenant Casah pra testar "boas-vindas" (papel Corretor, sem
+  permissões, senha `TesteQa#2026`, login de verdade): "Qa Teste Boas Vindas" /
+  `adenauerteixeira+welcome@gmail.com` e "Qa Teste Boas Vindas 2" /
+  `adenauerteixeira+welcome2@gmail.com`. Considerar desativar/excluir quando fizer a limpeza
+  geral.
+- Reserva "QA Teste Notificacao 2" (cancelada, criada 2x) no anúncio "Casa QA Teste 3 quartos".
 
-Aguardando o usuário indicar o que fazer a seguir (nada mais planejado explicitamente — Fases 0
-(infra: Vercel/domínio/CI/Resend — Resend em si já resolvido por esta fase) e 6 (testes,
-observabilidade) são as únicas pendências restantes do roadmap).
+**Próxima fase: Fase 6 — Polimento e observabilidade** (testes Vitest, Playwright, monitoramento
+de erros, acessibilidade, domínio próprio por tenant). Ver bloco "Fase 6" no ROADMAP.md pros
+itens exatos — nenhum código escrito ainda pra ela nesta sessão.
 
 **Melhorias na calculadora de ágio implementadas (2026-08-26)**
 (`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão
