@@ -5,6 +5,23 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Corrigido (Permissão "Proprietários" impossível de conceder, 2026-08-27)
+
+- **Bug real reportado pelo usuário**: um corretor tentando cadastrar um proprietário pelo botão
+  "+" na tela de anúncio (pra anunciar um imóvel próprio) recebia "new row violates row level
+  security policy for table owners". Causa raiz: a permissão `owners` foi adicionada ao catálogo
+  do banco na Fase 2 (`20260823090000_catalog_foundation.sql`, com nota reconhecendo que tinha
+  ficado de fora do catálogo original da Fase 1), mas a lista espelhada no frontend
+  (`PERMISSION_MODULES`, `src/features/tenant-users/permissions.ts`) nunca foi atualizada — sem
+  essa entrada, a checkbox "Proprietários" simplesmente não existia na tela de permissões, então
+  nenhum tenant_admin conseguia conceder esse acesso a um corretor, por mais que tentasse. A
+  policy de RLS em si sempre esteve correta (idêntica ao padrão de `partners`/`developments`).
+  Corrigido adicionando a entrada faltante.
+- Também: os 4 botões "+" de cadastro rápido na tela de anúncio (Empreendimento/Parceiro/
+  Proprietário/Corretor) agora só aparecem quando o usuário tem a permissão do módulo
+  correspondente — antes apareciam sempre, e um usuário sem permissão só descobria ao tentar
+  salvar e receber o erro cru de RLS. Mesma classe de bug evitada pros outros 3 módulos também.
+
 ### Adicionado (Home pública animada — segunda variante opt-in, 2026-08-27)
 
 - **Nova variante "Animada" da home pública** (`src/features/tenant/animated-home/`), alternativa

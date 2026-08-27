@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { hasPermission } from '@/features/auth/use-profile'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useDevelopments, type Development } from '@/features/developments/api'
 import { DevelopmentFormDialog } from '@/features/developments/development-form-dialog'
@@ -148,7 +149,7 @@ export function AnnouncementFormPage() {
   const { id } = useParams<{ id: string }>()
   const isEdit = !!id && id !== 'novo'
   const navigate = useNavigate()
-  const { tenant } = useTenantOutletContext()
+  const { tenant, profile } = useTenantOutletContext()
   const [cepLoading, setCepLoading] = useState(false)
   const [agioDialogOpen, setAgioDialogOpen] = useState(false)
   const [agioData, setAgioData] = useState<AgioCalculation | null>(null)
@@ -573,16 +574,18 @@ export function AnnouncementFormPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        aria-label="Novo empreendimento"
-                        title="Novo empreendimento"
-                        onClick={() => setDevelopmentDialogOpen(true)}
-                      >
-                        <Plus className="size-4" />
-                      </Button>
+                      {hasPermission(profile, 'developments') && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          aria-label="Novo empreendimento"
+                          title="Novo empreendimento"
+                          onClick={() => setDevelopmentDialogOpen(true)}
+                        >
+                          <Plus className="size-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -604,16 +607,18 @@ export function AnnouncementFormPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        aria-label="Novo parceiro"
-                        title="Novo parceiro"
-                        onClick={() => setPartnerDialogOpen(true)}
-                      >
-                        <Plus className="size-4" />
-                      </Button>
+                      {hasPermission(profile, 'partners') && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          aria-label="Novo parceiro"
+                          title="Novo parceiro"
+                          onClick={() => setPartnerDialogOpen(true)}
+                        >
+                          <Plus className="size-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -635,16 +640,18 @@ export function AnnouncementFormPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        aria-label="Novo proprietário"
-                        title="Novo proprietário"
-                        onClick={() => setOwnerDialogOpen(true)}
-                      >
-                        <Plus className="size-4" />
-                      </Button>
+                      {hasPermission(profile, 'owners') && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          aria-label="Novo proprietário"
+                          title="Novo proprietário"
+                          onClick={() => setOwnerDialogOpen(true)}
+                        >
+                          <Plus className="size-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -663,16 +670,18 @@ export function AnnouncementFormPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        aria-label="Novo corretor"
-                        title="Novo corretor"
-                        onClick={() => setBrokerDialogOpen(true)}
-                      >
-                        <Plus className="size-4" />
-                      </Button>
+                      {hasPermission(profile, 'brokers') && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          aria-label="Novo corretor"
+                          title="Novo corretor"
+                          onClick={() => setBrokerDialogOpen(true)}
+                        >
+                          <Plus className="size-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="col-span-2 flex flex-col gap-1.5">

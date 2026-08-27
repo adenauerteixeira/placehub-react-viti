@@ -132,6 +132,21 @@
   top" nas palavras dele) — eu não consigo assistir vídeo diretamente nesse ambiente; pedi uma
   descrição textual do que chamou atenção, ainda sem resposta quando a sessão fechou. Perguntar de
   novo na próxima sessão se for relevante pra polir ainda mais a experiência.
+
+- **Bug real reportado pelo usuário e corrigido (2026-08-27): permissão "Proprietários"
+  impossível de conceder a um corretor.** O usuário tentou cadastrar um proprietário pelo botão
+  "+" na tela de anúncio (representando o corretor dele mesmo, que queria anunciar um imóvel
+  próprio) e recebeu erro de RLS. Causa: `owners` foi adicionada ao catálogo de permissões do
+  banco na Fase 2, mas a lista espelhada no frontend (`PERMISSION_MODULES`,
+  `src/features/tenant-users/permissions.ts`) nunca foi atualizada — a checkbox "Proprietários"
+  simplesmente não existia na tela de edição de usuário, então nenhum tenant_admin conseguia
+  conceder esse acesso, por mais que tentasse (a RLS em si sempre esteve correta). Corrigido +
+  os 4 botões "+" de cadastro rápido na tela de anúncio agora só aparecem quando o usuário tem a
+  permissão do módulo (evita a mesma classe de erro confuso pros outros 3). **Falta um passo do
+  usuário**: marcar a checkbox "Proprietários" pro corretor dele
+  (`adenauerteixeira@gmail.com`/"Corretor Qa Comissao" — literalmente a conta que reportou o bug,
+  confirmado durante o QA) em Editar usuário → Permissões, e salvar — não marquei
+  automaticamente, é uma mudança de permissão de conta real.
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,

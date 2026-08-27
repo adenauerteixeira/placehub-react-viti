@@ -8,6 +8,7 @@ export const PERMISSION_MODULES: { key: string; label: string }[] = [
   { key: 'developments', label: 'Empreendimentos' },
   { key: 'partners', label: 'Parceiros' },
   { key: 'brokers', label: 'Corretores' },
+  { key: 'owners', label: 'Proprietários' },
   { key: 'leads', label: 'Leads' },
   { key: 'negotiations', label: 'Negociações' },
   { key: 'proposals', label: 'Propostas' },
