@@ -38,6 +38,9 @@ type TenantBranding = {
   slug: string
   primary_color: string
   logo_light_path: string | null
+  email_logo_path: string | null
+  email_logo_background_color: string
+  email_logo_background_transparent: boolean
 }
 
 function formatPrice(value: number) {
@@ -86,12 +89,27 @@ function emailShell(
   title: string,
   bodyHtml: string,
 ) {
-  const logoUrl = tenant.logo_light_path
-    ? `${supabaseUrl}/storage/v1/object/public/tenant-branding/${tenant.logo_light_path}`
-    : null
+  // email_logo_path (opcional) tem prioridade: é uma versão do logo com o
+  // fundo já embutido nos pixels da própria imagem — enviada de propósito
+  // pela tela de Identidade Visual pra escapar da reescrita de dark-mode de
+  // clientes como o Gmail Android, que ignoram cor de fundo via CSS mas
+  // nunca alteram o conteúdo de uma imagem. Sem essa imagem, cai pro
+  // logo_light_path de sempre com o fundo configurável abaixo.
+  const logoPath = tenant.email_logo_path || tenant.logo_light_path
+  const logoUrl = logoPath ? `${supabaseUrl}/storage/v1/object/public/tenant-branding/${logoPath}` : null
+
+  // Fundo do logo configurável (Identidade Visual → E-mails), separado do
+  // fundo usado no app: um cliente de e-mail que não respeita os metas de
+  // color-scheme abaixo pode escurecer o fundo branco do cabeçalho sem
+  // recolorir a imagem do logo — se o PNG tiver conteúdo escuro pensado pra
+  // um fundo claro, ele some. Padrão continua branco opaco (comportamento
+  // de antes), mas o tenant pode ajustar.
+  const logoBg = tenant.email_logo_background_transparent
+    ? 'transparent'
+    : tenant.email_logo_background_color || '#ffffff'
 
   const logoCell = logoUrl
-    ? `<td style="background:#ffffff;border-radius:8px;" valign="middle">
+    ? `<td style="background:${logoBg};border-radius:8px;" bgcolor="${logoBg === 'transparent' ? '#ffffff' : logoBg}" valign="middle">
          <img src="${logoUrl}" alt="${tenant.name}" height="36" style="display:block;height:36px;width:auto;" />
        </td>
        <td style="width:14px;font-size:0;line-height:0;">&nbsp;</td>`
@@ -103,6 +121,7 @@ function emailShell(
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
     <title>${title}</title>
   </head>
   <body style="margin:0;padding:0;background:#eef0f3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
@@ -115,7 +134,7 @@ function emailShell(
               <td style="background:${tenant.primary_color};height:4px;line-height:4px;font-size:0;">&nbsp;</td>
             </tr>
             <tr>
-              <td style="background:#ffffff;padding:28px 40px;border-bottom:1px solid #eef0f3;">
+              <td style="background:${logoBg === 'transparent' ? '#ffffff' : logoBg};padding:28px 40px;border-bottom:1px solid #eef0f3;" bgcolor="${logoBg === 'transparent' ? '#ffffff' : logoBg}">
                 <table role="presentation" cellpadding="0" cellspacing="0">
                   <tr>
                     ${logoCell}
@@ -192,10 +211,11 @@ Deno.serve(async (req: Request) => {
   const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
   let body: {
-    type?: 'welcome' | 'new_reservation' | 'commission_released' | 'payment_receipt'
+    type?: 'welcome' | 'new_reservation' | 'commission_released' | 'payment_receipt' | 'test'
     user_id?: string
     reservation_id?: string
     installment_id?: string
+    to?: string
   }
   try {
     body = await req.json()
@@ -227,7 +247,9 @@ Deno.serve(async (req: Request) => {
 
     const { data: tenant } = await adminClient
       .from('tenants')
-      .select('id, name, slug, primary_color, logo_light_path')
+      .select(
+        'id, name, slug, primary_color, logo_light_path, email_logo_path, email_logo_background_color, email_logo_background_transparent',
+      )
       .eq('id', tenantId)
       .single<TenantBranding>()
 
@@ -272,12 +294,54 @@ Deno.serve(async (req: Request) => {
 
   const { data: callerProfile } = await adminClient
     .from('profiles')
-    .select('tenant_id')
+    .select('tenant_id, role')
     .eq('id', user.id)
     .single()
 
   if (!callerProfile?.tenant_id) {
     return json({ error: 'sem tenant associado' }, 403)
+  }
+
+  // Disparado pela tela de Identidade Visual (E-mails), pra conferir a
+  // aparência do cabeçalho/logo de verdade na caixa de entrada — usa a
+  // identidade visual JÁ SALVA do tenant (é a mesma que os e-mails reais
+  // usam), não um rascunho ainda não salvo.
+  if (type === 'test') {
+    if (callerProfile.role !== 'tenant_admin') {
+      return json({ error: 'só o administrador da imobiliária pode enviar um e-mail de teste' }, 403)
+    }
+    if (!body.to) {
+      return json({ error: 'to é obrigatório' }, 400)
+    }
+
+    const { data: tenant } = await adminClient
+      .from('tenants')
+      .select(
+        'id, name, slug, primary_color, logo_light_path, email_logo_path, email_logo_background_color, email_logo_background_transparent',
+      )
+      .eq('id', callerProfile.tenant_id)
+      .single<TenantBranding>()
+
+    if (!tenant) return json({ sent: false, reason: 'tenant não encontrado' }, 404)
+
+    const html = emailShell(
+      tenant,
+      supabaseUrl,
+      'E-mail de teste da identidade visual do seu sistema.',
+      'E-mail de teste',
+      `<p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#3f3f46;">Olá!</p>
+       <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#3f3f46;">Este é um e-mail de teste, gerado a partir da identidade visual salva agora pra ${tenant.name} — é assim que os e-mails de verdade (boas-vindas, reserva, comissão, recibo) vão aparecer.</p>
+       ${highlightBox('Exemplo de destaque', 'R$ 1.234,56')}
+       <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#3f3f46;">E os botões de ação aparecem assim:</p>
+       ${ctaButton('Botão de exemplo', loginUrl(tenant.slug), tenant.primary_color)}`,
+    )
+
+    try {
+      await sendViaResend(body.to, `E-mail de teste — ${tenant.name}`, html)
+    } catch (err) {
+      return json({ sent: false, reason: (err as Error).message }, 502)
+    }
+    return json({ sent: true })
   }
 
   if (type === 'new_reservation') {
@@ -304,7 +368,9 @@ Deno.serve(async (req: Request) => {
 
     const { data: tenant } = await adminClient
       .from('tenants')
-      .select('id, name, slug, primary_color, logo_light_path')
+      .select(
+        'id, name, slug, primary_color, logo_light_path, email_logo_path, email_logo_background_color, email_logo_background_transparent',
+      )
       .eq('id', reservation.tenant_id)
       .single<TenantBranding>()
 
@@ -358,7 +424,9 @@ Deno.serve(async (req: Request) => {
 
     const { data: tenant } = await adminClient
       .from('tenants')
-      .select('id, name, slug, primary_color, logo_light_path')
+      .select(
+        'id, name, slug, primary_color, logo_light_path, email_logo_path, email_logo_background_color, email_logo_background_transparent',
+      )
       .eq('id', installment.tenant_id)
       .single<TenantBranding>()
 
@@ -417,7 +485,9 @@ Deno.serve(async (req: Request) => {
 
     const { data: tenant } = await adminClient
       .from('tenants')
-      .select('id, name, slug, primary_color, logo_light_path')
+      .select(
+        'id, name, slug, primary_color, logo_light_path, email_logo_path, email_logo_background_color, email_logo_background_transparent',
+      )
       .eq('id', installment.tenant_id)
       .single<TenantBranding>()
 

@@ -1,16 +1,28 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
-export type BrandingAsset = 'logo-light' | 'logo-dark' | 'background-image' | 'favicon' | 'placeholder-image'
+export type BrandingAsset =
+  | 'logo-light'
+  | 'logo-dark'
+  | 'email-logo'
+  | 'background-image'
+  | 'favicon'
+  | 'placeholder-image'
 
 const BUCKET = 'tenant-branding'
 
 const PATH_COLUMN: Record<
   BrandingAsset,
-  'logo_light_path' | 'logo_dark_path' | 'background_image_path' | 'favicon_path' | 'placeholder_image_path'
+  | 'logo_light_path'
+  | 'logo_dark_path'
+  | 'email_logo_path'
+  | 'background_image_path'
+  | 'favicon_path'
+  | 'placeholder_image_path'
 > = {
   'logo-light': 'logo_light_path',
   'logo-dark': 'logo_dark_path',
+  'email-logo': 'email_logo_path',
   'background-image': 'background_image_path',
   favicon: 'favicon_path',
   'placeholder-image': 'placeholder_image_path',
@@ -42,6 +54,10 @@ export type TenantColorsInput = {
   logo_dark_background_color: string
   logo_light_background_transparent: boolean
   logo_dark_background_transparent: boolean
+  email_logo_background_color: string
+  email_logo_background_transparent: boolean
+  public_hero_enabled: boolean
+  public_home_variant: 'classic' | 'animated'
 }
 
 export function useUpdateTenantColors(tenantId: string) {
@@ -54,6 +70,28 @@ export function useUpdateTenantColors(tenantId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant', tenantId] })
+    },
+  })
+}
+
+export function useSendTestEmail() {
+  return useMutation({
+    mutationFn: async (to: string) => {
+      const { data, error } = await supabase.functions.invoke('send-notification-email', {
+        body: { type: 'test', to },
+      })
+      if (error) {
+        let message = error.message
+        try {
+          const body = await error.context?.json()
+          if (body?.error) message = body.error
+        } catch {
+          // resposta sem corpo JSON legível — mantém error.message
+        }
+        throw new Error(message)
+      }
+      if (!data?.sent) throw new Error(data?.reason || 'Falha ao enviar o e-mail de teste.')
+      return data
     },
   })
 }

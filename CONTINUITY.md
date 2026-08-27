@@ -75,6 +75,32 @@
   bloqueante, precisa de conta externa nova (GlitchTip escolhido quando/se retomado). Itens
   restantes da Fase 6 sem código ainda: revisão de acessibilidade, domínio próprio por tenant,
   testar de verdade o job de expiração automática (pendência real desde a Fase 3).
+- **Rodada de melhorias em Identidade Visual (2026-08-27), a pedido do usuário — testada ponta a
+  ponta contra o Resend real:** o usuário viu os e-mails da Fase 5 no Gmail Android modo escuro e
+  reportou o logo quase invisível — Gmail reescreve o e-mail ignorando cor de fundo via CSS
+  (mesmo com `color-scheme`/`supported-color-schemes` corretos) mas nunca altera pixel de imagem.
+  Resolvido com aba **"E-mails"** nova em Identidade Visual: cor de fundo do logo dedicada pro
+  e-mail (`email_logo_background_color`/`transparent`, agora cobrindo o cabeçalho inteiro, não só
+  a logo) + upload **"Logo do e-mail"** (`email_logo_path`) — versão com fundo já embutido nos
+  pixels, imune a qualquer reescrita, com fallback pro `logo_light_path` de sempre. O usuário
+  reaproveitou a imagem que já tinha subido em "Plano de fundo" (eu baixei via Playwright e
+  reenviei pro novo campo, sem pedir reenvio manual). Confirmado recebido certo no Gmail Android
+  depois. Também: **"Enviar e-mail de teste"** (tipo `test` novo na function, restrito a
+  tenant_admin, usa a identidade visual já salva); **banner de destaque da home pública opcional**
+  (`public_hero_enabled`, aba "Página pública" — o banner com nome/tagline/"Ver corretores" que o
+  usuário chama de "área de publicidade do tenant"); e **Identidade Visual reorganizada em 4 abas**
+  (Logos e imagens / Cores / Página pública / E-mails) porque a tela vertical tinha ficado grande
+  demais — "Salvar identidade visual" continua fora das abas, salva tudo de uma vez. Migrations
+  `20260827100000_email_branding_and_public_hero_toggle.sql` e
+  `20260827110000_email_logo_asset.sql`. Ver CHANGELOG.md pros detalhes completos.
+  **Pedido do usuário, ainda não iniciado**: redesenho ambicioso da home pública com animações de
+  scroll (hero recolhendo pro cabeçalho, nav fixa por tipo de imóvel, boxes de categoria entrando/
+  saindo) — dei minha opinião (viável, mas recomendo prototipar 1 categoria antes de comprometer a
+  página inteira; usaria Framer Motion) e o usuário ofereceu mandar referências do YouTube. Ideia:
+  manter a home atual como está (só com o toggle novo) e criar uma **página alternativa** com o
+  redesenho, com um switch em Identidade Visual pra escolher qual exibir — dá redundância se a
+  nova página tiver problema. Nenhum código escrito ainda pra isso; não criar a coluna/switch de
+  variante até realmente começar esse trabalho (evitar opção morta na UI).
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,
@@ -383,6 +409,15 @@ não é bloqueante, precisa de conta externa nova; retomar só se o usuário ped
 perguntar de novo qual serviço (já decidido: GlitchTip, compatível com `@sentry/react`). Itens
 restantes sem código ainda: revisão de acessibilidade, domínio próprio por tenant, testar de
 verdade o job de expiração automática (pendência real desde a Fase 3).
+
+**Rodada de Identidade Visual fechada (2026-08-27)** — ver bloco próprio acima ("Rodada de
+melhorias em Identidade Visual") pros detalhes: fix do logo do e-mail no Gmail Android (aba
+E-mails, upload dedicado com fundo embutido), "Enviar e-mail de teste", toggle do banner de
+destaque da home pública, e a tela reorganizada em 4 abas. **Próximo passo combinado com o
+usuário, ainda não iniciado**: redesenho animado da home pública (hero com scroll, nav fixa por
+tipo de imóvel) como página **alternativa** nova, com switch em Identidade Visual pra escolher
+qual exibir — usuário pode mandar referências do YouTube antes de começar. Recomendação já dada:
+prototipar 1 categoria primeiro, não a página inteira de uma vez.
 
 **Melhorias na calculadora de ágio implementadas (2026-08-26)**
 (`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão

@@ -5,6 +5,33 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Identidade Visual — e-mails, página pública e organização em abas, 2026-08-27)
+
+- **Logo do cabeçalho de e-mail quase invisível no modo escuro do Gmail Android** (achado pelo
+  usuário testando os templates da Fase 5 no celular): o Gmail app reescreve o e-mail no modo
+  escuro do celular ignorando `color-scheme`/`supported-color-schemes` (adicionados mesmo assim,
+  ajudam em outros clientes) e cor de fundo via CSS/`bgcolor` — mas nunca altera pixels de imagem.
+  Resolvido em duas camadas: (1) nova aba **"E-mails"** em Identidade Visual com cor de fundo do
+  logo dedicada (`email_logo_background_color`/`email_logo_background_transparent`, independente
+  do fundo usado no app) aplicada ao cabeçalho inteiro do e-mail (não só um pedacinho ao redor do
+  logo); (2) upload dedicado **"Logo do e-mail"** (`email_logo_path`) — uma versão do logo com o
+  fundo já "assado" nos próprios pixels da imagem, imune a qualquer reescrita de cliente de
+  e-mail, com fallback pro `logo_light_path` de sempre quando não enviada. Testado ponta a ponta
+  contra o Resend real e confirmado recebido no Gmail Android.
+- **"Enviar e-mail de teste"** na aba E-mails — dispara um e-mail de exemplo (mesmo `emailShell()`
+  de produção) pra qualquer endereço, usando a identidade visual **já salva** do tenant. Novo tipo
+  `test` na Edge Function `send-notification-email`, restrito a `tenant_admin`.
+- **Banner de destaque da home pública ("área de publicidade do tenant") agora é opcional** —
+  checkbox `public_hero_enabled` (aba "Página pública" de Identidade Visual) esconde/mostra a
+  seção com nome da imobiliária, frase de efeito e botão "Ver corretores" no topo de `/` sem mexer
+  no resto da página pública.
+- **Identidade Visual reorganizada em abas** (Logos e imagens / Cores / Página pública / E-mails)
+  — a tela tinha crescido demais como uma lista vertical de cards; agrupar por assunto facilita
+  achar o que se quer ajustar. "Salvar identidade visual" continua fora das abas, salvando tudo de
+  uma vez (o estado é um objeto único, independente de qual aba está visível).
+- Migrations: `20260827100000_email_branding_and_public_hero_toggle.sql` (as 3 colunas acima) e
+  `20260827110000_email_logo_asset.sql` (`email_logo_path`).
+
 ### Adicionado (Fase 6 — Changelog dentro do sistema, 2026-08-27)
 
 - **Página `/changelog`** (`src/features/changelog/changelog-page.tsx`), acessível pelo
