@@ -5,7 +5,7 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-08-26
+## Estado atual — 2026-08-27
 
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
@@ -60,9 +60,21 @@
   processo: o `<Select>` do shadcn/Radix não tem nome acessível confiável pro Playwright (mesma
   causa-raiz do bug de perda de valor já documentado — `<select>` nativo oculto por trás do
   trigger visível), teste seleciona por posição (`.first()`) em vez de por nome. Dados criados
-  marcados "QA Playwright", mesma decisão de não limpar do Vitest. Próximos itens da Fase 6
-  (nenhum código escrito ainda): Sentry ou equivalente, revisão de acessibilidade, domínio próprio
-  por tenant.
+  marcados "QA Playwright", mesma decisão de não limpar do Vitest.
+  **Item extra pedido pelo usuário (2026-08-27, fora do escopo original da Fase 6): Changelog
+  dentro do sistema.** Página `/changelog` (`src/features/changelog/changelog-page.tsx`) acessível
+  ao super_admin (console da plataforma) e ao tenant_admin (item novo em "Administração" no
+  header do tenant) — renderiza o próprio `CHANGELOG.md` via `?raw` import (suporte nativo do
+  Vite) + `react-markdown`, dentro de um `Card` padrão do sistema. Decisão do usuário: reaproveitar
+  o arquivo técnico existente (não um changelog curado à parte). Verificado ponta a ponta via
+  Playwright direto (não o skill `browser-automation`, que estava com o browser do patchright
+  desinstalado nesta máquina — reinstalado no processo, `npx patchright install chromium` na pasta
+  da extensão do VS Code, ver "Notas técnicas"): heading renderiza, 108 itens de lista, 53 negritos,
+  zero erros de console, link "Changelog" aparece certinho no dropdown "Administração".
+  **Monitoramento de erros (Sentry/GlitchTip) foi proposto e adiado a pedido do usuário** — não é
+  bloqueante, precisa de conta externa nova (GlitchTip escolhido quando/se retomado). Itens
+  restantes da Fase 6 sem código ainda: revisão de acessibilidade, domínio próprio por tenant,
+  testar de verdade o job de expiração automática (pendência real desde a Fase 3).
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,
@@ -363,11 +375,14 @@ destrutivo" já usado nas fases anteriores — ver "Notas técnicas" abaixo):
   geral.
 - Reserva "QA Teste Notificacao 2" (cancelada, criada 2x) no anúncio "Casa QA Teste 3 quartos".
 
-**Fase 6 em andamento — 1º e 2º itens (Vitest e Playwright) fechados (2026-08-26).** Ver bloco
+**Fase 6 em andamento (2026-08-27).** Vitest, Playwright e Changelog no sistema prontos. Ver bloco
 "Fase 6" logo acima e em ROADMAP.md/CHANGELOG.md pros detalhes completos (arquitetura de testes,
-bug real achado e corrigido, decisão de não limpar dados de teste). Próximo item a decidir com o
-usuário: monitoramento de erros (Sentry ou equivalente, precisa de conta nova), revisão de
-acessibilidade, ou domínio próprio por tenant — nenhum tem código ainda.
+bug real achado e corrigido, decisão de não limpar dados de teste, página `/changelog`).
+**Monitoramento de erros (GlitchTip) foi proposto e adiado a pedido do usuário** (2026-08-27) —
+não é bloqueante, precisa de conta externa nova; retomar só se o usuário pedir de novo, sem
+perguntar de novo qual serviço (já decidido: GlitchTip, compatível com `@sentry/react`). Itens
+restantes sem código ainda: revisão de acessibilidade, domínio próprio por tenant, testar de
+verdade o job de expiração automática (pendência real desde a Fase 3).
 
 **Melhorias na calculadora de ágio implementadas (2026-08-26)**
 (`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão
@@ -423,6 +438,18 @@ registros "QA Comissao" criados testando comissões na Fase 4).
 - Testes locais de subdomínio: usar `http://app.localhost:5173`, `http://casah.localhost:5173`
   etc. (Chrome resolve `*.localhost` para 127.0.0.1 nativamente, sem mexer no hosts file). O SSO
   *entre* subdomínios (cookie compartilhado) não é testável assim — ver ARCHITECTURE.md.
+- **O skill `browser-automation` (patchright) pode ficar sem o Chromium baixado nesta máquina**
+  se algum outro processo rodar `npx playwright install` (o `@playwright/test` deste projeto, por
+  exemplo — instalado na Fase 6 pros testes e2e) — ele remove versões de Chromium "não usadas" do
+  cache compartilhado em `%LOCALAPPDATA%\ms-playwright`, incluindo a que o patchright da extensão
+  do VS Code espera. Sintoma: `browserType.launch: Executable doesn't exist at
+  ...\chromium-<versão>\chrome-win64\chrome.exe`. Correção: achar a versão do patchright em uso
+  (`Get-ChildItem -Recurse -Filter patchright -Directory` em
+  `C:\Users\<usuário>\.vscode\extensions\`, pegar a mais recente) e rodar
+  `node <caminho>\node_modules\patchright\cli.js install chromium`. Alternativa mais rápida quando
+  isso acontecer no meio de uma sessão: pular o skill e usar `@playwright/test` diretamente (já
+  instalado no projeto) num script Node ad-hoc — foi o que resolveu o QA da página `/changelog`
+  nesta sessão sem esperar o download de novo.
 - Ao rodar QA com o skill `browser-automation` neste projeto: sempre reiniciar o dev server
   (matar processo na porta, subir de novo, esperar "assentar" uns 3s) antes de testar depois de
   editar arquivos — testar durante uma janela de HMR ativo produz `ERR_ABORTED` em cascata que

@@ -5,6 +5,17 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Fase 6 — Changelog dentro do sistema, 2026-08-27)
+
+- **Página `/changelog`** (`src/features/changelog/changelog-page.tsx`), acessível pelo
+  super_admin no console da plataforma (`app.placehub.app`) e pelo tenant_admin de cada
+  imobiliária (item novo no dropdown "Administração" do header, ao lado de "Identidade visual").
+  Renderiza o próprio `CHANGELOG.md` do repositório — importado em build time via `?raw` (suporte
+  nativo do Vite) e desenhado com `react-markdown` (headings, listas, negrito e links estilizados
+  com os tokens de tema do app, dentro de um `Card` padrão). Decisão do usuário: reaproveitar o
+  arquivo técnico existente em vez de manter um changelog separado, curado, em linguagem de
+  usuário final — o texto inclui nomes de arquivo/migration/SQL como está.
+
 ### Adicionado (Fase 6 — testes Playwright dos fluxos principais, 2026-08-26)
 
 - **Playwright configurado** (`playwright.config.ts`, `npm run test:e2e`), rodando contra o dev

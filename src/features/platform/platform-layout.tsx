@@ -19,6 +19,7 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
             </span>
             <nav className="flex items-center gap-4 text-sm">
               <PlatformNavLink to="/tenants">Imobiliárias</PlatformNavLink>
+              <PlatformNavLink to="/changelog">Changelog</PlatformNavLink>
             </nav>
           </div>
           <div className="flex items-center gap-2">

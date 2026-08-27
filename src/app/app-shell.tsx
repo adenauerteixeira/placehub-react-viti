@@ -7,6 +7,7 @@ import { hasPermission, useProfile } from '@/features/auth/use-profile'
 import { AnnouncementFormPage } from '@/features/announcements/announcement-form-page'
 import { AnnouncementsListPage } from '@/features/announcements/announcements-list-page'
 import { BrokersListPage } from '@/features/brokers/brokers-list-page'
+import { ChangelogPage } from '@/features/changelog/changelog-page'
 import { DevelopmentsListPage } from '@/features/developments/developments-list-page'
 import { CommissionDetailPage } from '@/features/commissions/commission-detail-page'
 import { CommissionsListPage } from '@/features/commissions/commissions-list-page'
@@ -82,6 +83,14 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequireTenantAdmin>
               <TenantBrandingPage />
+            </RequireTenantAdmin>
+          }
+        />
+        <Route
+          path="/changelog"
+          element={
+            <RequireTenantAdmin>
+              <ChangelogPage />
             </RequireTenantAdmin>
           }
         />
@@ -306,6 +315,7 @@ function PlatformApp() {
       <Route element={<PlatformProtectedShell />}>
         <Route path="/" element={<Navigate to="/tenants" replace />} />
         <Route path="/tenants" element={<TenantsListPage />} />
+        <Route path="/changelog" element={<ChangelogPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

@@ -191,10 +191,19 @@ Fase 5 completa — os 4 e-mails transacionais funcionando ponta a ponta contra 
       "Aceita" → "Fechar venda", confirmando o negociação vira "Ganha" e o botão some). `npm run
       test:e2e`. Dados criados ficam marcados "QA Playwright" — mesma decisão de não limpar já
       tomada pro Vitest.
-- [ ] Monitoramento de erros no front (a decidir: Sentry ou equivalente).
+- [x] Changelog dentro do sistema — página `/changelog` (`ChangelogPage`, `src/features/changelog/`)
+      no console da plataforma (super_admin) e no painel de cada tenant (tenant_admin, item novo
+      no dropdown "Administração"), renderizando o próprio CHANGELOG.md do repositório via
+      `?raw` import + `react-markdown` — decisão do usuário: reaproveitar o arquivo técnico
+      existente em vez de manter um changelog separado curado pra usuário final.
+- [ ] Monitoramento de erros no front (a decidir: Sentry ou equivalente) — **adiado a pedido do
+      usuário (2026-08-27)**: não é bloqueante, precisa de conta/serviço externo novo (GlitchTip
+      foi a escolha quando/se retomado — compatível com o SDK `@sentry/react`, só muda o DSN).
 - [ ] Revisão de acessibilidade (foco, contraste, navegação por teclado) nos temas claro/escuro.
 - [ ] Domínio próprio por tenant (`custom_domain → tenant_id`), como evolução do roteamento
       por subdomínio.
+- [ ] Testar de verdade o job de expiração automática (`funnel-expirations`, Fase 3) — nunca foi
+      observado expirando uma reserva/proposta de verdade, só revisado no código.
 
 ## Backlog (não priorizado, registrado para não perder a ideia)
 
