@@ -147,6 +147,32 @@
   (`adenauerteixeira@gmail.com`/"Corretor Qa Comissao" — literalmente a conta que reportou o bug,
   confirmado durante o QA) em Editar usuário → Permissões, e salvar — não marquei
   automaticamente, é uma mudança de permissão de conta real.
+
+- **Também replicados os dados do anúncio "Casa 03 Quartos" (o primeiro cadastrado de verdade
+  pelo usuário) pros outros 28 anúncios publicados de teste** (a pedido do usuário, pra dar
+  conteúdo real — fotos, descrição, preço, endereço — pra home animada testar) — só o título de
+  cada um ficou original. **Não copiei** proprietário/corretor/parceiro/empreendimento (vínculos
+  internos, não aparecem no card público, e faria 29 anúncios "pertencerem" à mesma pessoa).
+  Reaproveitei o mesmo arquivo de foto no Storage (não duplicou arquivo). Como todos já eram tipo
+  "Casa", isso não ajuda a testar a nav de múltiplas categorias — só melhora a aparência dos cards
+  dentro da categoria única que já existe.
+
+- **Hero da home animada ganhou opções de fundo configuráveis (2026-08-27), a pedido do usuário.**
+  Nova seção "Hero da home animada" em Identidade Visual → Página pública (só aparece com o estilo
+  "Animada" selecionado): checkbox "Mostrar uma imagem de fundo" + upload dedicado
+  (`animated_hero_image_path`, independente do "Plano de fundo" da Clássica) — desmarcado, libera
+  "Mostrar efeito de partículas conectadas". O usuário mandou uma URL local
+  (`http://localhost:8001/views/auth/login.php`, tela de login do sistema Laravel antigo) como
+  referência do efeito — **o servidor estava rodando na mesma máquina e o `curl` do Bash alcançou
+  normalmente** (esse ambiente roda direto na máquina do usuário, não é sandbox isolado — vale
+  lembrar disso se aparecer outra referência `localhost` no futuro). Extraí o algoritmo exato
+  (canvas 2D à mão, sem lib externa: 150 partículas, linhas conectando quando próximas, repulsão
+  do mouse, fundo `radial-gradient` escuro) e reproduzi fielmente em
+  `src/features/tenant/animated-home/particles-background.tsx`. Com `prefers-reduced-motion`,
+  desenha só um quadro estático em vez de animar. Migration
+  `20260827130000_animated_hero_background_options.sql`. Testado ponta a ponta via automação de
+  navegador — efeito visualmente idêntico à referência, zero erro de console. Deixei configurado
+  com as partículas ligadas (sem imagem) pro usuário já ver ao entrar.
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,

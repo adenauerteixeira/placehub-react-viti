@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
+import { cn } from '@/lib/utils'
 import type { Tenant } from '@/features/tenants/api'
 import { brandingAssetUrl, useSendTestEmail, useUpdateTenantColors, type TenantColorsInput } from './api'
 import { BrandingPreviewCard } from './branding-preview-card'
@@ -47,6 +48,8 @@ function colorsFromTenant(tenant: Tenant): TenantColorsInput {
     email_logo_background_transparent: tenant.email_logo_background_transparent,
     public_hero_enabled: tenant.public_hero_enabled,
     public_home_variant: tenant.public_home_variant,
+    animated_hero_show_image: tenant.animated_hero_show_image,
+    animated_hero_show_particles: tenant.animated_hero_show_particles,
   }
 }
 
@@ -275,6 +278,69 @@ export function TenantBrandingPage() {
               </div>
             </CardContent>
           </Card>
+
+          {colors.public_home_variant === 'animated' && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Hero da home animada</CardTitle>
+                <CardDescription>
+                  Fundo da tela cheia mostrada antes do visitante começar a rolar.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={colors.animated_hero_show_image}
+                      onCheckedChange={(c) => set('animated_hero_show_image', c === true)}
+                    />
+                    Mostrar uma imagem de fundo
+                  </label>
+                  <p className="text-muted-foreground text-xs">
+                    Desmarcado, o fundo vira o gradiente das cores do tenant ou (se habilitado
+                    abaixo) um efeito de partículas — nunca fica em branco.
+                  </p>
+                </div>
+
+                {colors.animated_hero_show_image && (
+                  <div className="flex flex-col gap-3 rounded-xl border p-4">
+                    <BrandingUploadField
+                      tenantId={tenant.id}
+                      asset="animated-hero-image"
+                      label="Imagem do hero"
+                      currentPath={tenant.animated_hero_image_path}
+                      previewUrl={brandingAssetUrl(tenant.animated_hero_image_path, tenant.updated_at)}
+                      stacked
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      Independente do "Plano de fundo" usado na home Clássica — pode ser a mesma
+                      imagem ou uma diferente. Sem nada aqui, o hero cai no gradiente.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    className={cn(
+                      'flex items-center gap-2 text-sm',
+                      colors.animated_hero_show_image && 'text-muted-foreground',
+                    )}
+                  >
+                    <Checkbox
+                      checked={colors.animated_hero_show_particles}
+                      onCheckedChange={(c) => set('animated_hero_show_particles', c === true)}
+                      disabled={colors.animated_hero_show_image}
+                    />
+                    Mostrar efeito de partículas conectadas
+                  </label>
+                  <p className="text-muted-foreground text-xs">
+                    Só vale quando a imagem acima está desmarcada — pontos animados se conectando
+                    com linhas, num fundo escuro, reagindo ao mouse.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="emails" className="pt-4">

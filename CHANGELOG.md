@@ -5,6 +5,21 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Hero da home animada configurável, 2026-08-27)
+
+- **Fundo do hero da home animada agora configurável** (Identidade Visual → Página pública → "Hero
+  da home animada", só aparece quando o estilo "Animada" está selecionado): checkbox "Mostrar uma
+  imagem de fundo" com upload dedicado (`animated_hero_image_path`, independente do "Plano de
+  fundo" da home Clássica) — desmarcado, libera um segundo checkbox "Mostrar efeito de partículas
+  conectadas" (`animated_hero_show_particles`). Sem imagem e sem partículas, cai no gradiente das
+  cores do tenant que já existia — o hero nunca fica em branco.
+- **Efeito de partículas conectadas** (`src/features/tenant/animated-home/particles-background.tsx`)
+  — canvas 2D com pontos animados se conectando por linhas quando próximos, repelidos pelo mouse,
+  fundo escuro com gradiente radial. Fielmente reproduzido a partir de uma referência que o usuário
+  já tinha implementado no sistema Laravel anterior (tela de login). Com `prefers-reduced-motion`,
+  desenha só um quadro estático (a rede parada), em vez de animar.
+- Migration: `20260827130000_animated_hero_background_options.sql`.
+
 ### Corrigido (Permissão "Proprietários" impossível de conceder, 2026-08-27)
 
 - **Bug real reportado pelo usuário**: um corretor tentando cadastrar um proprietário pelo botão

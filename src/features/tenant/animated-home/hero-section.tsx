@@ -4,6 +4,7 @@ import { motion, useTransform, type MotionValue } from 'motion/react'
 import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { useTenantLogo } from '@/features/tenant-branding/tenant-brand'
 import type { Tenant } from '@/features/tenants/api'
+import { ParticlesBackground } from './particles-background'
 
 /** Hero em tela cheia — nome/logo centralizados, indicador de rolar pra
  * baixo. Some (opacidade/escala) conforme o usuário rola, via scrollYProgress
@@ -20,7 +21,15 @@ export function HeroSection({
   scrollYProgress: MotionValue<number>
 }) {
   const { logoUrl } = useTenantLogo(tenant, dark)
-  const backgroundUrl = brandingAssetUrl(tenant.background_image_path, tenant.updated_at)
+  // Imagem dedicada do hero animado — independente do "Plano de fundo" da
+  // home clássica (Identidade Visual > Página pública > "Hero da home
+  // animada"). Só entra em jogo se "Mostrar uma imagem de fundo" estiver
+  // marcado; senão cai pras partículas (se habilitadas) ou pro gradiente.
+  const showImage = tenant.animated_hero_show_image
+  const backgroundUrl = showImage
+    ? brandingAssetUrl(tenant.animated_hero_image_path, tenant.updated_at)
+    : null
+  const showParticles = !showImage && tenant.animated_hero_show_particles
 
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92])
@@ -30,7 +39,7 @@ export function HeroSection({
       ref={heroRef}
       className="relative flex h-dvh flex-col items-center justify-center overflow-hidden text-white"
       style={
-        !backgroundUrl
+        !backgroundUrl && !showParticles
           ? { background: 'linear-gradient(135deg, var(--primary), var(--accent))' }
           : undefined
       }
@@ -41,6 +50,7 @@ export function HeroSection({
           <div className="absolute inset-0 bg-black/55" />
         </>
       )}
+      {!backgroundUrl && showParticles && <ParticlesBackground />}
 
       <motion.div
         style={{ opacity, scale }}

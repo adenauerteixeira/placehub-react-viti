@@ -6,6 +6,7 @@ export type BrandingAsset =
   | 'logo-dark'
   | 'email-logo'
   | 'background-image'
+  | 'animated-hero-image'
   | 'favicon'
   | 'placeholder-image'
 
@@ -17,6 +18,7 @@ const PATH_COLUMN: Record<
   | 'logo_dark_path'
   | 'email_logo_path'
   | 'background_image_path'
+  | 'animated_hero_image_path'
   | 'favicon_path'
   | 'placeholder_image_path'
 > = {
@@ -24,6 +26,7 @@ const PATH_COLUMN: Record<
   'logo-dark': 'logo_dark_path',
   'email-logo': 'email_logo_path',
   'background-image': 'background_image_path',
+  'animated-hero-image': 'animated_hero_image_path',
   favicon: 'favicon_path',
   'placeholder-image': 'placeholder_image_path',
 }
@@ -58,6 +61,8 @@ export type TenantColorsInput = {
   email_logo_background_transparent: boolean
   public_hero_enabled: boolean
   public_home_variant: 'classic' | 'animated'
+  animated_hero_show_image: boolean
+  animated_hero_show_particles: boolean
 }
 
 export function useUpdateTenantColors(tenantId: string) {
