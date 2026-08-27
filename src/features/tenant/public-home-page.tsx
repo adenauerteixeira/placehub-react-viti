@@ -8,15 +8,13 @@ import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-st
 import { useTheme } from '@/lib/theme-provider'
 import { whatsappUrl } from '@/lib/whatsapp'
 import { announcementImageUrl, usePublicAnnouncementCovers, usePublicAnnouncements } from '@/features/announcements/api'
-import { PROPERTY_TYPE_LABELS } from '@/features/announcements/labels'
+import { groupAnnouncementsByType } from '@/features/announcements/labels'
 import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
 import { usePublicTenant } from '@/features/tenants/api'
 import { PublicAnnouncementCard } from './public-announcement-card'
-
-const PROPERTY_TYPE_ORDER = Object.keys(PROPERTY_TYPE_LABELS) as (keyof typeof PROPERTY_TYPE_LABELS)[]
 
 export function PublicTenantHomePage({ slug }: { slug: string }) {
   const { data: tenant, isLoading, isError } = usePublicTenant(slug)
@@ -27,14 +25,10 @@ export function PublicTenantHomePage({ slug }: { slug: string }) {
 
   useTenantFavicon(tenant?.favicon_path ?? null, tenant?.updated_at ?? '')
 
-  const sections = useMemo(() => {
-    if (!announcements) return []
-    return PROPERTY_TYPE_ORDER.map((type) => ({
-      type,
-      label: PROPERTY_TYPE_LABELS[type],
-      items: announcements.filter((a) => a.property_type === type),
-    })).filter((section) => section.items.length > 0)
-  }, [announcements])
+  const sections = useMemo(
+    () => (announcements ? groupAnnouncementsByType(announcements) : []),
+    [announcements],
+  )
 
   if (isLoading) return <FullscreenSpinner />
   if (isError || !tenant) {
@@ -69,44 +63,46 @@ export function PublicTenantHomePage({ slug }: { slug: string }) {
       footer={<AppFooter>{tenant.name} · Plataforma PlaceHub</AppFooter>}
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-10">
-        <section
-          className="relative flex min-h-56 flex-col justify-end overflow-hidden rounded-2xl border p-6 text-white sm:min-h-64 sm:p-10"
-          style={!heroImageUrl ? { background: 'linear-gradient(135deg, var(--primary), var(--accent))' } : undefined}
-        >
-          {heroImageUrl && (
-            <>
-              <img src={heroImageUrl} alt="" className="absolute inset-0 size-full object-cover" />
-              <div className="absolute inset-0 bg-black/55" />
-            </>
-          )}
-          <div className="relative flex flex-col gap-3">
-            <h1 className="text-2xl font-semibold sm:text-3xl">{tenant.name}</h1>
-            <p className="max-w-xl text-white/90">
-              Encontre seu próximo imóvel com quem entende do mercado local.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {tenant.phone && (
-                <Button asChild size="sm">
-                  <a
-                    href={whatsappUrl(tenant.phone, `Olá! Vim pelo site da ${tenant.name}.`)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Fale conosco
-                  </a>
+        {tenant.public_hero_enabled && (
+          <section
+            className="relative flex min-h-56 flex-col justify-end overflow-hidden rounded-2xl border p-6 text-white sm:min-h-64 sm:p-10"
+            style={!heroImageUrl ? { background: 'linear-gradient(135deg, var(--primary), var(--accent))' } : undefined}
+          >
+            {heroImageUrl && (
+              <>
+                <img src={heroImageUrl} alt="" className="absolute inset-0 size-full object-cover" />
+                <div className="absolute inset-0 bg-black/55" />
+              </>
+            )}
+            <div className="relative flex flex-col gap-3">
+              <h1 className="text-2xl font-semibold sm:text-3xl">{tenant.name}</h1>
+              <p className="max-w-xl text-white/90">
+                Encontre seu próximo imóvel com quem entende do mercado local.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {tenant.phone && (
+                  <Button asChild size="sm">
+                    <a
+                      href={whatsappUrl(tenant.phone, `Olá! Vim pelo site da ${tenant.name}.`)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Fale conosco
+                    </a>
+                  </Button>
+                )}
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  className="border-white/40 bg-white/10 text-white hover:bg-white/20"
+                >
+                  <Link to="/corretores">Ver corretores</Link>
                 </Button>
-              )}
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="border-white/40 bg-white/10 text-white hover:bg-white/20"
-              >
-                <Link to="/corretores">Ver corretores</Link>
-              </Button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {sections.length === 0 ? (
           <Card className="mx-auto w-full max-w-md">

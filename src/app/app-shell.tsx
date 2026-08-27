@@ -26,10 +26,11 @@ import { TenantsListPage } from '@/features/platform/tenants-list-page'
 import { PublicAnnouncementDetailPage } from '@/features/tenant/public-announcement-detail-page'
 import { PublicBrokerDetailPage } from '@/features/tenant/public-broker-detail-page'
 import { PublicBrokersListPage } from '@/features/tenant/public-brokers-list-page'
+import { AnimatedTenantHomePage } from '@/features/tenant/animated-home/animated-home-page'
 import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
 import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useTenant } from '@/features/tenants/api'
+import { useTenant, usePublicTenant } from '@/features/tenants/api'
 import { TenantBrandingPage } from '@/features/tenant-branding/tenant-branding-page'
 import { TenantUsersPage } from '@/features/tenant-users/tenant-users-page'
 import { platformUrl, resolveSubdomainContext, tenantUrl } from '@/lib/subdomain'
@@ -60,7 +61,7 @@ function TenantApp({ slug }: { slug: string }) {
 
   return (
     <Routes>
-      <Route path="/" element={<PublicTenantHomePage slug={slug} />} />
+      <Route path="/" element={<TenantHomeRoute slug={slug} />} />
       <Route path="/anuncios/:slug" element={<PublicAnnouncementDetailPage tenantSlug={slug} />} />
       <Route path="/corretores" element={<PublicBrokersListPage tenantSlug={slug} />} />
       <Route path="/corretores/:slug" element={<PublicBrokerDetailPage tenantSlug={slug} />} />
@@ -225,6 +226,29 @@ function TenantApp({ slug }: { slug: string }) {
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+  )
+}
+
+// Escolhe entre a home pública clássica e a animada conforme
+// `public_home_variant` — busca o tenant uma vez só aqui (mesma chave de
+// query que PublicTenantHomePage usa internamente, o react-query deduplica).
+function TenantHomeRoute({ slug }: { slug: string }) {
+  const { data: tenant, isLoading, isError } = usePublicTenant(slug)
+
+  if (isLoading) return <FullscreenSpinner />
+  if (isError || !tenant) {
+    return (
+      <FullscreenMessage
+        title="Imobiliária não encontrada"
+        description="Confira o endereço ou fale com quem te enviou o link."
+      />
+    )
+  }
+
+  return tenant.public_home_variant === 'animated' ? (
+    <AnimatedTenantHomePage tenant={tenant} />
+  ) : (
+    <PublicTenantHomePage slug={slug} />
   )
 }
 

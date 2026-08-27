@@ -93,14 +93,45 @@
   demais — "Salvar identidade visual" continua fora das abas, salva tudo de uma vez. Migrations
   `20260827100000_email_branding_and_public_hero_toggle.sql` e
   `20260827110000_email_logo_asset.sql`. Ver CHANGELOG.md pros detalhes completos.
-  **Pedido do usuário, ainda não iniciado**: redesenho ambicioso da home pública com animações de
-  scroll (hero recolhendo pro cabeçalho, nav fixa por tipo de imóvel, boxes de categoria entrando/
-  saindo) — dei minha opinião (viável, mas recomendo prototipar 1 categoria antes de comprometer a
-  página inteira; usaria Framer Motion) e o usuário ofereceu mandar referências do YouTube. Ideia:
-  manter a home atual como está (só com o toggle novo) e criar uma **página alternativa** com o
-  redesenho, com um switch em Identidade Visual pra escolher qual exibir — dá redundância se a
-  nova página tiver problema. Nenhum código escrito ainda pra isso; não criar a coluna/switch de
-  variante até realmente começar esse trabalho (evitar opção morta na UI).
+  **Achado confirmado com dois testes reais no Gmail Android**: o app inverte QUALQUER cor de
+  fundo clara pro seu próprio equivalente escuro (mesmo matiz, luminosidade invertida) — não existe
+  cor clara que escape disso especificamente nesse cliente, só pixel de imagem escapa (a logo com
+  fundo embutido ficou nítida nos dois testes; só o fundo do cabeçalho ao redor dela é que o Gmail
+  recolore sozinho). **Decisão registrada com o usuário: aceitar a versão escura que o Gmail gera**
+  (ficou esteticamente aceitável) em vez de perseguir mais tentativas de cor — não retomar esse
+  ajuste específico a menos que o usuário peça de novo. Bug corrigido no processo: o campo "Fundo
+  do cabeçalho do e-mail" estava desabilitado quando havia logo com fundo embutido, mesmo
+  controlando o cabeçalho inteiro (não só a logo) — corrigido, sempre editável agora.
+
+- **Home pública animada — segunda variante opt-in (2026-08-27), a pedido do usuário, planejada em
+  modo de planejamento formal (plano salvo em
+  `C:\Users\Adenauer Teixeira\.claude\plans\zany-waddling-mountain.md`) e testada ponta a ponta via
+  automação de navegador contra dados reais do Casah.** `src/features/tenant/animated-home/` —
+  hero em tela cheia (nome/logo/indicador de rolar) que recolhe pro cabeçalho ao rolar e fica fixo
+  lá (só reabre voltando ao topo), categorias com caixa fixa à esquerda (`position: sticky`, sem
+  JS de posição — a passagem pra próxima categoria acontece sozinha, por geometria de CSS) e
+  anúncios revelando à direita (foto entra, dados assentam logo depois, usando a `description` já
+  existente do anúncio como texto de apoio — o usuário rejeitou explicitamente um sistema de
+  "destaques configuráveis" à parte, por complexidade). Switch novo em Identidade Visual → Página
+  pública (`public_home_variant`, `'classic'|'animated'`, migration
+  `20260827120000_add_public_home_variant.sql`) escolhe qual variante roda em `/` — redundância de
+  propósito, dá pra voltar pra Clássica a qualquer momento (`public-home-page.tsx` não foi tocada).
+  **Decisão arquitetural importante**: essa página não usa `<AppShell>` (que trava a rolagem real
+  da janela) — precisa dela pra `position: sticky`/`useScroll` funcionarem sem container
+  customizado; tem cabeçalho/rodapé próprios. Dependência nova: `motion` (Framer Motion) — zero
+  libs de animação existiam antes. Testado: fluxo completo de rolagem, clique no card navegando
+  pro anúncio, `prefers-reduced-motion` mantendo a página usável, emulação mobile sem travamento,
+  e voltar pra "Clássica" revertendo exatamente pro comportamento de antes. **Dados de teste do
+  Casah são todos tipo "Casa"** — a nav de categorias (só aparece com 2+ tipos) nunca foi vista
+  renderizada de fato, só a lógica revisada (`sections.length <= 1` esconde) — vale confirmar
+  visualmente numa próxima sessão se o Casah ganhar anúncios de outros tipos, ou testar com um
+  tenant que já tenha catálogo variado. Deixei o Casah configurado em "Animada" ao final da sessão
+  (pra o usuário já ver ao entrar) — reverter pra "Clássica" em Identidade Visual se não for a
+  intenção.
+  **Referências do usuário**: mandou 3 links do YouTube como inspiração visual (o último, "muito
+  top" nas palavras dele) — eu não consigo assistir vídeo diretamente nesse ambiente; pedi uma
+  descrição textual do que chamou atenção, ainda sem resposta quando a sessão fechou. Perguntar de
+  novo na próxima sessão se for relevante pra polir ainda mais a experiência.
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,

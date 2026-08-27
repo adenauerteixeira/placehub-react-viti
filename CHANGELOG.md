@@ -5,6 +5,40 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Home pública animada — segunda variante opt-in, 2026-08-27)
+
+- **Nova variante "Animada" da home pública** (`src/features/tenant/animated-home/`), alternativa
+  opt-in à home clássica de sempre — um switch em Identidade Visual → "Página pública" (campo
+  `public_home_variant`, `'classic' | 'animated'`, migration
+  `20260827120000_add_public_home_variant.sql`) escolhe qual roda em `/`. Decisão do usuário:
+  redundância de propósito — se o visual animado tiver algum problema, dá pra voltar pra Clássica
+  na hora, sem perder nada; a home clássica (`public-home-page.tsx`) não foi tocada.
+- Experiência: hero em tela cheia (nome/logo/indicador de rolar) que recolhe suavemente pro
+  cabeçalho conforme a rolagem e fica fixo lá (só reabre se voltar ao topo); cada tipo de imóvel
+  cadastrado vira uma seção com uma caixa fixa à esquerda (`position: sticky`, sem JS de
+  posição) enquanto os anúncios revelam à direita (foto entra, dados assentam logo depois);
+  a passagem pra próxima categoria acontece sozinha, por geometria de CSS (o sticky solta quando a
+  seção acaba), sem nenhum listener de scroll calculando "qual categoria está ativa". Descrição de
+  cada anúncio (`Announcement.description`, já existente) reaproveitada como texto de apoio na
+  revelação — decisão do usuário de não criar um sistema de "destaques configuráveis" à parte.
+- **Decisão arquitetural**: essa página não usa `<AppShell>` (que é `h-dvh overflow-hidden` com
+  cabeçalho/rodapé `position: fixed` e um `<main>` que rola sozinho) — precisa da rolagem real da
+  janela pra `position: sticky` e `useScroll` do Framer Motion funcionarem sem container
+  customizado. Página raiz própria, cabeçalho/rodapé reaproveitando `TenantBrand`/`ThemeToggle`.
+  Nova dependência: `motion` (Framer Motion) — zero libs de animação existiam antes no projeto.
+  `<MotionConfig reducedMotion="user">` desliga as animações de transform/opacidade quando o SO
+  pede redução de movimento, mas não desliga `position: sticky` (layout, não animação).
+- Helper novo `groupAnnouncementsByType()` (`src/features/announcements/labels.ts`) — extraído da
+  lógica que já existia duplicada na home clássica, agora compartilhado pelas duas variantes.
+  Nenhuma query nova: reaproveita `usePublicAnnouncements`/`usePublicAnnouncementCovers`/
+  `announcementImageUrl` como estão.
+- Testado ponta a ponta via automação de navegador contra dados reais do Casah (28 anúncios "QA
+  Vitest" tipo Casa): hero → recolhimento do cabeçalho → caixa fixa + revelação → volta ao topo
+  reabre o hero, tudo sem erro de console; navegação pro detalhe do anúncio (`/anuncios/:slug`)
+  funcionando; modo de movimento reduzido (`prefers-reduced-motion`) mantém a página usável;
+  emulação mobile sem travamento de rolagem; voltar pra "Clássica" confirmado revertendo
+  exatamente pro comportamento de antes (valida a redundância que motivou o design).
+
 ### Adicionado (Identidade Visual — e-mails, página pública e organização em abas, 2026-08-27)
 
 - **Logo do cabeçalho de e-mail quase invisível no modo escuro do Gmail Android** (achado pelo
@@ -17,7 +51,16 @@ formato AAAA-MM-DD.
   logo); (2) upload dedicado **"Logo do e-mail"** (`email_logo_path`) — uma versão do logo com o
   fundo já "assado" nos próprios pixels da imagem, imune a qualquer reescrita de cliente de
   e-mail, com fallback pro `logo_light_path` de sempre quando não enviada. Testado ponta a ponta
-  contra o Resend real e confirmado recebido no Gmail Android.
+  contra o Resend real e confirmado recebido no Gmail Android — a logo em si ficou nítida e
+  legível. **Achado adicional, confirmado com dois testes reais**: o Gmail Android inverte
+  **qualquer** cor de fundo clara pro seu próprio equivalente escuro (mesmo matiz, luminosidade
+  invertida), não só tons quase-brancos — não existe cor clara configurável que escape disso
+  especificamente nesse cliente; só pixel de imagem escapa. Decisão registrada com o usuário:
+  aceitar a versão escura que o Gmail gera (o resultado ficou esteticamente aceitável — nome do
+  tenant continua legível) em vez de perseguir mais tentativas de cor. Corrigido no processo: o
+  campo "Fundo do cabeçalho do e-mail" estava incorretamente desabilitado quando havia logo com
+  fundo embutido, mesmo esse campo controlando o cabeçalho inteiro (não só a logo) — agora sempre
+  editável.
 - **"Enviar e-mail de teste"** na aba E-mails — dispara um e-mail de exemplo (mesmo `emailShell()`
   de produção) pra qualquer endereço, usando a identidade visual **já salva** do tenant. Novo tipo
   `test` na Edge Function `send-notification-email`, restrito a `tenant_admin`.
