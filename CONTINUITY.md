@@ -337,7 +337,11 @@ destrutivo" já usado nas fases anteriores — ver "Notas técnicas" abaixo):
 
 **Próxima fase: Fase 6 — Polimento e observabilidade** (testes Vitest, Playwright, monitoramento
 de erros, acessibilidade, domínio próprio por tenant). Ver bloco "Fase 6" no ROADMAP.md pros
-itens exatos — nenhum código escrito ainda pra ela nesta sessão.
+itens exatos — nenhum código escrito ainda pra ela. **Usuário já decidiu por qual item começar:
+testes Vitest** pras regras de negócio críticas (conversão reserva→venda, trava de venda
+concluída, cálculo de comissão) — não depende de conta/serviço externo, dá pra começar direto na
+próxima sessão sem precisar perguntar de novo. Vitest ainda não está instalado no projeto
+(`package.json` não tem `vitest` nas dependências) — primeiro passo real é configurar o runner.
 
 **Melhorias na calculadora de ágio implementadas (2026-08-26)**
 (`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão
