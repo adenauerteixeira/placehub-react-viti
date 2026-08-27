@@ -173,8 +173,17 @@ Fase 5 completa — os 4 e-mails transacionais funcionando ponta a ponta contra 
 
 ## Fase 6 — Polimento e observabilidade
 
-- [ ] Testes Vitest para as regras de negócio críticas (conversão reserva→venda, trava de
-      venda concluída, cálculo de comissão).
+- [x] Testes Vitest para as regras de negócio críticas (conversão reserva→venda, trava de
+      venda concluída, cálculo de comissão) — testes de integração (`tests/integration/`) contra
+      o Supabase real, autenticados como tenant_admin/corretor de teste do tenant Casah, chamando
+      as mesmas funções SQL/RPC que o app usa (`reserve_announcement`, `create_sale_from_proposal`,
+      `cancel_sale`). 10 testes, `npm run test`. Achado e corrigido um bug real no processo: duas
+      versões sobrecarregadas de `create_sale_from_proposal` coexistiam no banco (a da Fase 3 nunca
+      foi removida quando a Fase 4 acrescentou `p_commission_percentage`), deixando qualquer
+      chamada que confiasse no valor padrão desse parâmetro ambígua pro PostgREST. Dados de teste
+      gerados (vendas/reservas/comissões, marcados "QA Vitest") não são apagados depois — não há
+      função de exclusão pra essas tabelas (RLS só dá select) — ficam pra limpeza manual periódica,
+      mesmo padrão já usado nas Fases 2-5.
 - [ ] Playwright para os fluxos principais (login, criar lead até venda).
 - [ ] Monitoramento de erros no front (a decidir: Sentry ou equivalente).
 - [ ] Revisão de acessibilidade (foco, contraste, navegação por teclado) nos temas claro/escuro.

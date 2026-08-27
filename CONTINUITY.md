@@ -35,6 +35,25 @@
   rodapé com slogan da PlaceHub) desenhado e aprovado iterativamente via prévia em Artifact —
   testados ponta a ponta contra o Resend real duas vezes (antes e depois do redesign), os 4
   e-mails confirmados recebidos pelo usuário. Branch de snapshot `fase-5-notificacoes` criada.
+- **Fase 6 — em andamento (2026-08-26): 1º item (testes Vitest) pronto.** Vitest configurado
+  (`vitest.config.ts`, `npm run test`), testes de **integração** (não unitários) em
+  `tests/integration/` contra o Supabase real — autenticam como tenant_admin/corretor de teste
+  reais do tenant Casah (`.env.test.local`, gitignored) e chamam as mesmas funções SQL/RPC do app
+  (`reserve_announcement`, `create_sale_from_proposal`, `cancel_sale`). 10 testes cobrindo as 3
+  regras que o usuário pediu: conversão reserva→venda, trava de venda concluída (via `cancel_sale`,
+  já que `sales` não tem policy de UPDATE pra ninguém — a trigger em si só é exercitável com
+  service_role key, não usada aqui), cálculo de comissão (clamp do `min()`, sem corretor, pro-rata
+  nas parcelas). **Achou um bug real**: duas versões sobrecarregadas de `create_sale_from_proposal`
+  coexistiam no banco (a da Fase 3 nunca foi removida quando a Fase 4 acrescentou
+  `p_commission_percentage` via `create or replace function` — lista de parâmetros diferente cria
+  função nova, não substitui) — corrigido com
+  `20260826200000_drop_stale_create_sale_from_proposal_overload.sql`, já aplicada pelo usuário.
+  **Decisão registrada**: dados de teste (vendas/reservas/comissões, marcados "QA Vitest") não são
+  apagados — não há função de exclusão pra essas tabelas — ficam pra limpeza manual periódica,
+  mesmo padrão das Fases 2-5; por isso **não rodar os testes em loop/CI automático**, só quando
+  pedido explicitamente, pra não acumular lixo rápido demais. Ver CHANGELOG.md pros detalhes.
+  Próximos itens da Fase 6 (nenhum código escrito ainda): Playwright (fluxos principais), Sentry ou
+  equivalente, revisão de acessibilidade, domínio próprio por tenant.
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,
@@ -335,13 +354,11 @@ destrutivo" já usado nas fases anteriores — ver "Notas técnicas" abaixo):
   geral.
 - Reserva "QA Teste Notificacao 2" (cancelada, criada 2x) no anúncio "Casa QA Teste 3 quartos".
 
-**Próxima fase: Fase 6 — Polimento e observabilidade** (testes Vitest, Playwright, monitoramento
-de erros, acessibilidade, domínio próprio por tenant). Ver bloco "Fase 6" no ROADMAP.md pros
-itens exatos — nenhum código escrito ainda pra ela. **Usuário já decidiu por qual item começar:
-testes Vitest** pras regras de negócio críticas (conversão reserva→venda, trava de venda
-concluída, cálculo de comissão) — não depende de conta/serviço externo, dá pra começar direto na
-próxima sessão sem precisar perguntar de novo. Vitest ainda não está instalado no projeto
-(`package.json` não tem `vitest` nas dependências) — primeiro passo real é configurar o runner.
+**Fase 6 em andamento — 1º item (testes Vitest) fechado (2026-08-26).** Ver bloco "Fase 6" logo
+acima e em ROADMAP.md/CHANGELOG.md pros detalhes completos (arquitetura de testes, bug real achado
+e corrigido, decisão de não limpar dados de teste). Próximo item a decidir com o usuário: Playwright
+(fluxos principais) ou monitoramento de erros (Sentry ou equivalente) — nenhum dos dois tem código
+ainda.
 
 **Melhorias na calculadora de ágio implementadas (2026-08-26)**
 (`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão

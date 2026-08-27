@@ -5,6 +5,40 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Fase 6 — testes Vitest de integração, 2026-08-26)
+
+- **Vitest configurado** (`vitest.config.ts`, `npm run test`/`test:watch`) com testes de
+  **integração** — não unitários — contra o Supabase real, autenticando como um tenant_admin e um
+  corretor de teste reais do tenant Casah (`.env.test.local`, gitignored, ver
+  `.env.test.local.example`). Decisão: as regras críticas (conversão reserva→venda, trava
+  financeira de venda concluída, cálculo de comissão) vivem inteiramente em funções/triggers SQL,
+  não em TypeScript — testar via RPC real é a única forma de validar o comportamento de verdade,
+  não uma cópia da lógica.
+- `tests/integration/reservation-to-sale.test.ts`: `reserve_announcement` marca o anúncio como
+  reservado, rejeita reservar um anúncio já reservado, e `create_sale_from_proposal` com
+  `p_reservation_id` converte a reserva (`status='converted'`, `sale_id`, `converted_at`) e marca o
+  anúncio como vendido.
+- `tests/integration/sale-financial-lock.test.ts`: `cancel_sale` funciona uma vez numa venda
+  `completed`, rejeita cancelar de novo, e cancela a comissão junto. (A trava em si —
+  `guard_sale_financial_lock`, bloqueia UPDATE em coluna financeira — não tem como ser exercitada
+  pelo client anônimo: `sales` não tem policy de UPDATE pra ninguém, só as funções security definer
+  escrevem nela; testar a checagem de status do `cancel_sale`, que é a porta real de mutação
+  pós-venda, é a cobertura possível sem a service_role key.)
+- `tests/integration/commission-calculation.test.ts`: corte do corretor = `min(commission_percentage
+  do corretor, percentual total da venda)` nos dois ramos (clampado e não-clampado), venda sem
+  corretor joga 100% pra imobiliária, e a distribuição pro-rata nas parcelas de entrada soma
+  exatamente de volta ao total (a última parcela absorve o resto do arredondamento).
+- **Bug real encontrado e corrigido durante a implementação**: `create_sale_from_proposal` tinha
+  **duas versões sobrecarregadas** coexistindo no banco — a migration da Fase 4
+  (`20260827090000_commissions_and_audit.sql`) usou `create or replace function` pra acrescentar
+  `p_commission_percentage`, mas como a lista de parâmetros mudou (9 → 10), o Postgres criou uma
+  função nova em vez de substituir a da Fase 3; a antiga nunca foi removida. Qualquer chamada RPC
+  que omitisse `p_commission_percentage` (contando com o default = 5) ficava ambígua pro PostgREST
+  (`PGRST203`). O client sempre manda o parâmetro explicitamente (não quebrou em produção), mas os
+  próprios testes esbarraram nisso na primeira rodada. Corrigido com
+  `20260826200000_drop_stale_create_sale_from_proposal_overload.sql` (`drop function` da versão
+  antiga), aplicada pelo usuário via SQL Editor.
+
 ### Alterado (Redesign profissional dos 4 templates de e-mail, 2026-08-26)
 
 - **Envelope visual novo** em `emailShell()` (`supabase/functions/send-notification-email/index.ts`),
