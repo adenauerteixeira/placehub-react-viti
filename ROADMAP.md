@@ -184,7 +184,13 @@ Fase 5 completa — os 4 e-mails transacionais funcionando ponta a ponta contra 
       gerados (vendas/reservas/comissões, marcados "QA Vitest") não são apagados depois — não há
       função de exclusão pra essas tabelas (RLS só dá select) — ficam pra limpeza manual periódica,
       mesmo padrão já usado nas Fases 2-5.
-- [ ] Playwright para os fluxos principais (login, criar lead até venda).
+- [x] Playwright para os fluxos principais (login, criar lead até venda) — `tests/e2e/`, dirigido
+      pela UI de verdade contra o dev server local (`http://casah.localhost:5173`), mesmas
+      credenciais de teste do Vitest. `login.spec.ts` (credenciais válidas/inválidas) e
+      `lead-to-sale.spec.ts` (login → criar lead → nova negociação → nova proposta → editar pra
+      "Aceita" → "Fechar venda", confirmando o negociação vira "Ganha" e o botão some). `npm run
+      test:e2e`. Dados criados ficam marcados "QA Playwright" — mesma decisão de não limpar já
+      tomada pro Vitest.
 - [ ] Monitoramento de erros no front (a decidir: Sentry ou equivalente).
 - [ ] Revisão de acessibilidade (foco, contraste, navegação por teclado) nos temas claro/escuro.
 - [ ] Domínio próprio por tenant (`custom_domain → tenant_id`), como evolução do roteamento

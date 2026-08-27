@@ -18,6 +18,11 @@ dist-ssr
 supabase/.temp
 supabase/.branches
 
+# Playwright
+test-results
+playwright-report
+blob-report
+
 # Claude Code local-only settings
 .claude/settings.local.json
 

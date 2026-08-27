@@ -5,6 +5,28 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Fase 6 — testes Playwright dos fluxos principais, 2026-08-26)
+
+- **Playwright configurado** (`playwright.config.ts`, `npm run test:e2e`), rodando contra o dev
+  server local no subdomínio do tenant Casah (`http://casah.localhost:5173` — mesmo padrão do QA
+  manual, `webServer` do Playwright sobe/reaproveita o `npm run dev` sozinho). Usa as mesmas
+  credenciais de teste do `.env.test.local` da suíte Vitest.
+- `tests/e2e/login.spec.ts`: credenciais válidas de tenant_admin redirecionam pra `/dashboard`;
+  credenciais inválidas mostram o toast de erro e mantêm o usuário em `/login`.
+- `tests/e2e/lead-to-sale.spec.ts`: fluxo completo pela UI real — login → `/leads` criar lead
+  (só o nome é obrigatório) → `/negotiations` criar negociação selecionando esse lead → abrir o
+  hub da negociação → criar proposta (só o valor) → editar a proposta pra status "Aceita" →
+  "Fechar venda" com os valores padrão do formulário (comissão 5%, sem parcelas/bens) → confirma
+  que o botão "Fechar venda" some da lista e que a negociação vira "Ganha". Não passa por
+  `announcement_id` (campo opcional na negociação) — evita ter que simular o formulário de
+  anúncio, que tem bem mais campos obrigatórios (capa, descrição, cidade/UF, preço).
+- **Achados durante a implementação** (documentados em comentário no próprio spec): o `SelectTrigger`
+  do shadcn/Radix não expõe um nome acessível confiável pro Playwright reconhecer via
+  `getByRole('combobox', { name: ... })` — cada `<Select>` também renderiza um `<select>` nativo
+  oculto (mesmo mecanismo do bug de perda de valor documentado nas Fases 2/notas técnicas),
+  então o teste seleciona pela posição (`.first()`) dentro do diálogo em vez de por nome. O rótulo
+  "Senha" também colide com o botão "Mostrar senha" do campo — resolvido com `{ exact: true }`.
+
 ### Adicionado (Fase 6 — testes Vitest de integração, 2026-08-26)
 
 - **Vitest configurado** (`vitest.config.ts`, `npm run test`/`test:watch`) com testes de

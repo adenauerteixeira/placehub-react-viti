@@ -52,8 +52,17 @@
   apagados — não há função de exclusão pra essas tabelas — ficam pra limpeza manual periódica,
   mesmo padrão das Fases 2-5; por isso **não rodar os testes em loop/CI automático**, só quando
   pedido explicitamente, pra não acumular lixo rápido demais. Ver CHANGELOG.md pros detalhes.
-  Próximos itens da Fase 6 (nenhum código escrito ainda): Playwright (fluxos principais), Sentry ou
-  equivalente, revisão de acessibilidade, domínio próprio por tenant.
+  **2º item (Playwright) também pronto, mesma sessão.** `playwright.config.ts` +
+  `tests/e2e/` rodando contra o dev server local (`http://casah.localhost:5173`), mesmas
+  credenciais do `.env.test.local`. `login.spec.ts` (válido/inválido) e `lead-to-sale.spec.ts`
+  (login → criar lead → nova negociação → proposta → aceitar → fechar venda, tudo pela UI real,
+  sem tocar anúncio — `announcement_id` é opcional na negociação). `npm run test:e2e`. Achado no
+  processo: o `<Select>` do shadcn/Radix não tem nome acessível confiável pro Playwright (mesma
+  causa-raiz do bug de perda de valor já documentado — `<select>` nativo oculto por trás do
+  trigger visível), teste seleciona por posição (`.first()`) em vez de por nome. Dados criados
+  marcados "QA Playwright", mesma decisão de não limpar do Vitest. Próximos itens da Fase 6
+  (nenhum código escrito ainda): Sentry ou equivalente, revisão de acessibilidade, domínio próprio
+  por tenant.
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,
@@ -354,11 +363,11 @@ destrutivo" já usado nas fases anteriores — ver "Notas técnicas" abaixo):
   geral.
 - Reserva "QA Teste Notificacao 2" (cancelada, criada 2x) no anúncio "Casa QA Teste 3 quartos".
 
-**Fase 6 em andamento — 1º item (testes Vitest) fechado (2026-08-26).** Ver bloco "Fase 6" logo
-acima e em ROADMAP.md/CHANGELOG.md pros detalhes completos (arquitetura de testes, bug real achado
-e corrigido, decisão de não limpar dados de teste). Próximo item a decidir com o usuário: Playwright
-(fluxos principais) ou monitoramento de erros (Sentry ou equivalente) — nenhum dos dois tem código
-ainda.
+**Fase 6 em andamento — 1º e 2º itens (Vitest e Playwright) fechados (2026-08-26).** Ver bloco
+"Fase 6" logo acima e em ROADMAP.md/CHANGELOG.md pros detalhes completos (arquitetura de testes,
+bug real achado e corrigido, decisão de não limpar dados de teste). Próximo item a decidir com o
+usuário: monitoramento de erros (Sentry ou equivalente, precisa de conta nova), revisão de
+acessibilidade, ou domínio próprio por tenant — nenhum tem código ainda.
 
 **Melhorias na calculadora de ágio implementadas (2026-08-26)**
 (`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão
