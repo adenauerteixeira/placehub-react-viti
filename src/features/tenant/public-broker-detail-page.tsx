@@ -17,6 +17,7 @@ import { brokerPhotoUrl, usePublicBroker } from '@/features/brokers/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
+import { useTenantTitle } from '@/features/tenant-branding/use-tenant-title'
 import { usePublicTenant } from '@/features/tenants/api'
 import { PublicAnnouncementCard } from './public-announcement-card'
 
@@ -34,6 +35,7 @@ export function PublicBrokerDetailPage({ tenantSlug }: { tenantSlug: string }) {
   const { data: covers } = usePublicAnnouncementCovers(announcementIds)
 
   useTenantFavicon(tenant?.favicon_path ?? null, tenant?.updated_at ?? '')
+  useTenantTitle(tenant?.name ?? null)
 
   if (tenantLoading || brokerLoading) return <FullscreenSpinner />
   if (!tenant) {

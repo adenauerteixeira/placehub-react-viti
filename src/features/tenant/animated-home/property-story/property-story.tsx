@@ -24,7 +24,7 @@ export function PropertyStory({
   return (
     <div
       ref={registerWrapperRef}
-      className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 opacity-0"
+      className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 pb-12 opacity-0 sm:pb-16"
       aria-hidden="true"
     >
       <PropertyGallery photos={photos} title={announcement.title} registerPhotoRef={registerPhotoRef} />

@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { cn } from '@/lib/utils'
 import type { Tenant } from '@/features/tenants/api'
 import { brandingAssetUrl, useSendTestEmail, useUpdateTenantColors, type TenantColorsInput } from './api'
 import { BrandingPreviewCard } from './branding-preview-card'
@@ -297,8 +296,8 @@ export function TenantBrandingPage() {
                     Mostrar uma imagem de fundo
                   </label>
                   <p className="text-muted-foreground text-xs">
-                    Desmarcado, o fundo vira o gradiente das cores do tenant ou (se habilitado
-                    abaixo) um efeito de partículas — nunca fica em branco.
+                    Desmarcado, o fundo vira o gradiente das cores do tenant (ou, se habilitado
+                    abaixo, o efeito de partículas aparece por trás) — nunca fica em branco.
                   </p>
                 </div>
 
@@ -320,22 +319,17 @@ export function TenantBrandingPage() {
                 )}
 
                 <div className="flex flex-col gap-1.5">
-                  <label
-                    className={cn(
-                      'flex items-center gap-2 text-sm',
-                      colors.animated_hero_show_image && 'text-muted-foreground',
-                    )}
-                  >
+                  <label className="flex items-center gap-2 text-sm">
                     <Checkbox
                       checked={colors.animated_hero_show_particles}
                       onCheckedChange={(c) => set('animated_hero_show_particles', c === true)}
-                      disabled={colors.animated_hero_show_image}
                     />
                     Mostrar efeito de partículas conectadas
                   </label>
                   <p className="text-muted-foreground text-xs">
-                    Só vale quando a imagem acima está desmarcada — pontos animados se conectando
-                    com linhas, num fundo escuro, reagindo ao mouse.
+                    Pontos animados se conectando com linhas, num fundo escuro, reagindo ao mouse.
+                    Funciona junto com a imagem de fundo (se houver) e continua visível por trás
+                    de toda a rolagem dos anúncios, não só na tela inicial.
                   </p>
                 </div>
               </CardContent>

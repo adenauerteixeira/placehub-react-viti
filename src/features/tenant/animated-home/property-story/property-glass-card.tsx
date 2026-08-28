@@ -24,7 +24,7 @@ export const PropertyGlassCard = forwardRef<HTMLDivElement, { announcement: Anno
     return (
       <div
         ref={ref}
-        className="absolute inset-x-4 bottom-2 z-10 mx-auto max-w-xl rounded-2xl border border-white/20 bg-white/10 p-5 opacity-0 shadow-2xl backdrop-blur-xl sm:p-6 dark:border-white/10 dark:bg-black/20"
+        className="absolute inset-x-4 bottom-6 z-10 mx-auto max-w-xl rounded-2xl border border-white/20 bg-white/10 p-5 opacity-0 shadow-2xl backdrop-blur-xl sm:bottom-8 sm:p-6 dark:border-white/10 dark:bg-black/20"
       >
         <h3 className="text-xl font-semibold text-white drop-shadow-sm sm:text-2xl">
           {announcement.title}

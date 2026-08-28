@@ -24,6 +24,7 @@ import { brokerPhotoUrl, usePublicBrokers } from '@/features/brokers/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
+import { useTenantTitle } from '@/features/tenant-branding/use-tenant-title'
 import { usePublicTenant } from '@/features/tenants/api'
 
 function formatPrice(value: number) {
@@ -53,6 +54,7 @@ export function PublicAnnouncementDetailPage({ tenantSlug }: { tenantSlug: strin
   const [photoIndex, setPhotoIndex] = useState(0)
 
   useTenantFavicon(tenant?.favicon_path ?? null, tenant?.updated_at ?? '')
+  useTenantTitle(tenant?.name ?? null)
 
   useEffect(() => {
     if (!viewerOpen || !images || images.length === 0) return

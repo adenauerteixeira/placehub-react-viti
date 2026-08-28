@@ -5,6 +5,52 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Alterado (Property Story — "deck panorâmico" virou colagem, 2026-08-28)
+
+- **Coreografia de entrada dos imóveis redesenhada do zero**, a pedido do usuário com imagem de
+  referência (colagem estilo Polaroid): as fotos secundárias de cada imóvel agora sobem de baixo
+  da tela juntas (leve stagger entre elas, ease `back.out` com efeito de "pouso") e se espalham em
+  5 posições fixas ao redor do centro (`collageSlotFor`, `property-story-variants.ts`) — não é
+  mais um baralho sequencial foto-a-foto com fan-out lateral. A foto de capa sobe por cima logo
+  em seguida (mesmo evento, sobrepõe a cauda da montagem da colagem), sempre centralizada e com
+  z-index maior, com o cartão de vidro entrando colado nela. As 5 variantes de coreografia por
+  tipo de imóvel (right/alternate/depth/scale-parallax/horizontal) foram removidas — a colagem usa
+  o mesmo layout pra todos os tipos.
+- Fotos da capa e da colagem ganharam borda branca contrastante (efeito Polaroid, delimita uma
+  foto da outra quando se sobrepõem) — mesma espessura nas duas (`border-[6px]`), a pedido do
+  usuário.
+- Capa dimensionada em ~2x o tamanho de uma foto da colagem (`top-[10%] left-[10%] size-[80%]` do
+  palco), fixo pra qualquer largura de tela — decisão explícita do usuário depois de descartar uma
+  tentativa anterior de encolher por breakpoint (parecia "grande" demais em telas médias mesmo
+  reduzida).
+- Contador "01/26" novo no canto superior direito de cada categoria (só quando há 2+ imóveis).
+- **Partículas conectadas desacopladas da imagem de fundo do hero** (antes eram mutuamente
+  exclusivas) e viraram um fundo fixo de página inteira, visível durante toda a rolagem dos
+  anúncios — não só na tela inicial.
+- Gap de ~20px entre a barra sticky de categorias e o título de cada seção.
+
+### Corrigido (dois bugs reais achados durante o redesign da colagem, 2026-08-28)
+
+- **Duração do pin de scroll zerando silenciosamente**: virou uma função (`end: () =>
+  tl.duration()`) que referenciava a variável `tl` antes dela ser atribuída (ainda avaliando o
+  lado direito de `tl = gsap.timeline(...)`) — o pin nascia com comprimento ~0 e nunca corrigia.
+  Revertido pra um total pré-calculado em números puros (`totalScrollUnits()`), espelhando a
+  mesma matemática de posições relativas da timeline.
+- **Foto de capa colapsando pra ~12×12px independente do valor de tamanho no código**: `<img>` é
+  um elemento *replaced* no CSS — `inset-X%` sozinho, sem `width`/`height` explícitos, não estica
+  ele como estica uma `<div>` comum (o navegador usa o algoritmo de tamanho intrínseco do
+  elemento substituído, resultado ~0). Substituído por `top`/`left` (posição) + `size-[X%]`
+  (tamanho explícito). Confirmado por medição direta no DOM antes/depois da correção, não só
+  inspeção visual.
+
+### Adicionado (Título dinâmico da aba do navegador, 2026-08-28)
+
+- Título vira **"{nome do tenant} | Place Hub"** em toda página com escopo de tenant (painel
+  autenticado + as 5 páginas públicas) — antes era sempre o `<title>` estático do `index.html`
+  ("PlaceHub"), igual pra qualquer tenant. Hook novo `useTenantTitle`
+  (`src/features/tenant-branding/use-tenant-title.ts`), mesmo padrão de restaurar o valor anterior
+  no cleanup que o `useTenantFavicon` já usava.
+
 ### Adicionado (Property Story — apresentação dos anúncios por scroll na home animada, 2026-08-27)
 
 - **Nova experiência de scroll na home animada** (`src/features/tenant/animated-home/property-story/`):

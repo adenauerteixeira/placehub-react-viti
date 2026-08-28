@@ -13,6 +13,7 @@ import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
+import { useTenantTitle } from '@/features/tenant-branding/use-tenant-title'
 import { usePublicTenant } from '@/features/tenants/api'
 import { PublicAnnouncementCard } from './public-announcement-card'
 
@@ -24,6 +25,7 @@ export function PublicTenantHomePage({ slug }: { slug: string }) {
   const { data: covers } = usePublicAnnouncementCovers(announcementIds)
 
   useTenantFavicon(tenant?.favicon_path ?? null, tenant?.updated_at ?? '')
+  useTenantTitle(tenant?.name ?? null)
 
   const sections = useMemo(
     () => (announcements ? groupAnnouncementsByType(announcements) : []),
@@ -77,7 +79,7 @@ export function PublicTenantHomePage({ slug }: { slug: string }) {
             <div className="relative flex flex-col gap-3">
               <h1 className="text-2xl font-semibold sm:text-3xl">{tenant.name}</h1>
               <p className="max-w-xl text-white/90">
-                Encontre seu próximo imóvel com quem entende do mercado local.
+                Encontre seu próximo imóvel com quem entende do mercado!
               </p>
               <div className="flex flex-wrap gap-2">
                 {tenant.phone && (

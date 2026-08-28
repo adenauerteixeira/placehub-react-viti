@@ -16,6 +16,7 @@ import { hasPermission, type Profile } from '@/features/auth/use-profile'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
+import { useTenantTitle } from '@/features/tenant-branding/use-tenant-title'
 import type { Tenant } from '@/features/tenants/api'
 
 export type TenantOutletContext = { tenant: Tenant; profile: Profile }
@@ -31,6 +32,7 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
   const location = useLocation()
 
   useTenantFavicon(tenant.favicon_path, tenant.updated_at)
+  useTenantTitle(tenant.name)
 
   const isAdmin = profile.role === 'tenant_admin'
 

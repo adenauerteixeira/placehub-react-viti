@@ -8,12 +8,21 @@ import {
 import { groupAnnouncementsByType } from '@/features/announcements/labels'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
+import { useTenantTitle } from '@/features/tenant-branding/use-tenant-title'
 import type { Tenant } from '@/features/tenants/api'
 import { useTheme } from '@/lib/theme-provider'
 import { CategoryNav } from './category-nav'
 import { CollapsingHeader } from './collapsing-header'
 import { HeroSection } from './hero-section'
+import { ParticlesBackground } from './particles-background'
 import { useHeroCollapse } from './use-hero-collapse'
+
+// Altura do cabeçalho compacto (h-16) mais, quando há mais de uma categoria,
+// a barra de pills do CategoryNav (h-12, sticky logo abaixo dele) — usado
+// tanto pra dimensionar cada seção pinada quanto pro ponto de início do
+// pin, senão o topo de cada categoria nasce coberto pela barra de pills.
+const HEADER_HEIGHT = 64
+const CATEGORY_NAV_HEIGHT = 48
 
 // GSAP (usado só a partir daqui pra baixo) fica no chunk separado desse
 // import dinâmico — o hero, que precisa pintar rápido (LCP), não carrega
@@ -39,6 +48,7 @@ export function AnimatedTenantHomePage({ tenant }: { tenant: Tenant }) {
   const { heroRef, scrollYProgress } = useHeroCollapse()
 
   useTenantFavicon(tenant.favicon_path, tenant.updated_at)
+  useTenantTitle(tenant.name)
 
   // scroll-behavior:smooth precisa estar no elemento que a janela realmente
   // rola (<html>), não num container React — essa página não tem um.
@@ -56,13 +66,22 @@ export function AnimatedTenantHomePage({ tenant }: { tenant: Tenant }) {
     [announcements],
   )
   const galleryMap = galleries ?? {}
+  const hasNav = sections.length > 1
+  const topOffset = HEADER_HEIGHT + (hasNav ? CATEGORY_NAV_HEIGHT : 0)
+  const showParticles = tenant.animated_hero_show_particles
 
   return (
     <MotionConfig reducedMotion="user">
       <div
         style={tenantThemeVars(tenant, resolvedTheme)}
-        className="bg-background text-foreground min-h-dvh"
+        className={showParticles ? 'text-foreground min-h-dvh' : 'bg-background text-foreground min-h-dvh'}
       >
+        {showParticles && (
+          <div className="fixed inset-0 -z-10">
+            <ParticlesBackground />
+          </div>
+        )}
+
         <HeroSection tenant={tenant} dark={dark} heroRef={heroRef} scrollYProgress={scrollYProgress} />
         <CollapsingHeader tenant={tenant} dark={dark} scrollYProgress={scrollYProgress} />
 
@@ -80,6 +99,8 @@ export function AnimatedTenantHomePage({ tenant }: { tenant: Tenant }) {
                     label={section.label}
                     items={section.items}
                     galleries={galleryMap}
+                    topOffset={topOffset}
+                    showParticles={showParticles}
                   />
                 </Suspense>
               ))}
@@ -103,7 +124,7 @@ export function AnimatedTenantHomePage({ tenant }: { tenant: Tenant }) {
           )}
         </div>
 
-        <footer className="text-muted-foreground border-border border-t px-6 py-8 text-center text-xs">
+        <footer className="text-muted-foreground border-border bg-background/70 border-t px-6 py-8 text-center text-xs backdrop-blur-xl">
           © {new Date().getFullYear()} {tenant.name} · Plataforma PlaceHub
         </footer>
       </div>

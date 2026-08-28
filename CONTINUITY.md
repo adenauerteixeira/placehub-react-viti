@@ -5,8 +5,66 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-08-27
+## Estado atual — 2026-08-28
 
+- **Property Story trocou de "deck panorâmico" pra "colagem" (2026-08-28), a pedido do usuário
+  com imagem de referência, iterado bastante até fechar.** `property-type-section.tsx` +
+  `property-story-variants.ts` + `property-gallery.tsx`: por imóvel, as fotos secundárias agora
+  sobem de baixo da tela juntas (leve stagger, `back.out` overshoot) e pousam espalhadas ao redor
+  do centro numa colagem — 5 posições fixas determinísticas (`collageSlotFor`), não mais um
+  "baralho" sequencial foto-a-foto. A capa sobe por cima logo depois (overlap com a cauda da
+  montagem da colagem, mesmo evento), sempre centralizada, com z-index maior — e o cartão de
+  vidro entra colado nela. Isso **substitui inteiramente** as 5 variantes de coreografia por tipo
+  de imóvel (right/alternate/depth/scale-parallax/horizontal) descritas na entrada "Property
+  Story..." abaixo, que não existem mais.
+  - **Bug real achado e corrigido nessa refatoração**: o comprimento do scroll do pin virou uma
+    função (`end: () => tl.duration()`) pra não precisar recalcular manualmente depois de trocar
+    a lógica de posições sobrepostas — só que essa função referencia a variável `tl` antes dela
+    ser atribuída (ainda estava avaliando o lado direito de `tl = gsap.timeline(...)`), então o
+    pin nascia com comprimento ~0 e nunca corrigia depois. Revertido pra um `totalScrollUnits()`
+    pré-calculado em números puros, espelhando a mesma matemática de posições relativas — mais
+    simples e sem essa armadilha de closure.
+  - **Capa: tamanho ajustado por pedido do usuário em várias rodadas** (ele foi bem específico:
+    "2x o tamanho de uma foto da colagem", formato wide, borda um pouco mais grossa) até bater
+    exatamente. **Achado um segundo bug real nesse processo**: `<img>` é um elemento
+    *replaced* no CSS — `inset-X%` sozinho, sem `width`/`height` explícitos, não estica ele como
+    estica uma `<div>` comum (o navegador cai no algoritmo de tamanho intrínseco do elemento
+    substituído, resultado ~0). A capa vinha colapsando pra ~12×12px mesmo com o inset "certo" no
+    código — corrigido trocando `inset-[10%]` por `top-[10%] left-[10%] size-[80%]` (posição +
+    tamanho explícitos). Confirmado por medição direta no DOM (`offsetWidth`/`getBoundingClientRect`,
+    não só print): capa 538×302px contra ~283px médio de uma foto da colagem, razão ~2x, batendo
+    com o pedido. Borda branca (`border-[6px]`) agora igual em capa e colagem (pedido explícito
+    do usuário antes do commit desta rodada).
+  - Contador "01/26" novo, canto superior direito de cada categoria (só aparece com 2+ imóveis),
+    atualizado via `tl.call()` na mesma posição do início do slot de cada imóvel.
+  - Gap de ~20px entre a barra de categorias (`CategoryNav`, sticky) e o título de cada seção
+    corrigido: o `start` do pin e a altura da seção não contavam a altura da barra de pills
+    (48px) além do cabeçalho (64px) — os primeiros ~48px de cada categoria nasciam cobertos por
+    ela. `topOffset` agora passado de `AnimatedTenantHomePage` pra `PropertyTypeSection`
+    (`64 + (sections.length > 1 ? 48 : 0)`).
+  - **Partículas conectadas desacopladas da imagem de fundo do hero** (antes eram mutuamente
+    exclusivas — `!showImage && showParticles`) e viraram um fundo **fixo de página inteira**
+    (`AnimatedTenantHomePage`, `position: fixed inset-0 -z-10`), visível durante toda a rolagem
+    dos anúncios, não só na tela inicial — a pedido explícito do usuário. `CategoryTitle` ganhou
+    um modo `onParticles` (texto branco forçado + text-shadow) porque o canvas de partículas é
+    sempre escuro, independente do tema claro/escuro do tenant — as cores de tema normais
+    ficavam ilegíveis em cima dele no tema claro.
+  - Testado ponta a ponta via automação de navegador em 6 larguras de tela (400 a 1920px),
+    inclusive um caso real de teste-com-falso-positivo: imagens que ainda não terminaram de
+    baixar da rede aparecem como caixas brancas vazias no primeiro screenshot de uma sessão nova
+    — não é bug do produto, é só timing do teste (resolvido dando um `networkidle` antes de
+    screenshotar).
+- **Título da aba do navegador agora é dinâmico: "{nome do tenant} | Place Hub"** (2026-08-28, a
+  pedido do usuário — antes era sempre o `<title>` estático do `index.html`, "PlaceHub"). Hook
+  novo `useTenantTitle` (`src/features/tenant-branding/use-tenant-title.ts`, mesmo padrão de
+  restauração do `useTenantFavicon`) plugado nas 6 páginas com escopo de tenant (layout
+  autenticado + as 5 páginas públicas). `index.html` só guarda o título padrão ("PlaceHub") pra
+  quando não há tenant carregado ainda.
+- **`.vscode/settings.json` novo** — escopa a extensão Deno só pra `supabase/functions`
+  (`deno.enablePaths`), resolvendo o erro "Cannot find module 'jsr:...'" que o editor mostra
+  nesses arquivos (rodam em Deno, não Node/Vite; `tsconfig.app.json` só inclui `src`, então o
+  `tsc` do projeto nunca via esses arquivos mesmo). Precisa da extensão "Deno" instalada no VS
+  Code pra funcionar de fato — não é algo que dá pra verificar/instalar por aqui.
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
   commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até

@@ -4,7 +4,6 @@ import { motion, useTransform, type MotionValue } from 'motion/react'
 import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { useTenantLogo } from '@/features/tenant-branding/tenant-brand'
 import type { Tenant } from '@/features/tenants/api'
-import { ParticlesBackground } from './particles-background'
 
 /** Hero em tela cheia — nome/logo centralizados, indicador de rolar pra
  * baixo. Some (opacidade/escala) conforme o usuário rola, via scrollYProgress
@@ -24,12 +23,16 @@ export function HeroSection({
   // Imagem dedicada do hero animado — independente do "Plano de fundo" da
   // home clássica (Identidade Visual > Página pública > "Hero da home
   // animada"). Só entra em jogo se "Mostrar uma imagem de fundo" estiver
-  // marcado; senão cai pras partículas (se habilitadas) ou pro gradiente.
+  // marcado. As partículas (ParticlesBackground) não são mais renderizadas
+  // aqui — viraram um fundo fixo de página inteira em AnimatedTenantHomePage,
+  // visível também atrás do hero sempre que a seção não tiver imagem própria
+  // cobrindo tudo (as duas opções são independentes e podem estar ligadas
+  // juntas: a imagem simplesmente fica por cima).
   const showImage = tenant.animated_hero_show_image
   const backgroundUrl = showImage
     ? brandingAssetUrl(tenant.animated_hero_image_path, tenant.updated_at)
     : null
-  const showParticles = !showImage && tenant.animated_hero_show_particles
+  const showParticles = tenant.animated_hero_show_particles
 
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92])
@@ -50,7 +53,6 @@ export function HeroSection({
           <div className="absolute inset-0 bg-black/55" />
         </>
       )}
-      {!backgroundUrl && showParticles && <ParticlesBackground />}
 
       <motion.div
         style={{ opacity, scale }}
@@ -61,7 +63,7 @@ export function HeroSection({
         )}
         <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">{tenant.name}</h1>
         <p className="max-w-xl text-white/90 sm:text-lg">
-          Encontre seu próximo imóvel com quem entende do mercado local.
+          Encontre seu próximo imóvel com quem entende do mercado!
         </p>
       </motion.div>
 

@@ -9,6 +9,7 @@ import { brokerPhotoUrl, usePublicBrokers } from '@/features/brokers/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
+import { useTenantTitle } from '@/features/tenant-branding/use-tenant-title'
 import { usePublicTenant } from '@/features/tenants/api'
 
 export function PublicBrokersListPage({ tenantSlug }: { tenantSlug: string }) {
@@ -17,6 +18,7 @@ export function PublicBrokersListPage({ tenantSlug }: { tenantSlug: string }) {
   const { data: brokers } = usePublicBrokers(tenant?.id)
 
   useTenantFavicon(tenant?.favicon_path ?? null, tenant?.updated_at ?? '')
+  useTenantTitle(tenant?.name ?? null)
 
   if (isLoading) return <FullscreenSpinner />
   if (!tenant) {
