@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, User, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -42,6 +42,8 @@ const FEATURE_LABELS: { key: string; label: string }[] = [
 
 export function PublicAnnouncementDetailPage({ tenantSlug }: { tenantSlug: string }) {
   const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
+  const location = useLocation()
   const { data: tenant, isLoading: tenantLoading } = usePublicTenant(tenantSlug)
   const { resolvedTheme } = useTheme()
   const { data: announcement, isLoading: announcementLoading } = usePublicAnnouncement(tenant?.id, slug)
@@ -118,6 +120,16 @@ export function PublicAnnouncementDetailPage({ tenantSlug }: { tenantSlug: strin
     setViewerOpen(true)
   }
 
+  // location.key === 'default' significa que a página foi aberta direto
+  // (URL colada/refresh), sem histórico de navegação do app pra voltar —
+  // nesse caso navigate(-1) sairia do site. Com histórico, volta de fato
+  // (preserva a posição de rolagem da home, igual ao botão voltar do
+  // navegador), em vez de sempre reabrir a home do zero no topo.
+  function handleBack() {
+    if (location.key !== 'default') navigate(-1)
+    else navigate('/')
+  }
+
   return (
     <AppShell
       style={tenantThemeVars(tenant, resolvedTheme)}
@@ -138,9 +150,13 @@ export function PublicAnnouncementDetailPage({ tenantSlug }: { tenantSlug: strin
       footer={<AppFooter>{tenant.name} · Plataforma PlaceHub</AppFooter>}
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-4">
-        <Link to="/" className="text-muted-foreground hover:text-foreground w-fit text-sm">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="text-muted-foreground hover:text-foreground w-fit cursor-pointer text-left text-sm"
+        >
           ← Voltar aos anúncios
-        </Link>
+        </button>
 
         <header className="bg-card flex flex-col gap-4 rounded-2xl border p-6 shadow-sm sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-1">

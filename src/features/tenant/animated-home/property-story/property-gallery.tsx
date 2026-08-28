@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 // Borda branca contrastante em toda foto (capa e colagem, mesma espessura
 // nas duas) — separa visualmente uma foto da outra quando se sobrepõem,
 // tipo Polaroid.
@@ -34,28 +36,41 @@ const PHOTO_BORDER = 'border-[6px] border-white/90 rounded-2xl object-cover shad
 export function PropertyGallery({
   photos,
   title,
+  slug,
   registerPhotoRef,
 }: {
   photos: { url: string; alt: string }[]
   title: string
+  slug: string
   registerPhotoRef: (index: number, el: HTMLImageElement | null) => void
 }) {
   return (
     <div className="relative aspect-video w-full max-w-2xl">
-      {photos.map((photo, index) => (
-        <img
-          key={`${photo.url}-${index}`}
-          ref={(el) => registerPhotoRef(index, el)}
-          src={photo.url}
-          alt={index === 0 ? title : ''}
-          className={
-            index === 0
-              ? `absolute top-[10%] left-[10%] size-[80%] z-10 ${PHOTO_BORDER}`
-              : `absolute inset-0 size-full ${PHOTO_BORDER}`
-          }
-          style={index === 0 ? undefined : { opacity: 0 }}
-        />
-      ))}
+      {photos.map((photo, index) =>
+        index === 0 ? (
+          <Link
+            key={`${photo.url}-${index}`}
+            to={`/anuncios/${slug}`}
+            className="absolute top-[10%] left-[10%] size-[80%] z-10 block cursor-pointer transition-transform duration-300 ease-out hover:scale-[1.2]"
+          >
+            <img
+              ref={(el) => registerPhotoRef(index, el)}
+              src={photo.url}
+              alt={title}
+              className={`size-full ${PHOTO_BORDER}`}
+            />
+          </Link>
+        ) : (
+          <img
+            key={`${photo.url}-${index}`}
+            ref={(el) => registerPhotoRef(index, el)}
+            src={photo.url}
+            alt=""
+            className={`absolute inset-0 size-full ${PHOTO_BORDER}`}
+            style={{ opacity: 0 }}
+          />
+        ),
+      )}
     </div>
   )
 }
