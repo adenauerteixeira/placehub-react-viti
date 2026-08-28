@@ -173,6 +173,29 @@
   `20260827130000_animated_hero_background_options.sql`. Testado ponta a ponta via automação de
   navegador — efeito visualmente idêntico à referência, zero erro de console. Deixei configurado
   com as partículas ligadas (sem imagem) pro usuário já ver ao entrar.
+- **Property Story — apresentação dos anúncios por scroll na home animada (2026-08-27), a pedido
+  detalhado do usuário, planejada em Plan Mode com revisão técnica própria (guardrails de
+  GSAP+React 19+SPA) e testada ponta a ponta.** `src/features/tenant/animated-home/property-story/`
+  substitui a listagem simples de cards por categoria: um único `ScrollTrigger` com `pin: true` por
+  categoria (`property-type-section.tsx`), título encolhendo e fixando no canto, deck panorâmico de
+  fotos entrando uma a uma por imóvel (`property-gallery.tsx`), cartão glassmórfico subindo por
+  baixo (`property-glass-card.tsx`) — coreografia varia por tipo de imóvel via config único
+  (`property-story-variants.ts`), não 5 implementações separadas. GSAP + `@gsap/react` novos,
+  carregados via `React.lazy()`. Achei e corrigi **dois bugs reais** na própria QA:
+  (1) a seção pinada usava `h-dvh` mas era fixada 64px abaixo do topo — sobrava 64px de conteúdo
+  (preço + botão "Ver imóvel" do cartão) empurrado pra fora da tela, corrigido pra
+  `h-[calc(100dvh-4rem)]`; (2) `CategoryNav` usava o `ScrollToPlugin` do GSAP num tween pra pular
+  entre categorias — atravessando 2+ seções pinadas numa rolagem só, a atribuição de scrollTop
+  quadro-a-quadro do tween conflitava com a compensação de pin de cada `ScrollTrigger`
+  intermediário e o clique aterrissava a dezenas de milhares de pixels do alvo (confirmado via
+  script automatizado, comparando `getBoundingClientRect()` do alvo antes/depois do clique).
+  Trocado por `window.scrollTo({ behavior: 'smooth' })` nativo com alvo calculado manualmente —
+  sem esse conflito, aterrissagem exata mesmo pulando 3+ seções pinadas de uma vez (mesmo padrão de
+  `scroll-behavior: smooth` já usado no resto da página). Testado: reduced-motion (lista estática,
+  zero `ScrollTrigger` criado), mobile (cross-fade sequencial sem fan-out), variantes Casa/
+  Apartamento/Chácara-Fazenda visualmente confirmadas com dados reais do Casah (Lote sem anúncio
+  publicado ainda, não dá pra confirmar visualmente), navegação de volta/avante sem vazamento de
+  ScrollTrigger, zero erro de console em todos os cenários.
 - **6ª rodada de melhorias pós-Fase 4 (2026-08-25), a pedido do usuário — 3 pontos, testados
   ponta a ponta via automação de navegador:** menu do cabeçalho aninhado em "Comercial"/
   "Administração" (`src/features/tenant/tenant-layout.tsx`, componente `NavGroup` novo,
@@ -485,11 +508,17 @@ verdade o job de expiração automática (pendência real desde a Fase 3).
 **Rodada de Identidade Visual fechada (2026-08-27)** — ver bloco próprio acima ("Rodada de
 melhorias em Identidade Visual") pros detalhes: fix do logo do e-mail no Gmail Android (aba
 E-mails, upload dedicado com fundo embutido), "Enviar e-mail de teste", toggle do banner de
-destaque da home pública, e a tela reorganizada em 4 abas. **Próximo passo combinado com o
-usuário, ainda não iniciado**: redesenho animado da home pública (hero com scroll, nav fixa por
-tipo de imóvel) como página **alternativa** nova, com switch em Identidade Visual pra escolher
-qual exibir — usuário pode mandar referências do YouTube antes de começar. Recomendação já dada:
-prototipar 1 categoria primeiro, não a página inteira de uma vez.
+destaque da home pública, e a tela reorganizada em 4 abas. **Redesenho animado da home pública:
+feito e fechado** (mesma sessão) — hero com scroll + partículas configuráveis (bloco "Hero da home
+animada ganhou opções..." acima) e depois a experiência completa por scroll com GSAP
+(bloco "Property Story..." acima). Página **alternativa** nova, com switch em Identidade Visual
+pra escolher qual exibir. **Pendência real, ainda não resolvida**: o usuário reportou que o logo
+do e-mail continua sendo invertido pelo Gmail Android mesmo como pixel de imagem (não só CSS) —
+ele decidiu adiar esse tópico explicitamente ("isso revemos depois") pra focar na home animada;
+retomar se ele voltar a mencionar. Também ficou pendente: o que exatamente chamou atenção dele na
+3ª referência do YouTube que ele mandou como inspiração (chamou de "muito top", mas não chegou a
+descrever o que especificamente); não foi crítico pro resultado final, mas vale perguntar se for
+relevante numa próxima rodada de ajuste fino da coreografia.
 
 **Melhorias na calculadora de ágio implementadas (2026-08-26)**
 (`src/features/announcements/agio-calculator-dialog.tsx`), os dois pontos pendentes da sessão

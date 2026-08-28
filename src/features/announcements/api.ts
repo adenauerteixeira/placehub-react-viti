@@ -142,6 +142,32 @@ export function usePublicAnnouncementCovers(announcementIds: string[]) {
   })
 }
 
+/** Mapa announcement_id -> todas as fotos (ordenadas), pra montar o "deck"
+ * da home animada sem N queries. Ao contrário de usePublicAnnouncementCovers
+ * (só a capa), traz a galeria inteira — mesma tabela/RLS já pública (usada
+ * hoje na galeria com lightbox da página de detalhe). */
+export function usePublicAnnouncementGalleries(announcementIds: string[]) {
+  return useQuery({
+    queryKey: ['public-announcement-galleries', announcementIds],
+    enabled: announcementIds.length > 0,
+    queryFn: async (): Promise<Record<string, AnnouncementImage[]>> => {
+      const { data, error } = await supabase
+        .from('announcement_images')
+        .select('id, announcement_id, path, caption, sort_order, is_cover')
+        .in('announcement_id', announcementIds)
+        .order('sort_order')
+
+      if (error) throw error
+
+      const byAnnouncement: Record<string, AnnouncementImage[]> = {}
+      for (const image of data) {
+        ;(byAnnouncement[image.announcement_id] ??= []).push(image)
+      }
+      return byAnnouncement
+    },
+  })
+}
+
 export function usePublicAnnouncement(tenantId: string | null | undefined, slug: string | null | undefined) {
   return useQuery({
     queryKey: ['public-announcement', tenantId, slug],

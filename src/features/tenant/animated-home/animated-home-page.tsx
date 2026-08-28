@@ -1,17 +1,28 @@
-import { useEffect, useMemo } from 'react'
+import { lazy, Suspense, useEffect, useMemo } from 'react'
 import { MotionConfig } from 'motion/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { usePublicAnnouncementCovers, usePublicAnnouncements } from '@/features/announcements/api'
+import {
+  usePublicAnnouncementGalleries,
+  usePublicAnnouncements,
+} from '@/features/announcements/api'
 import { groupAnnouncementsByType } from '@/features/announcements/labels'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
 import type { Tenant } from '@/features/tenants/api'
 import { useTheme } from '@/lib/theme-provider'
 import { CategoryNav } from './category-nav'
-import { CategorySection } from './category-section'
 import { CollapsingHeader } from './collapsing-header'
 import { HeroSection } from './hero-section'
 import { useHeroCollapse } from './use-hero-collapse'
+
+// GSAP (usado só a partir daqui pra baixo) fica no chunk separado desse
+// import dinâmico — o hero, que precisa pintar rápido (LCP), não carrega
+// essa dependência à toa.
+const PropertyTypeSection = lazy(() =>
+  import('./property-story/property-type-section').then((m) => ({
+    default: m.PropertyTypeSection,
+  })),
+)
 
 /** Variante animada da home pública (opt-in, Identidade Visual > Página
  * pública). Não usa <AppShell> de propósito: o AppShell é h-dvh
@@ -24,7 +35,7 @@ export function AnimatedTenantHomePage({ tenant }: { tenant: Tenant }) {
   const dark = resolvedTheme === 'dark'
   const { data: announcements } = usePublicAnnouncements(tenant.id)
   const announcementIds = useMemo(() => announcements?.map((a) => a.id) ?? [], [announcements])
-  const { data: covers } = usePublicAnnouncementCovers(announcementIds)
+  const { data: galleries } = usePublicAnnouncementGalleries(announcementIds)
   const { heroRef, scrollYProgress } = useHeroCollapse()
 
   useTenantFavicon(tenant.favicon_path, tenant.updated_at)
@@ -44,7 +55,7 @@ export function AnimatedTenantHomePage({ tenant }: { tenant: Tenant }) {
     () => (announcements ? groupAnnouncementsByType(announcements) : []),
     [announcements],
   )
-  const coverMap = covers ?? {}
+  const galleryMap = galleries ?? {}
 
   return (
     <MotionConfig reducedMotion="user">
@@ -60,13 +71,17 @@ export function AnimatedTenantHomePage({ tenant }: { tenant: Tenant }) {
             <>
               <CategoryNav sections={sections} />
               {sections.map((section) => (
-                <CategorySection
+                <Suspense
                   key={section.type}
-                  type={section.type}
-                  label={section.label}
-                  items={section.items}
-                  covers={coverMap}
-                />
+                  fallback={<div className="h-dvh w-full animate-pulse bg-muted/30" />}
+                >
+                  <PropertyTypeSection
+                    type={section.type}
+                    label={section.label}
+                    items={section.items}
+                    galleries={galleryMap}
+                  />
+                </Suspense>
               ))}
             </>
           ) : (

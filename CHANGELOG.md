@@ -5,6 +5,38 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Property Story — apresentação dos anúncios por scroll na home animada, 2026-08-27)
+
+- **Nova experiência de scroll na home animada** (`src/features/tenant/animated-home/property-story/`):
+  cada categoria de imóvel vira uma seção pinada em tela cheia (GSAP `ScrollTrigger`) — o título da
+  categoria encolhe e fixa no canto superior esquerdo enquanto, por imóvel, as fotos entram uma a
+  uma formando um "deck panorâmico" sobreposto (offset horizontal, leve translação/escala/rotação),
+  seguido de um cartão glassmórfico com título/specs/localização/descrição/preço/"Ver imóvel" subindo
+  por baixo; ao continuar a rolagem, a composição sai e o próximo imóvel entra. Reversível em
+  qualquer direção, sem JS específico por anúncio — se adapta à quantidade de fotos de cada imóvel.
+- **Coreografia varia por tipo de imóvel** (Casas: deck da direita; Apartamentos: alternado
+  esquerda/direita; Lotes: profundidade; Chácaras/Fazendas: escala+parallax; Comerciais:
+  horizontal/geométrico) — um único sistema parametrizado (`property-story-variants.ts`), não 5
+  implementações separadas.
+- Desktop mostra o deck completo com fan-out horizontal; mobile simplifica pra cross-fade sequencial
+  (sem sobreposição horizontal). `prefers-reduced-motion` cai numa lista estática (sem nenhum
+  `ScrollTrigger` criado), reaproveitando o card já existente.
+- Novo hook `usePublicAnnouncementGalleries` (`src/features/announcements/api.ts`) busca a galeria
+  completa de várias fotos por anúncio, em lote, pra alimentar o deck.
+- Dependências novas: `gsap` + `@gsap/react` (100% grátis, uso comercial incluso), carregadas via
+  `React.lazy()` num chunk separado — não pesam no LCP do hero, que continua em Framer Motion.
+- **Correção de layout**: a seção pinada usava `h-dvh` (altura cheia da tela) mas era fixada 64px
+  abaixo do topo (pra não ficar sob o cabeçalho compacto) — sobrava exatamente 64px de conteúdo
+  empurrado pra fora da janela visível, cortando o preço e o botão "Ver imóvel" do cartão. Corrigido
+  para `h-[calc(100dvh-4rem)]`.
+- **Correção de navegação**: `CategoryNav` usava o `ScrollToPlugin` do GSAP num tween de scroll pra
+  pular entre categorias. Ao atravessar 2+ seções pinadas numa única rolagem, a atribuição de
+  scrollTop quadro-a-quadro do tween conflitava com a compensação de pin de cada `ScrollTrigger`
+  intermediário, e o clique aterrissava a dezenas de milhares de pixels do alvo. Trocado por
+  `window.scrollTo({ behavior: 'smooth' })` nativo com o alvo calculado manualmente — o scroll
+  nativo do browser não sofre esse conflito, confirmado por teste automatizado mesmo pulando por 3+
+  seções pinadas de uma vez.
+
 ### Adicionado (Hero da home animada configurável, 2026-08-27)
 
 - **Fundo do hero da home animada agora configurável** (Identidade Visual → Página pública → "Hero
