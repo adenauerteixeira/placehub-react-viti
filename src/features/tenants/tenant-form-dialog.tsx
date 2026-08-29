@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { rootDomain } from '@/lib/hostname'
 import { isReservedSlug, slugify, SLUG_PATTERN } from '@/lib/slugify'
 import { useCreateTenant, useUpdateTenant, type Tenant } from '@/features/tenants/api'
 
@@ -47,6 +48,7 @@ export function TenantFormDialog({
 }) {
   const isEdit = !!tenant
   const [slugEdited, setSlugEdited] = useState(isEdit)
+  const domain = rootDomain() ?? 'placehubapp.com.br'
   const createTenant = useCreateTenant()
   const updateTenant = useUpdateTenant()
   const submitting = createTenant.isPending || updateTenant.isPending
@@ -125,7 +127,10 @@ export function TenantFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="tenant-slug" hint="Endereço público da imobiliária ({subdomínio}.placehub.app). Não pode ser alterado depois de criado.">
+            <FieldLabel
+              htmlFor="tenant-slug"
+              hint={`Endereço público da imobiliária ({subdomínio}.${domain}). Não pode ser alterado depois de criado.`}
+            >
               Subdomínio
             </FieldLabel>
             <div className="flex items-center gap-1.5">
@@ -135,7 +140,7 @@ export function TenantFormDialog({
                 {...register('slug', { onChange: () => setSlugEdited(true) })}
                 aria-invalid={!!errors.slug}
               />
-              <span className="text-muted-foreground text-sm whitespace-nowrap">.placehub.app</span>
+              <span className="text-muted-foreground text-sm whitespace-nowrap">.{domain}</span>
             </div>
             {errors.slug && <p className="text-destructive text-sm">{errors.slug.message}</p>}
           </div>
