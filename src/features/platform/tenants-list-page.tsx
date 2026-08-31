@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Pencil, Plus, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -10,11 +10,20 @@ import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { LinkAdminDialog } from '@/features/tenants/link-admin-dialog'
 import { TenantFormDialog } from '@/features/tenants/tenant-form-dialog'
-import { useTenants, useToggleTenantActive, type Tenant } from '@/features/tenants/api'
+import { useTenantAdmins, useTenants, useToggleTenantActive, type Tenant } from '@/features/tenants/api'
 
 export function TenantsListPage() {
   const { data: tenants, isLoading, isError } = useTenants()
+  const { data: tenantAdmins } = useTenantAdmins()
   const toggleActive = useToggleTenantActive()
+
+  const adminEmailsByTenant = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const admin of tenantAdmins ?? []) {
+      map.set(admin.tenant_id, [...(map.get(admin.tenant_id) ?? []), admin.email])
+    }
+    return map
+  }, [tenantAdmins])
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null)
@@ -58,6 +67,7 @@ export function TenantsListPage() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Subdomínio</TableHead>
+                <TableHead>Administrador</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Criada em</TableHead>
                 <TableHead className="w-0" />
@@ -68,6 +78,9 @@ export function TenantsListPage() {
                 <TableRow key={tenant.id}>
                   <TableCell className="font-medium">{tenant.name}</TableCell>
                   <TableCell className="text-muted-foreground">{tenant.slug}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {(adminEmailsByTenant.get(tenant.id) ?? []).join(', ') || '—'}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Switch

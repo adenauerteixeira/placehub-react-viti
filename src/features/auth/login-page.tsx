@@ -73,9 +73,9 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
       <Card className="mx-auto w-full max-w-sm">
         <CardHeader>
           <CardTitle>Entrar</CardTitle>
-          <CardDescription>
-            Use o mesmo login em qualquer imobiliária ou na plataforma.
-          </CardDescription>
+          {!tenantSlug && (
+            <CardDescription>Área restrita da administração da plataforma PlaceHub.</CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>

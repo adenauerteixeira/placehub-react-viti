@@ -104,6 +104,27 @@ export function useTenants() {
   })
 }
 
+export type TenantAdmin = { tenant_id: string; email: string }
+
+/** E-mails de todos os tenant_admin cadastrados, de todos os tenants — usado
+ * pra listar na tabela de imobiliárias da plataforma (super_admin enxerga
+ * profiles de qualquer tenant via RLS, ver profiles_select). */
+export function useTenantAdmins() {
+  return useQuery({
+    queryKey: ['tenant-admins'],
+    queryFn: async (): Promise<TenantAdmin[]> => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('tenant_id, email')
+        .eq('role', 'tenant_admin')
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+      return data as TenantAdmin[]
+    },
+  })
+}
+
 export type TenantInput = {
   name: string
   slug: string
