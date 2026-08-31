@@ -44,7 +44,7 @@ export function PlatformBrandingPage() {
                   currentPath={settings.logo_light_path}
                   previewUrl={platformBrandingAssetUrl(settings.logo_light_path, settings.updated_at)}
                 />
-                <p className="text-muted-foreground text-xs">Reservado para uso futuro.</p>
+                <p className="text-muted-foreground text-xs">Exibido na tela de login da plataforma.</p>
               </div>
 
               <div className="flex flex-col gap-3 rounded-xl border p-4">
@@ -54,20 +54,37 @@ export function PlatformBrandingPage() {
                   currentPath={settings.logo_dark_path}
                   previewUrl={platformBrandingAssetUrl(settings.logo_dark_path, settings.updated_at)}
                 />
-                <p className="text-muted-foreground text-xs">Reservado para uso futuro.</p>
+                <p className="text-muted-foreground text-xs">Exibido na tela de login da plataforma.</p>
               </div>
 
               <div className="flex flex-col gap-3 rounded-xl border p-4">
                 <PlatformUploadField
-                  asset="background-image"
-                  label="Imagem de fundo"
-                  currentPath={settings.background_image_path}
+                  asset="background-image-light"
+                  label="Imagem de fundo (tema claro)"
+                  currentPath={settings.background_image_light_path}
                   previewUrl={platformBrandingAssetUrl(
-                    settings.background_image_path,
+                    settings.background_image_light_path,
                     settings.updated_at,
                   )}
                 />
-                <p className="text-muted-foreground text-xs">Reservado para uso futuro.</p>
+                <p className="text-muted-foreground text-xs">
+                  Fundo da tela de login da plataforma, no tema claro.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-xl border p-4">
+                <PlatformUploadField
+                  asset="background-image-dark"
+                  label="Imagem de fundo (tema escuro)"
+                  currentPath={settings.background_image_dark_path}
+                  previewUrl={platformBrandingAssetUrl(
+                    settings.background_image_dark_path,
+                    settings.updated_at,
+                  )}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Fundo da tela de login da plataforma, no tema escuro.
+                </p>
               </div>
             </div>
           )}

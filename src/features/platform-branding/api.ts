@@ -5,22 +5,33 @@ export type PlatformSettings = {
   favicon_path: string | null
   logo_light_path: string | null
   logo_dark_path: string | null
-  background_image_path: string | null
+  background_image_light_path: string | null
+  background_image_dark_path: string | null
   updated_at: string
 }
 
-export type PlatformBrandingAsset = 'favicon' | 'logo-light' | 'logo-dark' | 'background-image'
+export type PlatformBrandingAsset =
+  | 'favicon'
+  | 'logo-light'
+  | 'logo-dark'
+  | 'background-image-light'
+  | 'background-image-dark'
 
 const BUCKET = 'platform-branding'
 
 const PATH_COLUMN: Record<
   PlatformBrandingAsset,
-  'favicon_path' | 'logo_light_path' | 'logo_dark_path' | 'background_image_path'
+  | 'favicon_path'
+  | 'logo_light_path'
+  | 'logo_dark_path'
+  | 'background_image_light_path'
+  | 'background_image_dark_path'
 > = {
   favicon: 'favicon_path',
   'logo-light': 'logo_light_path',
   'logo-dark': 'logo_dark_path',
-  'background-image': 'background_image_path',
+  'background-image-light': 'background_image_light_path',
+  'background-image-dark': 'background_image_dark_path',
 }
 
 export function platformBrandingAssetUrl(path: string | null, updatedAt: string): string | null {
@@ -29,13 +40,16 @@ export function platformBrandingAssetUrl(path: string | null, updatedAt: string)
   return `${data.publicUrl}?v=${new Date(updatedAt).getTime()}`
 }
 
-export function usePlatformSettings() {
+export function usePlatformSettings(enabled = true) {
   return useQuery({
     queryKey: ['platform-settings'],
+    enabled,
     queryFn: async (): Promise<PlatformSettings> => {
       const { data, error } = await supabase
         .from('platform_settings')
-        .select('favicon_path, logo_light_path, logo_dark_path, background_image_path, updated_at')
+        .select(
+          'favicon_path, logo_light_path, logo_dark_path, background_image_light_path, background_image_dark_path, updated_at',
+        )
         .eq('id', true)
         .single()
 
