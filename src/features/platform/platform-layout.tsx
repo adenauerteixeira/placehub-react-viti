@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { AppFooter, AppShell } from '@/components/app-shell'
+import { NavGroup } from '@/components/nav-group'
 import { PlatformPageLabel } from '@/components/platform-page-label'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { UserMenu } from '@/features/auth/user-menu'
@@ -22,6 +23,11 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
   const location = useLocation()
   const pageTitle = PAGE_TITLES[location.pathname]
 
+  const adminItems = [
+    { to: '/branding', label: 'Identidade Visual' },
+    { to: '/changelog', label: 'Changelog' },
+  ]
+
   return (
     <AppShell
       header={
@@ -33,8 +39,11 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
             </span>
             <nav className="flex items-center gap-4 text-sm">
               <PlatformNavLink to="/tenants">Imobiliárias</PlatformNavLink>
-              <PlatformNavLink to="/branding">Identidade Visual</PlatformNavLink>
-              <PlatformNavLink to="/changelog">Changelog</PlatformNavLink>
+              <NavGroup
+                label="Administração"
+                items={adminItems}
+                active={adminItems.some((item) => location.pathname.startsWith(item.to))}
+              />
             </nav>
           </div>
           <div className="flex items-center gap-4">

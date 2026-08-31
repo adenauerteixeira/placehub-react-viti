@@ -1,10 +1,23 @@
+import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { platformBrandingAssetUrl, usePlatformSettings } from './api'
+import { errorMessage } from '@/lib/errors'
+import { platformBrandingAssetUrl, usePlatformSettings, useUpdatePlatformBackgroundBorder } from './api'
 import { PlatformUploadField } from './platform-upload-field'
 
 export function PlatformBrandingPage() {
   const { data: settings, isLoading, isError } = usePlatformSettings()
+  const updateBorder = useUpdatePlatformBackgroundBorder()
+
+  async function handleBorderChange(theme: 'light' | 'dark', show: boolean) {
+    try {
+      await updateBorder.mutateAsync({ theme, show })
+    } catch (error) {
+      toast.error('Não foi possível atualizar a borda', { description: errorMessage(error) })
+    }
+  }
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -25,18 +38,6 @@ export function PlatformBrandingPage() {
 
           {settings && (
             <div className="grid gap-6 sm:grid-cols-2">
-              <div className="flex flex-col gap-3 rounded-xl border p-4">
-                <PlatformUploadField
-                  asset="favicon"
-                  label="Favicon"
-                  currentPath={settings.favicon_path}
-                  previewUrl={platformBrandingAssetUrl(settings.favicon_path, settings.updated_at)}
-                />
-                <p className="text-muted-foreground text-xs">
-                  Aplicado no ícone da aba do navegador em toda a plataforma.
-                </p>
-              </div>
-
               <div className="flex flex-col gap-3 rounded-xl border p-4">
                 <PlatformUploadField
                   asset="logo-light"
@@ -68,8 +69,18 @@ export function PlatformBrandingPage() {
                   )}
                 />
                 <p className="text-muted-foreground text-xs">
-                  Fundo da tela de login da plataforma, no tema claro.
+                  Fundo da tela de login e banner da lista de imobiliárias, no tema claro.
                 </p>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="bg-light-border"
+                    checked={settings.background_image_light_border}
+                    onCheckedChange={(checked) => handleBorderChange('light', checked === true)}
+                  />
+                  <Label htmlFor="bg-light-border" className="text-sm font-normal">
+                    Mostrar borda ao redor da imagem
+                  </Label>
+                </div>
               </div>
 
               <div className="flex flex-col gap-3 rounded-xl border p-4">
@@ -83,7 +94,29 @@ export function PlatformBrandingPage() {
                   )}
                 />
                 <p className="text-muted-foreground text-xs">
-                  Fundo da tela de login da plataforma, no tema escuro.
+                  Fundo da tela de login e banner da lista de imobiliárias, no tema escuro.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="bg-dark-border"
+                    checked={settings.background_image_dark_border}
+                    onCheckedChange={(checked) => handleBorderChange('dark', checked === true)}
+                  />
+                  <Label htmlFor="bg-dark-border" className="text-sm font-normal">
+                    Mostrar borda ao redor da imagem
+                  </Label>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-xl border p-4">
+                <PlatformUploadField
+                  asset="favicon"
+                  label="Favicon"
+                  currentPath={settings.favicon_path}
+                  previewUrl={platformBrandingAssetUrl(settings.favicon_path, settings.updated_at)}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Aplicado no ícone da aba do navegador em toda a plataforma.
                 </p>
               </div>
             </div>

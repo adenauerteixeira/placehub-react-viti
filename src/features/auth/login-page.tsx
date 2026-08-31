@@ -18,7 +18,11 @@ import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { usePublicTenant } from '@/features/tenants/api'
-import { usePlatformBackgroundUrl, usePlatformLogoUrl } from '@/features/platform-branding/use-platform-brand-assets'
+import {
+  usePlatformBackgroundBorder,
+  usePlatformBackgroundUrl,
+  usePlatformLogoUrl,
+} from '@/features/platform-branding/use-platform-brand-assets'
 
 const SLOGAN = 'Conecta pessoas à lugares. Realiza sonhos!'
 
@@ -54,6 +58,7 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
   const dark = resolvedTheme === 'dark'
   const platformLogoUrl = usePlatformLogoUrl(dark)
   const heroImageUrl = usePlatformBackgroundUrl(dark)
+  const heroBorder = usePlatformBackgroundBorder(dark)
 
   const card = (
     <Card
@@ -137,7 +142,12 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
       {tenantSlug ? (
         card
       ) : (
-        <div className="relative flex min-h-[28rem] w-full items-center justify-center overflow-hidden rounded-2xl border sm:min-h-[32rem]">
+        <div
+          className={cn(
+            'relative flex min-h-[28rem] w-full items-center justify-center overflow-hidden rounded-2xl sm:min-h-[32rem]',
+            (!heroImageUrl || heroBorder) && 'border',
+          )}
+        >
           {heroImageUrl ? (
             <img src={heroImageUrl} alt="" className="absolute inset-0 size-full object-contain" />
           ) : (

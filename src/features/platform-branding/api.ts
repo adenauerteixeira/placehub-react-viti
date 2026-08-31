@@ -7,6 +7,8 @@ export type PlatformSettings = {
   logo_dark_path: string | null
   background_image_light_path: string | null
   background_image_dark_path: string | null
+  background_image_light_border: boolean
+  background_image_dark_border: boolean
   updated_at: string
 }
 
@@ -48,7 +50,7 @@ export function usePlatformSettings(enabled = true) {
       const { data, error } = await supabase
         .from('platform_settings')
         .select(
-          'favicon_path, logo_light_path, logo_dark_path, background_image_light_path, background_image_dark_path, updated_at',
+          'favicon_path, logo_light_path, logo_dark_path, background_image_light_path, background_image_dark_path, background_image_light_border, background_image_dark_border, updated_at',
         )
         .eq('id', true)
         .single()
@@ -80,6 +82,31 @@ export function useUploadPlatformBrandingAsset() {
       if (updateError) throw updateError
 
       return path
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['platform-settings'] })
+    },
+  })
+}
+
+export function useUpdatePlatformBackgroundBorder() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      theme,
+      show,
+    }: {
+      theme: 'light' | 'dark'
+      show: boolean
+    }) => {
+      const column = theme === 'light' ? 'background_image_light_border' : 'background_image_dark_border'
+      const { data: userData } = await supabase.auth.getUser()
+      const { error } = await supabase
+        .from('platform_settings')
+        .update({ [column]: show, updated_by: userData.user?.id ?? null })
+        .eq('id', true)
+      if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['platform-settings'] })

@@ -11,15 +11,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { LinkAdminDialog } from '@/features/tenants/link-admin-dialog'
 import { TenantFormDialog } from '@/features/tenants/tenant-form-dialog'
 import { useTenantAdmins, useTenants, useToggleTenantActive, type Tenant } from '@/features/tenants/api'
-import { usePlatformBackgroundUrl } from '@/features/platform-branding/use-platform-brand-assets'
+import {
+  usePlatformBackgroundBorder,
+  usePlatformBackgroundUrl,
+} from '@/features/platform-branding/use-platform-brand-assets'
 import { useTheme } from '@/lib/theme-provider'
+import { cn } from '@/lib/utils'
 
 export function TenantsListPage() {
   const { data: tenants, isLoading, isError } = useTenants()
   const { data: tenantAdmins } = useTenantAdmins()
   const toggleActive = useToggleTenantActive()
   const { resolvedTheme } = useTheme()
-  const backgroundUrl = usePlatformBackgroundUrl(resolvedTheme === 'dark')
+  const dark = resolvedTheme === 'dark'
+  const backgroundUrl = usePlatformBackgroundUrl(dark)
+  const showBackgroundBorder = usePlatformBackgroundBorder(dark)
 
   const adminEmailsByTenant = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -47,8 +53,10 @@ export function TenantsListPage() {
   return (
     <div className="flex flex-col gap-4">
       {backgroundUrl && (
-        <div className="w-1/3 min-w-48 overflow-hidden rounded-xl border">
-          <img src={backgroundUrl} alt="" className="aspect-[3/1] w-full object-contain" />
+        <div
+          className={cn('w-1/3 min-w-48 overflow-hidden rounded-xl', showBackgroundBorder && 'border')}
+        >
+          <img src={backgroundUrl} alt="" className="block h-auto w-full" />
         </div>
       )}
 
