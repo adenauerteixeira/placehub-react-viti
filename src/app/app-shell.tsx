@@ -20,6 +20,9 @@ import { ReservationsListPage } from '@/features/reservations/reservations-list-
 import { SaleDetailPage } from '@/features/sales/sale-detail-page'
 import { SalesListPage } from '@/features/sales/sales-list-page'
 import { PartnersListPage } from '@/features/partners/partners-list-page'
+import { PlatformBrandingPage } from '@/features/platform-branding/platform-branding-page'
+import { usePlatformFavicon } from '@/features/platform-branding/use-platform-favicon'
+import { usePlatformSettings } from '@/features/platform-branding/api'
 import { PlatformLayout } from '@/features/platform/platform-layout'
 import { ReportsPage } from '@/features/reports/reports-page'
 import { TenantsListPage } from '@/features/platform/tenants-list-page'
@@ -332,6 +335,8 @@ function TenantProtectedShell({ slug }: { slug: string }) {
 
 function PlatformApp() {
   const { session } = useAuth()
+  const { data: settings } = usePlatformSettings()
+  usePlatformFavicon(settings?.favicon_path ?? null, settings?.updated_at ?? '')
 
   return (
     <Routes>
@@ -339,6 +344,7 @@ function PlatformApp() {
       <Route element={<PlatformProtectedShell />}>
         <Route path="/" element={<Navigate to="/tenants" replace />} />
         <Route path="/tenants" element={<TenantsListPage />} />
+        <Route path="/branding" element={<PlatformBrandingPage />} />
         <Route path="/changelog" element={<ChangelogPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
