@@ -16,6 +16,11 @@ const MIME_BY_EXT: Record<string, string> = {
 /** Aplica o favicon da plataforma na aba do navegador (link#favicon, index.html). */
 export function usePlatformFavicon(faviconPath: string | null, updatedAt: string) {
   useEffect(() => {
+    // updatedAt vazio = configurações ainda carregando — index.html já tem o
+    // favicon padrão, não precisa reatribuir (evita um 2º fetch redundante
+    // do mesmo /favicon.svg assim que a query resolve, que o browser aborta).
+    if (!updatedAt) return
+
     const link = document.querySelector<HTMLLinkElement>('link#favicon')
     if (!link) return
 
