@@ -71,6 +71,9 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
                 items={adminItems}
                 active={adminItems.some((item) => location.pathname.startsWith(item.to))}
               />
+              {tenant.training_enabled && (
+                <TenantNavLink to="/treinamento">Treinamento</TenantNavLink>
+              )}
             </nav>
           </div>
           <div className="flex items-center gap-2">

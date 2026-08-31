@@ -49,6 +49,7 @@ function colorsFromTenant(tenant: Tenant): TenantColorsInput {
     public_home_variant: tenant.public_home_variant,
     animated_hero_show_image: tenant.animated_hero_show_image,
     animated_hero_show_particles: tenant.animated_hero_show_particles,
+    training_enabled: tenant.training_enabled,
   }
 }
 
@@ -335,6 +336,31 @@ export function TenantBrandingPage() {
               </CardContent>
             </Card>
           )}
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Treinamento da equipe</CardTitle>
+              <CardDescription>
+                Manual do corretor em formato web, direto no app — o mesmo conteúdo do PDF de
+                treinamento, navegável por capítulo.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-1.5">
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={colors.training_enabled}
+                    onCheckedChange={(c) => set('training_enabled', c === true)}
+                  />
+                  Habilitar página de treinamento pra equipe
+                </label>
+                <p className="text-muted-foreground text-xs">
+                  Com isso marcado, um item "Treinamento" aparece no menu pra todos os usuários da
+                  imobiliária, com o passo a passo completo do sistema.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="emails" className="pt-4">

@@ -63,6 +63,7 @@ export type TenantColorsInput = {
   public_home_variant: 'classic' | 'animated'
   animated_hero_show_image: boolean
   animated_hero_show_particles: boolean
+  training_enabled: boolean
 }
 
 export function useUpdateTenantColors(tenantId: string) {

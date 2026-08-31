@@ -32,6 +32,7 @@ import { PublicBrokersListPage } from '@/features/tenant/public-brokers-list-pag
 import { AnimatedTenantHomePage } from '@/features/tenant/animated-home/animated-home-page'
 import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
+import { TrainingPage } from '@/features/tenant/training-page'
 import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useTenant, usePublicTenant } from '@/features/tenants/api'
 import { TenantBrandingPage } from '@/features/tenant-branding/tenant-branding-page'
@@ -74,6 +75,14 @@ function TenantApp({ slug }: { slug: string }) {
       />
       <Route element={<TenantProtectedShell slug={slug} />}>
         <Route path="/dashboard" element={<TenantDashboardPage />} />
+        <Route
+          path="/treinamento"
+          element={
+            <RequireTrainingEnabled>
+              <TrainingPage />
+            </RequireTrainingEnabled>
+          }
+        />
         <Route
           path="/users"
           element={
@@ -281,6 +290,19 @@ function RequirePermission({
       <FullscreenMessage
         title="Sem permissão"
         description="Você não tem acesso a este módulo. Fale com o administrador da sua imobiliária."
+      />
+    )
+  }
+  return children
+}
+
+function RequireTrainingEnabled({ children }: { children: React.ReactNode }) {
+  const { tenant } = useTenantOutletContext()
+  if (!tenant.training_enabled) {
+    return (
+      <FullscreenMessage
+        title="Treinamento não disponível"
+        description="O administrador da sua imobiliária ainda não habilitou a página de treinamento."
       />
     )
   }

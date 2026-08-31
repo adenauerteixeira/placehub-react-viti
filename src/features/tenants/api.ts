@@ -40,6 +40,8 @@ export type Tenant = {
   animated_hero_show_image: boolean
   animated_hero_image_path: string | null
   animated_hero_show_particles: boolean
+  // Treinamento
+  training_enabled: boolean
   // Imagens
   logo_light_path: string | null
   logo_dark_path: string | null
@@ -51,7 +53,7 @@ export type Tenant = {
 }
 
 const TENANT_COLUMNS =
-  'id, name, slug, email, phone, active, primary_color, secondary_color, accent_color, light_background_color, light_surface_color, light_text_color, light_muted_text_color, light_border_color, dark_primary_color, dark_accent_color, dark_background_color, dark_surface_color, dark_text_color, dark_muted_text_color, dark_border_color, logo_light_background_color, logo_dark_background_color, logo_light_background_transparent, logo_dark_background_transparent, email_logo_path, email_logo_background_color, email_logo_background_transparent, public_hero_enabled, public_home_variant, animated_hero_show_image, animated_hero_image_path, animated_hero_show_particles, logo_light_path, logo_dark_path, favicon_path, background_image_path, placeholder_image_path, created_at, updated_at'
+  'id, name, slug, email, phone, active, primary_color, secondary_color, accent_color, light_background_color, light_surface_color, light_text_color, light_muted_text_color, light_border_color, dark_primary_color, dark_accent_color, dark_background_color, dark_surface_color, dark_text_color, dark_muted_text_color, dark_border_color, logo_light_background_color, logo_dark_background_color, logo_light_background_transparent, logo_dark_background_transparent, email_logo_path, email_logo_background_color, email_logo_background_transparent, public_hero_enabled, public_home_variant, animated_hero_show_image, animated_hero_image_path, animated_hero_show_particles, training_enabled, logo_light_path, logo_dark_path, favicon_path, background_image_path, placeholder_image_path, created_at, updated_at'
 
 export function useTenant(tenantId: string | null | undefined) {
   return useQuery({
