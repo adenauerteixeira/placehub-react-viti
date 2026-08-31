@@ -11,11 +11,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { LinkAdminDialog } from '@/features/tenants/link-admin-dialog'
 import { TenantFormDialog } from '@/features/tenants/tenant-form-dialog'
 import { useTenantAdmins, useTenants, useToggleTenantActive, type Tenant } from '@/features/tenants/api'
+import { usePlatformBackgroundUrl } from '@/features/platform-branding/use-platform-brand-assets'
+import { useTheme } from '@/lib/theme-provider'
 
 export function TenantsListPage() {
   const { data: tenants, isLoading, isError } = useTenants()
   const { data: tenantAdmins } = useTenantAdmins()
   const toggleActive = useToggleTenantActive()
+  const { resolvedTheme } = useTheme()
+  const backgroundUrl = usePlatformBackgroundUrl(resolvedTheme === 'dark')
 
   const adminEmailsByTenant = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -41,101 +45,109 @@ export function TenantsListPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Imobiliárias</CardTitle>
-        <CardAction>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> Nova imobiliária
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
-
-        {isError && (
-          <p className="text-destructive text-sm">Não foi possível carregar as imobiliárias.</p>
-        )}
-
-        {tenants && tenants.length === 0 && (
-          <p className="text-muted-foreground text-sm">Nenhuma imobiliária cadastrada ainda.</p>
-        )}
-
-        {tenants && tenants.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Subdomínio</TableHead>
-                <TableHead>Administrador</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Criada em</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tenants.map((tenant) => (
-                <TableRow key={tenant.id}>
-                  <TableCell className="font-medium">{tenant.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{tenant.slug}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {(adminEmailsByTenant.get(tenant.id) ?? []).join(', ') || '—'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={tenant.active}
-                        onCheckedChange={(checked) => handleToggleActive(tenant, checked)}
-                        aria-label={tenant.active ? 'Desativar imobiliária' : 'Ativar imobiliária'}
-                      />
-                      <Badge variant={tenant.active ? 'default' : 'secondary'}>
-                        {tenant.active ? 'Ativa' : 'Inativa'}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(tenant.created_at).toLocaleDateString('pt-BR')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Editar"
-                        onClick={() => setEditingTenant(tenant)}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Vincular administrador"
-                        onClick={() => setLinkingTenant(tenant)}
-                      >
-                        <UserPlus className="size-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-
-      <TenantFormDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={setLinkingTenant} />
-      <TenantFormDialog
-        open={!!editingTenant}
-        onOpenChange={(open) => !open && setEditingTenant(null)}
-        tenant={editingTenant ?? undefined}
-      />
-      {linkingTenant && (
-        <LinkAdminDialog
-          open={!!linkingTenant}
-          onOpenChange={(open) => !open && setLinkingTenant(null)}
-          tenant={linkingTenant}
-        />
+    <div className="flex flex-col gap-4">
+      {backgroundUrl && (
+        <div className="w-1/3 min-w-48 overflow-hidden rounded-xl border">
+          <img src={backgroundUrl} alt="" className="aspect-[3/1] w-full object-contain" />
+        </div>
       )}
-    </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Imobiliárias</CardTitle>
+          <CardAction>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" /> Nova imobiliária
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          {isLoading && <Skeleton className="h-40 w-full" />}
+
+          {isError && (
+            <p className="text-destructive text-sm">Não foi possível carregar as imobiliárias.</p>
+          )}
+
+          {tenants && tenants.length === 0 && (
+            <p className="text-muted-foreground text-sm">Nenhuma imobiliária cadastrada ainda.</p>
+          )}
+
+          {tenants && tenants.length > 0 && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Subdomínio</TableHead>
+                  <TableHead>Administrador</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Criada em</TableHead>
+                  <TableHead className="w-0" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tenants.map((tenant) => (
+                  <TableRow key={tenant.id}>
+                    <TableCell className="font-medium">{tenant.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{tenant.slug}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {(adminEmailsByTenant.get(tenant.id) ?? []).join(', ') || '—'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={tenant.active}
+                          onCheckedChange={(checked) => handleToggleActive(tenant, checked)}
+                          aria-label={tenant.active ? 'Desativar imobiliária' : 'Ativar imobiliária'}
+                        />
+                        <Badge variant={tenant.active ? 'default' : 'secondary'}>
+                          {tenant.active ? 'Ativa' : 'Inativa'}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(tenant.created_at).toLocaleDateString('pt-BR')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Editar"
+                          onClick={() => setEditingTenant(tenant)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Vincular administrador"
+                          onClick={() => setLinkingTenant(tenant)}
+                        >
+                          <UserPlus className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+
+        <TenantFormDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={setLinkingTenant} />
+        <TenantFormDialog
+          open={!!editingTenant}
+          onOpenChange={(open) => !open && setEditingTenant(null)}
+          tenant={editingTenant ?? undefined}
+        />
+        {linkingTenant && (
+          <LinkAdminDialog
+            open={!!linkingTenant}
+            onOpenChange={(open) => !open && setLinkingTenant(null)}
+            tenant={linkingTenant}
+          />
+        )}
+      </Card>
+    </div>
   )
 }

@@ -12,11 +12,15 @@ import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/password-input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AppFooter, AppShell } from '@/components/app-shell'
+import { PlatformPageLabel } from '@/components/platform-page-label'
 import { useTheme } from '@/lib/theme-provider'
 import { supabase } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { usePublicTenant } from '@/features/tenants/api'
-import { platformBrandingAssetUrl, usePlatformSettings } from '@/features/platform-branding/api'
+import { usePlatformBackgroundUrl, usePlatformLogoUrl } from '@/features/platform-branding/use-platform-brand-assets'
+
+const SLOGAN = 'Conecta pessoas à lugares. Realiza sonhos!'
 
 const loginSchema = z.object({
   email: z.email('Informe um e-mail válido.'),
@@ -29,7 +33,6 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
   const [submitting, setSubmitting] = useState(false)
   const { resolvedTheme } = useTheme()
   const { data: tenant } = usePublicTenant(tenantSlug ?? null)
-  const { data: platformSettings } = usePlatformSettings(!tenantSlug)
   const {
     register,
     handleSubmit,
@@ -49,17 +52,56 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
   }
 
   const dark = resolvedTheme === 'dark'
+  const platformLogoUrl = usePlatformLogoUrl(dark)
+  const heroImageUrl = usePlatformBackgroundUrl(dark)
 
-  const platformLogoPath = dark ? platformSettings?.logo_dark_path : platformSettings?.logo_light_path
-  const platformLogoUrl = platformSettings
-    ? platformBrandingAssetUrl(platformLogoPath ?? null, platformSettings.updated_at)
-    : null
-  const heroImagePath = dark
-    ? platformSettings?.background_image_dark_path
-    : platformSettings?.background_image_light_path
-  const heroImageUrl = platformSettings
-    ? platformBrandingAssetUrl(heroImagePath ?? null, platformSettings.updated_at)
-    : null
+  const card = (
+    <Card
+      className={cn(
+        'mx-auto w-full max-w-sm',
+        !tenantSlug &&
+          'border-white/40 bg-white/40 shadow-2xl ring-1 ring-white/40 backdrop-blur-xl dark:border-white/10 dark:bg-black/40 dark:ring-white/10',
+      )}
+    >
+      <CardHeader>
+        <CardTitle>Entrar</CardTitle>
+        {!tenantSlug && (
+          <CardDescription>Área restrita da administração da plataforma PlaceHub.</CardDescription>
+        )}
+      </CardHeader>
+      <CardContent>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="email">E-mail</Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              {...register('email')}
+              aria-invalid={!!errors.email}
+            />
+            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="password">Senha</Label>
+            <PasswordInput
+              id="password"
+              autoComplete="current-password"
+              {...register('password')}
+              aria-invalid={!!errors.password}
+            />
+            {errors.password && (
+              <p className="text-destructive text-sm">{errors.password.message}</p>
+            )}
+          </div>
+          <Button type="submit" disabled={submitting} className="mt-2">
+            {submitting && <Loader2 className="animate-spin" />}
+            Entrar
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  )
 
   return (
     <AppShell
@@ -69,89 +111,44 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
           {tenant ? (
             <TenantBrand tenant={tenant} dark={dark} />
           ) : (
-            <span className="text-lg font-semibold">PlaceHub</span>
+            <div className="flex items-center gap-2">
+              {platformLogoUrl && (
+                <img src={platformLogoUrl} alt="PlaceHub" className="h-8 max-w-36 object-contain" />
+              )}
+              <div className="flex flex-col leading-tight">
+                <span className="text-base font-semibold">PlaceHub</span>
+                <span className="text-muted-foreground hidden text-xs sm:block">{SLOGAN}</span>
+              </div>
+            </div>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             {tenantSlug && (
               <Button asChild variant="ghost">
                 <Link to="/">Anúncios</Link>
               </Button>
             )}
+            {!tenantSlug && <PlatformPageLabel page="Login" />}
             <ThemeToggle />
           </div>
         </>
       }
       footer={<AppFooter>{tenant ? `${tenant.name} · Plataforma PlaceHub` : 'Plataforma PlaceHub'}</AppFooter>}
     >
-      {!tenantSlug && (
-        <div className="fixed inset-0 -z-10 overflow-hidden">
+      {tenantSlug ? (
+        card
+      ) : (
+        <div className="relative flex min-h-[28rem] w-full items-center justify-center overflow-hidden rounded-2xl border sm:min-h-[32rem]">
           {heroImageUrl ? (
-            <img src={heroImageUrl} alt="" className="size-full object-cover" />
+            <img src={heroImageUrl} alt="" className="absolute inset-0 size-full object-contain" />
           ) : (
             <div
-              className="size-full"
+              className="absolute inset-0"
               style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}
             />
           )}
-          <div className="absolute inset-0 bg-black/60" />
+          <div className="relative z-10 px-4">{card}</div>
         </div>
       )}
-
-      <div className="flex flex-col items-center gap-8">
-        {!tenantSlug && (
-          <div className="flex flex-col items-center gap-3 text-center">
-            {platformLogoUrl && (
-              <img
-                src={platformLogoUrl}
-                alt="PlaceHub"
-                className="h-14 max-w-56 object-contain drop-shadow-sm"
-              />
-            )}
-            <h1 className="text-3xl font-semibold text-white drop-shadow-sm sm:text-4xl">PlaceHub</h1>
-            <p className="max-w-sm text-white/90">Conecta pessoas à lugares. Realiza sonhos!</p>
-          </div>
-        )}
-
-        <Card className="mx-auto w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>Entrar</CardTitle>
-            {!tenantSlug && (
-              <CardDescription>Área restrita da administração da plataforma PlaceHub.</CardDescription>
-            )}
-          </CardHeader>
-          <CardContent>
-            <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  {...register('email')}
-                  aria-invalid={!!errors.email}
-                />
-                {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="password">Senha</Label>
-                <PasswordInput
-                  id="password"
-                  autoComplete="current-password"
-                  {...register('password')}
-                  aria-invalid={!!errors.password}
-                />
-                {errors.password && (
-                  <p className="text-destructive text-sm">{errors.password.message}</p>
-                )}
-              </div>
-              <Button type="submit" disabled={submitting} className="mt-2">
-                {submitting && <Loader2 className="animate-spin" />}
-                Entrar
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
     </AppShell>
   )
 }
