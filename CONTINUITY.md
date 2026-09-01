@@ -39,10 +39,29 @@
   - Todas as duas fases validadas com `tsc -b`/`oxlint` limpos e testes ao vivo via automação de
     navegador, logado de verdade como tenant_admin (Casah) e como super_admin (plataforma) —
     screenshots conferidos, zero erro de console em qualquer tela tocada.
-  - **Próximo passo já combinado com o usuário**: Fase 3 (formulários — padronizar exibição de
-    erro de campo/validação; hoje é `<p>` manual repetido em cada formulário, sem usar nenhum
-    wrapper de formulário do shadcn — o item `form` do registry desse shadcn não retornou arquivos
-    quando tentei instalar, precisa investigar de novo nessa fase).
+  - **Fase 3 (formulários) completa**: `Field` (`src/components/field.tsx`) padroniza label +
+    tooltip + controle + erro, aplicado em 21 formulários (todos os diálogos de cadastro do
+    catálogo/funil + os 2 formulários inline de detalhe + login + o formulário de anúncio inteiro).
+    Achou e corrigiu 3 campos de senha que tinham validação no schema mas nunca mostravam o erro
+    (editar usuário, convite de usuário, vincular administrador). O item `form` do registry do
+    shadcn continuou sem retornar arquivos (tentado de novo, mesmo resultado) — não é um wrapper
+    baseado em `FormProvider`/`useFormContext`, é só presentational, compatível com o padrão já
+    usado no projeto (`register`/`Controller` direto, sem contexto de formulário).
+  - **Achado "por acaso" durante o QA da Fase 3, corrigido a pedido do usuário**: todo componente
+    shadcn que abre em portal (`Dialog`, `AlertDialog`, `Sheet`, `DropdownMenu`, `Popover`,
+    `Tooltip`, `Select`) renderizava em `document.body`, fora da árvore onde `tenantThemeVars()`
+    aplica as cores do tenant — botão `primary`/`accent` dentro de diálogo ou menu saía na cor
+    padrão da plataforma, não na do tenant. Corrigido com `ThemeScopeContext`
+    (`src/lib/theme-scope.tsx`): `AppShell` expõe seu nó DOM via contexto, os 7 componentes portam
+    nele. Qualquer novo componente shadcn com Portal (se for adicionado no futuro) precisa do mesmo
+    tratamento — ver o padrão nos 7 arquivos já ajustados em `src/components/ui/`.
+  - **3 pedidos de responsividade mobile, também nesta sessão**: rodapé do tenant em duas linhas
+    abaixo do breakpoint `sm` (conteúdo diferente do desktop — inclui "Place Hub" explicitamente);
+    menu mobile com submenus colapsáveis (`Comercial`/`Administração`, igual ao dropdown do
+    desktop, abre sozinho o grupo da rota atual); botões "Novo X" das listagens viram só "+" abaixo
+    de `sm` em 10 telas.
+  - Tudo validado com `tsc -b`/`oxlint` limpos e teste ao vivo (mobile 390px + desktop, tenant Casah
+    logado de verdade) — zero erro de console. Commit/deploy autorizado pelo usuário e enviado.
 - **App no ar em produção pela primeira vez (2026-08-28/09-01) — Vercel + domínio próprio.**
   Projeto `place-hub1/placehub` conectado ao GitHub, deploy automático a cada push em `trunk`.
   Domínio raiz da plataforma é **`placehubapp.com.br`** (não `placehub.app` — já registrado por

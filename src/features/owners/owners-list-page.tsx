@@ -97,7 +97,7 @@ export function OwnersListPage() {
         <CardTitle>Proprietários</CardTitle>
         <CardAction>
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> Novo proprietário
+            <Plus className="size-4" /> <span className="hidden sm:inline">Novo proprietário</span>
           </Button>
         </CardAction>
       </CardHeader>

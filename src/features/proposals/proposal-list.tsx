@@ -61,7 +61,7 @@ export function ProposalList({
         <CardTitle className="text-base">Propostas</CardTitle>
         <CardAction>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> Nova proposta
+            <Plus className="size-4" /> <span className="hidden sm:inline">Nova proposta</span>
           </Button>
         </CardAction>
       </CardHeader>

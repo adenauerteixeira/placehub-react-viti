@@ -149,7 +149,7 @@ export function AnnouncementsListPage() {
           </Select>
           <Button asChild>
             <Link to="/announcements/novo">
-              <Plus className="size-4" /> Novo anúncio
+              <Plus className="size-4" /> <span className="hidden sm:inline">Novo anúncio</span>
             </Link>
           </Button>
         </CardAction>

@@ -94,7 +94,7 @@ export function NegotiationsListPage() {
         <CardTitle>Negociações</CardTitle>
         <CardAction>
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> Nova negociação
+            <Plus className="size-4" /> <span className="hidden sm:inline">Nova negociação</span>
           </Button>
         </CardAction>
       </CardHeader>

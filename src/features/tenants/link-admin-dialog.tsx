@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { PasswordRequirements } from '@/components/password-requirements'
@@ -106,8 +106,7 @@ export function LinkAdminDialog({
         </DialogHeader>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="admin-name">Nome</FieldLabel>
+          <Field label="Nome" htmlFor="admin-name">
             <Input
               id="admin-name"
               {...nameField}
@@ -116,36 +115,33 @@ export function LinkAdminDialog({
                 setValue('fullName', capitalizeName(e.target.value))
               }}
             />
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="admin-email">E-mail</FieldLabel>
+          <Field label="E-mail" htmlFor="admin-email" error={errors.email?.message}>
             <Input id="admin-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
-            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="admin-password">Senha</FieldLabel>
+          <Field label="Senha" htmlFor="admin-password" error={errors.password?.message}>
             <PasswordInput
               id="admin-password"
               autoComplete="new-password"
               {...register('password')}
               aria-invalid={!!errors.password}
             />
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="admin-confirm-password">Confirmar senha</FieldLabel>
+          <Field
+            label="Confirmar senha"
+            htmlFor="admin-confirm-password"
+            error={errors.confirmPassword?.message}
+          >
             <PasswordInput
               id="admin-confirm-password"
               autoComplete="new-password"
               {...register('confirmPassword')}
               aria-invalid={!!errors.confirmPassword}
             />
-            {errors.confirmPassword && (
-              <p className="text-destructive text-sm">{errors.confirmPassword.message}</p>
-            )}
-          </div>
+          </Field>
 
           <PasswordRequirements value={watch('password')} />
 

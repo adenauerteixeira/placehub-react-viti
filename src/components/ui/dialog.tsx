@@ -4,6 +4,7 @@ import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useThemeScope } from "@/lib/theme-scope"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
@@ -20,9 +21,13 @@ function DialogTrigger({
 }
 
 function DialogPortal({
+  container,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+  const scope = useThemeScope()
+  return (
+    <DialogPrimitive.Portal data-slot="dialog-portal" container={container ?? scope ?? undefined} {...props} />
+  )
 }
 
 function DialogClose({

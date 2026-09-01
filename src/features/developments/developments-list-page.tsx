@@ -68,7 +68,7 @@ export function DevelopmentsListPage() {
         <CardTitle>Empreendimentos</CardTitle>
         <CardAction>
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> Novo empreendimento
+            <Plus className="size-4" /> <span className="hidden sm:inline">Novo empreendimento</span>
           </Button>
         </CardAction>
       </CardHeader>

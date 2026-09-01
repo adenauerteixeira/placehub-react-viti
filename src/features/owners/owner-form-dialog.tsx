@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DocumentInput } from '@/components/document-input'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/phone-input'
 import { Textarea } from '@/components/ui/textarea'
@@ -131,8 +131,7 @@ export function OwnerFormDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="grid grid-cols-[1fr_auto] gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="owner-name">Nome</FieldLabel>
+            <Field label="Nome" htmlFor="owner-name" error={errors.name?.message}>
               <Input
                 id="owner-name"
                 {...nameField}
@@ -142,12 +141,14 @@ export function OwnerFormDialog({
                 }}
                 aria-invalid={!!errors.name}
               />
-              {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel hint="Pessoa física ou jurídica — muda a validação do documento (CPF/CNPJ).">Tipo</FieldLabel>
+            </Field>
+            <Field
+              label="Tipo"
+              htmlFor="owner-person-type"
+              hint="Pessoa física ou jurídica — muda a validação do documento (CPF/CNPJ)."
+            >
               <Select value={personType} onValueChange={(v) => setValue('person_type', v as PersonType)}>
-                <SelectTrigger className="w-24">
+                <SelectTrigger id="owner-person-type" className="w-24">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -155,14 +156,16 @@ export function OwnerFormDialog({
                   <SelectItem value="PJ">PJ</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="owner-document" hint="Validado por dígito verificador — não é só checagem de tamanho.">
-                {personType === 'PF' ? 'CPF' : 'CNPJ'}
-              </FieldLabel>
+            <Field
+              label={personType === 'PF' ? 'CPF' : 'CNPJ'}
+              htmlFor="owner-document"
+              hint="Validado por dígito verificador — não é só checagem de tamanho."
+              error={errors.document?.message}
+            >
               <Controller
                 control={control}
                 name="document"
@@ -176,12 +179,8 @@ export function OwnerFormDialog({
                   />
                 )}
               />
-              {errors.document && (
-                <p className="text-destructive text-sm">{errors.document.message}</p>
-              )}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="owner-phone">Telefone</FieldLabel>
+            </Field>
+            <Field label="Telefone" htmlFor="owner-phone">
               <Controller
                 control={control}
                 name="phone"
@@ -189,21 +188,20 @@ export function OwnerFormDialog({
                   <PhoneInput id="owner-phone" value={field.value} onChange={field.onChange} />
                 )}
               />
-            </div>
+            </Field>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="owner-email">E-mail</FieldLabel>
+          <Field label="E-mail" htmlFor="owner-email" error={errors.email?.message}>
             <Input id="owner-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
-            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="owner-notes" hint="Anotações internas — não aparece em nenhum lugar público.">
-              Observações
-            </FieldLabel>
+          <Field
+            label="Observações"
+            htmlFor="owner-notes"
+            hint="Anotações internas — não aparece em nenhum lugar público."
+          >
             <Textarea id="owner-notes" rows={3} {...register('notes')} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

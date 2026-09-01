@@ -2,6 +2,7 @@ import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useThemeScope } from "@/lib/theme-scope"
 
 function Popover({
   ...props
@@ -21,8 +22,9 @@ function PopoverContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  const scope = useThemeScope()
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={scope ?? undefined}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}

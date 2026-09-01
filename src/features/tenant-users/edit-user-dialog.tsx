@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/password-input'
@@ -147,8 +147,7 @@ export function EditUserDialog({
         </DialogHeader>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="edit-user-name">Nome</FieldLabel>
+          <Field label="Nome" htmlFor="edit-user-name">
             <Input
               id="edit-user-name"
               {...nameField}
@@ -157,46 +156,48 @@ export function EditUserDialog({
                 setValue('fullName', capitalizeName(e.target.value))
               }}
             />
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="edit-user-email" hint="Usado pra fazer login — precisa ser único na plataforma inteira.">
-              E-mail
-            </FieldLabel>
+          <Field
+            label="E-mail"
+            htmlFor="edit-user-email"
+            hint="Usado pra fazer login — precisa ser único na plataforma inteira."
+            error={errors.email?.message}
+          >
             <Input id="edit-user-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
-            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-          </div>
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="edit-user-new-password" hint="Deixe em branco pra manter a senha atual. Preencha só se o usuário esqueceu a senha e precisa de uma nova.">
-                Nova senha
-              </FieldLabel>
+            <Field
+              label="Nova senha"
+              htmlFor="edit-user-new-password"
+              hint="Deixe em branco pra manter a senha atual. Preencha só se o usuário esqueceu a senha e precisa de uma nova."
+              error={errors.newPassword?.message}
+            >
               <PasswordInput
                 id="edit-user-new-password"
                 autoComplete="new-password"
                 {...register('newPassword')}
                 aria-invalid={!!errors.newPassword}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="edit-user-confirm-new-password">Confirmar nova senha</FieldLabel>
+            </Field>
+            <Field
+              label="Confirmar nova senha"
+              htmlFor="edit-user-confirm-new-password"
+              error={errors.confirmNewPassword?.message}
+            >
               <PasswordInput
                 id="edit-user-confirm-new-password"
                 autoComplete="new-password"
                 {...register('confirmNewPassword')}
                 aria-invalid={!!errors.confirmNewPassword}
               />
-              {errors.confirmNewPassword && (
-                <p className="text-destructive text-sm">{errors.confirmNewPassword.message}</p>
-              )}
-            </div>
+            </Field>
           </div>
           {watch('newPassword') !== '' && <PasswordRequirements value={watch('newPassword')} />}
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="edit-user-phone">Telefone</FieldLabel>
+            <Field label="Telefone" htmlFor="edit-user-phone">
               <Controller
                 control={control}
                 name="phone"
@@ -204,21 +205,21 @@ export function EditUserDialog({
                   <PhoneInput id="edit-user-phone" value={field.value} onChange={field.onChange} />
                 )}
               />
-            </div>
+            </Field>
             <div className="grid grid-cols-[1fr_auto] gap-2">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel htmlFor="edit-user-creci" hint="Registro profissional, se este usuário for corretor.">
-                  CRECI
-                </FieldLabel>
+              <Field
+                label="CRECI"
+                htmlFor="edit-user-creci"
+                hint="Registro profissional, se este usuário for corretor."
+              >
                 <Input id="edit-user-creci" {...register('creci')} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel>UF</FieldLabel>
+              </Field>
+              <Field label="UF" htmlFor="edit-user-creci-state">
                 <Select
                   value={watch('creci_state')}
                   onValueChange={(v) => setValue('creci_state', v)}
                 >
-                  <SelectTrigger className="w-20">
+                  <SelectTrigger id="edit-user-creci-state" className="w-20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -230,19 +231,20 @@ export function EditUserDialog({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel hint="Define o nível de acesso padrão — tenant_admin e manager veem tudo do módulo liberado; corretor só o que é dele.">
-              Papel
-            </FieldLabel>
+          <Field
+            label="Papel"
+            htmlFor="edit-user-role"
+            hint="Define o nível de acesso padrão — tenant_admin e manager veem tudo do módulo liberado; corretor só o que é dele."
+          >
             <Select
               value={watch('role')}
               onValueChange={(value) => setValue('role', value as AssignableRole)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="edit-user-role">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -253,7 +255,7 @@ export function EditUserDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
           <div className="flex items-center gap-2">
             <Switch
@@ -266,12 +268,12 @@ export function EditUserDialog({
             </Label>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel hint="Módulos que este usuário pode acessar no menu — tenant_admin sempre vê tudo, independente do que estiver marcado aqui.">
-              Permissões
-            </FieldLabel>
+          <Field
+            label="Permissões"
+            hint="Módulos que este usuário pode acessar no menu — tenant_admin sempre vê tudo, independente do que estiver marcado aqui."
+          >
             <PermissionCheckboxes selected={permissions} onChange={setPermissions} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -140,7 +140,7 @@ export function TenantsListPage() {
           <CardTitle>Imobiliárias</CardTitle>
           <CardAction>
             <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="size-4" /> Nova imobiliária
+              <Plus className="size-4" /> <span className="hidden sm:inline">Nova imobiliária</span>
             </Button>
           </CardAction>
         </CardHeader>

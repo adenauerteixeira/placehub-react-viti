@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
-import { Menu } from 'lucide-react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { ChevronDown, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -14,9 +14,36 @@ export type MobileNavEntry =
  * assume no lugar dela, abrindo os mesmos links num Sheet lateral. */
 export function MobileNav({ entries, title }: { entries: MobileNavEntry[]; title: string }) {
   const [open, setOpen] = useState(false)
+  const location = useLocation()
+
+  const activeGroups = new Set(
+    entries
+      .filter(
+        (entry): entry is Extract<MobileNavEntry, { type: 'group' }> =>
+          entry.type === 'group' &&
+          entry.items.some((item) => location.pathname.startsWith(item.to)),
+      )
+      .map((entry) => entry.label),
+  )
+  const [openGroups, setOpenGroups] = useState(activeGroups)
+
+  function toggleGroup(label: string) {
+    setOpenGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label)
+      else next.add(label)
+      return next
+    })
+  }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (next) setOpenGroups(activeGroups)
+      }}
+    >
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="Abrir menu" className="md:hidden">
           <Menu className="size-5" />
@@ -33,15 +60,33 @@ export function MobileNav({ entries, title }: { entries: MobileNavEntry[]; title
                 {entry.label}
               </MobileNavLink>
             ) : (
-              <div key={`${entry.label}-${index}`} className="flex flex-col gap-1 pt-3 first:pt-0">
-                <span className="text-muted-foreground px-2.5 text-xs font-medium tracking-wide uppercase">
+              <div key={`${entry.label}-${index}`} className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(entry.label)}
+                  aria-expanded={openGroups.has(entry.label)}
+                  className={cn(
+                    'text-muted-foreground hover:bg-muted hover:text-foreground flex items-center justify-between rounded-md px-2.5 py-2 text-sm transition-colors',
+                    activeGroups.has(entry.label) && 'text-foreground font-medium',
+                  )}
+                >
                   {entry.label}
-                </span>
-                {entry.items.map((item) => (
-                  <MobileNavLink key={item.to} to={item.to} onNavigate={() => setOpen(false)}>
-                    {item.label}
-                  </MobileNavLink>
-                ))}
+                  <ChevronDown
+                    className={cn(
+                      'size-4 transition-transform',
+                      openGroups.has(entry.label) && 'rotate-180',
+                    )}
+                  />
+                </button>
+                {openGroups.has(entry.label) && (
+                  <div className="flex flex-col gap-1 border-l pl-2.5">
+                    {entry.items.map((item) => (
+                      <MobileNavLink key={item.to} to={item.to} onNavigate={() => setOpen(false)}>
+                        {item.label}
+                      </MobileNavLink>
+                    ))}
+                  </div>
+                )}
               </div>
             ),
           )}

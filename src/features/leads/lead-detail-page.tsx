@@ -8,7 +8,7 @@ import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-state'
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/phone-input'
@@ -172,8 +172,7 @@ export function LeadDetailPage() {
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="lead-detail-name">Nome</FieldLabel>
+            <Field label="Nome" htmlFor="lead-detail-name" error={errors.name?.message}>
               <Input
                 id="lead-detail-name"
                 {...nameField}
@@ -183,12 +182,10 @@ export function LeadDetailPage() {
                 }}
                 aria-invalid={!!errors.name}
               />
-              {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
-            </div>
+            </Field>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel htmlFor="lead-detail-phone">Telefone</FieldLabel>
+              <Field label="Telefone" htmlFor="lead-detail-phone">
                 <Controller
                   control={control}
                   name="phone"
@@ -196,24 +193,21 @@ export function LeadDetailPage() {
                     <PhoneInput id="lead-detail-phone" value={field.value} onChange={field.onChange} />
                   )}
                 />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel htmlFor="lead-detail-email">E-mail</FieldLabel>
+              </Field>
+              <Field label="E-mail" htmlFor="lead-detail-email" error={errors.email?.message}>
                 <Input
                   id="lead-detail-email"
                   type="email"
                   {...register('email')}
                   aria-invalid={!!errors.email}
                 />
-                {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-              </div>
+              </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel>Origem</FieldLabel>
+              <Field label="Origem" htmlFor="lead-detail-source">
                 <Select value={watch('source')} onValueChange={(v) => setValue('source', v as LeadSource)}>
-                  <SelectTrigger>
+                  <SelectTrigger id="lead-detail-source">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -224,11 +218,14 @@ export function LeadDetailPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel hint="Deixe em branco pra entrar na fila de leads não atribuídos.">Corretor</FieldLabel>
+              </Field>
+              <Field
+                label="Corretor"
+                htmlFor="lead-detail-broker"
+                hint="Deixe em branco pra entrar na fila de leads não atribuídos."
+              >
                 <Select value={watch('broker_id')} onValueChange={(v) => setValue('broker_id', v)}>
-                  <SelectTrigger>
+                  <SelectTrigger id="lead-detail-broker">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -240,13 +237,12 @@ export function LeadDetailPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="lead-detail-notes">Observações</FieldLabel>
+            <Field label="Observações" htmlFor="lead-detail-notes">
               <Textarea id="lead-detail-notes" rows={3} {...register('notes')} />
-            </div>
+            </Field>
 
             <div className="flex justify-end">
               <Button type="submit" disabled={updateLead.isPending}>

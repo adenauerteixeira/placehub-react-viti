@@ -99,7 +99,7 @@ export function TenantUsersPage() {
         <CardTitle>Usuários</CardTitle>
         <CardAction>
           <Button onClick={() => setInviteOpen(true)}>
-            <Plus className="size-4" /> Novo usuário
+            <Plus className="size-4" /> <span className="hidden sm:inline">Novo usuário</span>
           </Button>
         </CardAction>
       </CardHeader>

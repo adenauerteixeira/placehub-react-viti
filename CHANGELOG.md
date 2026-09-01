@@ -5,6 +5,45 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Corrigido (Cores do tenant não chegavam a diálogos/menus/select, achado por acaso, 2026-09-01)
+
+- **Todo componente shadcn que abre em portal** (`Dialog`, `AlertDialog`, `Sheet`, `DropdownMenu`,
+  `Popover`, `Tooltip`, `Select`) renderizava direto em `document.body`, fora da `<div>` do
+  `AppShell` onde `tenantThemeVars()` aplica as 15 cores do tenant via `style` inline — então
+  qualquer botão `primary`/conteúdo `accent` dentro de um diálogo ou menu mostrava a cor padrão da
+  plataforma (azul) em vez da cor configurada do tenant (ex.: vermelho da Casah). Achado durante o
+  QA da Fase 3, sem relação com o que estava sendo testado. Corrigido com
+  `ThemeScopeContext`/`useThemeScope()` (`src/lib/theme-scope.tsx`): o `AppShell` expõe seu próprio
+  nó DOM via contexto (callback ref, pra disparar re-render quando monta) e os 7 componentes
+  passam a portar `container={scope}` nele em vez do padrão do Radix. Confirmado ao vivo: botão de
+  diálogo e destaque do menu mobile (`bg-accent`) agora saem na cor certa do tenant.
+
+### Adicionado (Refinamento de UX/UI — responsividade mobile, pedido do usuário, 2026-09-01)
+
+- **Rodapé do tenant em duas linhas no mobile** (`TenantLayout`): "© {ano} Place Hub — {tenant}" /
+  "Conectando imóveis, corretores e oportunidades." — texto único de sempre mantido a partir do
+  breakpoint `sm`, sem mudança nas outras telas (login, plataforma, páginas públicas).
+- **Menu mobile (`MobileNav`) ganhou submenus colapsáveis**, replicando o comportamento do
+  dropdown do desktop: "Comercial"/"Administração" começam fechados (com seta) e expandem ao
+  tocar — abre sozinho o grupo que contém a rota atual.
+- **Botões "Novo X" das listagens viram só "+" no mobile** (10 telas: anúncios, leads, corretores,
+  proprietários, parceiros, empreendimentos, negociações, propostas, usuários do tenant,
+  imobiliárias da plataforma) — o texto volta a partir do breakpoint `sm`, onde já há espaço.
+
+### Adicionado (Refinamento de UX/UI — Fase 3: padronização de erro de campo nos formulários, 2026-09-01)
+
+- **`Field`** (`src/components/field.tsx`) — wrapper padrão de campo (label + tooltip de ajuda +
+  controle + mensagem de erro sempre no mesmo lugar), substituindo o bloco repetido em todo
+  formulário. Corrige também a lacuna de acessibilidade apontada no diagnóstico original: vários
+  `Select` tinham `FieldLabel` sem `htmlFor` associado — agora todo `SelectTrigger` ganhou `id`
+  correspondente.
+- **Aplicado em 21 formulários** (os 10 diálogos de cadastro do catálogo/funil, repasse de
+  comissão, receber parcela, os 2 formulários inline de detalhe, login, e o formulário de anúncio
+  inteiro — 5 abas).
+- **3 bugs reais corrigidos no processo**: campos com validação no schema que nunca mostravam o
+  erro pro usuário — "Nova senha" (editar usuário), "Senha" (convite de usuário), "Senha" (vincular
+  administrador de imobiliária).
+
 ### Adicionado (Refinamento de UX/UI — Fase 2: busca/ordenação/paginação nas listagens, 2026-09-01)
 
 - **`DataTable`** (`src/components/data-table.tsx`), componente reutilizável de listagem — busca

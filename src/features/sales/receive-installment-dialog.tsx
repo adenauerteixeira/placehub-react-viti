@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { errorMessage } from '@/lib/errors'
 import { useReceiveInstallment, type SaleEntryInstallment } from './api'
@@ -80,35 +80,35 @@ export function ReceiveInstallmentDialog({
           </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="receive-payment-method">Forma de pagamento</FieldLabel>
+          <Field
+            label="Forma de pagamento"
+            htmlFor="receive-payment-method"
+            error={errors.payment_method?.message}
+          >
             <Input
               id="receive-payment-method"
               placeholder="Pix, transferência, dinheiro..."
               {...register('payment_method')}
               aria-invalid={!!errors.payment_method}
             />
-            {errors.payment_method && (
-              <p className="text-destructive text-sm">{errors.payment_method.message}</p>
-            )}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="receive-payer-name" hint="Quem efetivamente pagou, se for diferente do cliente.">
-              Pagador
-            </FieldLabel>
+          <Field
+            label="Pagador"
+            htmlFor="receive-payer-name"
+            hint="Quem efetivamente pagou, se for diferente do cliente."
+          >
             <Input id="receive-payer-name" {...register('payer_name')} />
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="receive-receipt">Comprovante</FieldLabel>
+          <Field label="Comprovante" htmlFor="receive-receipt">
             <Input
               id="receive-receipt"
               type="file"
               accept="image/png,image/jpeg,image/webp,application/pdf"
               onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
             />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

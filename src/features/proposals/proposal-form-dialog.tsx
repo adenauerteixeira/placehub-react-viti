@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
@@ -119,8 +119,7 @@ export function ProposalFormDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="proposal-amount">Valor</FieldLabel>
+            <Field label="Valor" htmlFor="proposal-amount" error={errors.amount?.message}>
               <Controller
                 control={control}
                 name="amount"
@@ -133,12 +132,10 @@ export function ProposalFormDialog({
                   />
                 )}
               />
-              {errors.amount && <p className="text-destructive text-sm">{errors.amount.message}</p>}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>Status</FieldLabel>
+            </Field>
+            <Field label="Status" htmlFor="proposal-status">
               <Select value={watch('status')} onValueChange={(v) => setValue('status', v as ProposalStatus)}>
-                <SelectTrigger>
+                <SelectTrigger id="proposal-status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -149,25 +146,24 @@ export function ProposalFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="proposal-valid-until" hint="Depois dessa data, se ninguém agir, a proposta expira sozinha.">
-              Válida até
-            </FieldLabel>
+          <Field
+            label="Válida até"
+            htmlFor="proposal-valid-until"
+            hint="Depois dessa data, se ninguém agir, a proposta expira sozinha."
+          >
             <Input id="proposal-valid-until" type="date" {...register('valid_until')} />
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="proposal-payment-terms">Condições de pagamento</FieldLabel>
+          <Field label="Condições de pagamento" htmlFor="proposal-payment-terms">
             <Textarea id="proposal-payment-terms" rows={2} {...register('payment_terms')} />
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="proposal-notes">Observações</FieldLabel>
+          <Field label="Observações" htmlFor="proposal-notes">
             <Textarea id="proposal-notes" rows={2} {...register('notes')} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

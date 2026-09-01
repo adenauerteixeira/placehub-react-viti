@@ -7,8 +7,8 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/password-input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AppFooter, AppShell } from '@/components/app-shell'
@@ -76,8 +76,7 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
       </CardHeader>
       <CardContent>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email">E-mail</Label>
+          <Field label="E-mail" htmlFor="email" error={errors.email?.message}>
             <Input
               id="email"
               type="email"
@@ -85,20 +84,15 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
               {...register('email')}
               aria-invalid={!!errors.email}
             />
-            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="password">Senha</Label>
+          </Field>
+          <Field label="Senha" htmlFor="password" error={errors.password?.message}>
             <PasswordInput
               id="password"
               autoComplete="current-password"
               {...register('password')}
               aria-invalid={!!errors.password}
             />
-            {errors.password && (
-              <p className="text-destructive text-sm">{errors.password.message}</p>
-            )}
-          </div>
+          </Field>
           <Button type="submit" disabled={submitting} className="mt-2">
             {submitting && <Loader2 className="animate-spin" />}
             Entrar

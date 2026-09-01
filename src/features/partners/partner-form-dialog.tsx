@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DocumentInput } from '@/components/document-input'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/phone-input'
 import { Textarea } from '@/components/ui/textarea'
@@ -128,8 +128,7 @@ export function PartnerFormDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="grid grid-cols-[1fr_auto] gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="partner-name">Nome</FieldLabel>
+            <Field label="Nome" htmlFor="partner-name" error={errors.name?.message}>
               <Input
                 id="partner-name"
                 {...nameField}
@@ -139,12 +138,14 @@ export function PartnerFormDialog({
                 }}
                 aria-invalid={!!errors.name}
               />
-              {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel hint="Pessoa física ou jurídica — muda a validação do documento (CPF/CNPJ).">Tipo</FieldLabel>
+            </Field>
+            <Field
+              label="Tipo"
+              htmlFor="partner-person-type"
+              hint="Pessoa física ou jurídica — muda a validação do documento (CPF/CNPJ)."
+            >
               <Select value={personType} onValueChange={(v) => setValue('person_type', v as PersonType)}>
-                <SelectTrigger className="w-24">
+                <SelectTrigger id="partner-person-type" className="w-24">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -152,14 +153,16 @@ export function PartnerFormDialog({
                   <SelectItem value="PJ">PJ</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="partner-document" hint="Validado por dígito verificador — não é só checagem de tamanho.">
-                {personType === 'PF' ? 'CPF' : 'CNPJ'}
-              </FieldLabel>
+            <Field
+              label={personType === 'PF' ? 'CPF' : 'CNPJ'}
+              htmlFor="partner-document"
+              hint="Validado por dígito verificador — não é só checagem de tamanho."
+              error={errors.document?.message}
+            >
               <Controller
                 control={control}
                 name="document"
@@ -173,12 +176,8 @@ export function PartnerFormDialog({
                   />
                 )}
               />
-              {errors.document && (
-                <p className="text-destructive text-sm">{errors.document.message}</p>
-              )}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="partner-phone">Telefone</FieldLabel>
+            </Field>
+            <Field label="Telefone" htmlFor="partner-phone">
               <Controller
                 control={control}
                 name="phone"
@@ -186,21 +185,20 @@ export function PartnerFormDialog({
                   <PhoneInput id="partner-phone" value={field.value} onChange={field.onChange} />
                 )}
               />
-            </div>
+            </Field>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="partner-email">E-mail</FieldLabel>
+          <Field label="E-mail" htmlFor="partner-email" error={errors.email?.message}>
             <Input id="partner-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
-            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="partner-notes" hint="Anotações internas — não aparece em nenhum lugar público.">
-              Observações
-            </FieldLabel>
+          <Field
+            label="Observações"
+            htmlFor="partner-notes"
+            hint="Anotações internas — não aparece em nenhum lugar público."
+          >
             <Textarea id="partner-notes" rows={3} {...register('notes')} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

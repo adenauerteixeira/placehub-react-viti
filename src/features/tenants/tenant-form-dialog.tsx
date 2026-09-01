@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/phone-input'
 import { errorMessage } from '@/lib/errors'
@@ -120,19 +120,16 @@ export function TenantFormDialog({
         </DialogHeader>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="tenant-name">Nome</FieldLabel>
+          <Field label="Nome" htmlFor="tenant-name" error={errors.name?.message}>
             <Input id="tenant-name" {...register('name')} aria-invalid={!!errors.name} />
-            {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel
-              htmlFor="tenant-slug"
-              hint={`Endereço público da imobiliária ({subdomínio}.${domain}). Não pode ser alterado depois de criado.`}
-            >
-              Subdomínio
-            </FieldLabel>
+          <Field
+            label="Subdomínio"
+            htmlFor="tenant-slug"
+            hint={`Endereço público da imobiliária ({subdomínio}.${domain}). Não pode ser alterado depois de criado.`}
+            error={errors.slug?.message}
+          >
             <div className="flex items-center gap-1.5">
               <Input
                 id="tenant-slug"
@@ -142,17 +139,13 @@ export function TenantFormDialog({
               />
               <span className="text-muted-foreground text-sm whitespace-nowrap">.{domain}</span>
             </div>
-            {errors.slug && <p className="text-destructive text-sm">{errors.slug.message}</p>}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="tenant-email">E-mail de contato</FieldLabel>
+          <Field label="E-mail de contato" htmlFor="tenant-email" error={errors.email?.message}>
             <Input id="tenant-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
-            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="tenant-phone">Telefone</FieldLabel>
+          <Field label="Telefone" htmlFor="tenant-phone">
             <Controller
               control={control}
               name="phone"
@@ -160,7 +153,7 @@ export function TenantFormDialog({
                 <PhoneInput id="tenant-phone" value={field.value} onChange={field.onChange} />
               )}
             />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

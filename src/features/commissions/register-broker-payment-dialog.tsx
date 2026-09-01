@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { errorMessage } from '@/lib/errors'
 import { useRegisterBrokerPayment, type CommissionInstallment } from './api'
@@ -88,34 +88,31 @@ export function RegisterBrokerPaymentDialog({
           </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="broker-payment-date">Data do repasse</FieldLabel>
+          <Field label="Data do repasse" htmlFor="broker-payment-date" error={errors.paid_at?.message}>
             <Input id="broker-payment-date" type="date" {...register('paid_at')} aria-invalid={!!errors.paid_at} />
-            {errors.paid_at && <p className="text-destructive text-sm">{errors.paid_at.message}</p>}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="broker-payment-method">Forma de pagamento</FieldLabel>
+          <Field
+            label="Forma de pagamento"
+            htmlFor="broker-payment-method"
+            error={errors.payment_method?.message}
+          >
             <Input
               id="broker-payment-method"
               placeholder="Pix, transferência, dinheiro..."
               {...register('payment_method')}
               aria-invalid={!!errors.payment_method}
             />
-            {errors.payment_method && (
-              <p className="text-destructive text-sm">{errors.payment_method.message}</p>
-            )}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="broker-payment-receipt">Comprovante</FieldLabel>
+          <Field label="Comprovante" htmlFor="broker-payment-receipt">
             <Input
               id="broker-payment-receipt"
               type="file"
               accept="image/png,image/jpeg,image/webp,application/pdf"
               onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
             />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

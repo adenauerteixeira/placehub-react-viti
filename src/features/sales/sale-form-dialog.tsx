@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Field } from '@/components/field'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -149,8 +150,7 @@ export function SaleFormDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="sale-down-payment">Entrada</FieldLabel>
+            <Field label="Entrada" htmlFor="sale-down-payment">
               <Controller
                 control={control}
                 name="down_payment_amount"
@@ -158,15 +158,15 @@ export function SaleFormDialog({
                   <CurrencyInput id="sale-down-payment" value={field.value} onChange={field.onChange} />
                 )}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel hint="Calculado no servidor: valor da venda − entrada − bens dados como parte de pagamento.">
-                Financiamento (estimado)
-              </FieldLabel>
+            </Field>
+            <Field
+              label="Financiamento (estimado)"
+              hint="Calculado no servidor: valor da venda − entrada − bens dados como parte de pagamento."
+            >
               <p className="text-muted-foreground flex h-9 items-center text-sm">
                 {formatPrice(financingPreview)}
               </p>
-            </div>
+            </Field>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -261,21 +261,20 @@ export function SaleFormDialog({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="sale-financing-installments">Parcelas do financiamento</FieldLabel>
+            <Field label="Parcelas do financiamento" htmlFor="sale-financing-installments">
               <Input id="sale-financing-installments" type="number" min="0" {...register('financing_installments')} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="sale-financing-source">Instituição financiadora</FieldLabel>
+            </Field>
+            <Field label="Instituição financiadora" htmlFor="sale-financing-source">
               <Input id="sale-financing-source" {...register('financing_source')} />
-            </div>
+            </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="sale-commission-percentage" hint="Percentual total da comissão sobre o valor da venda. O corte do corretor é o menor entre este percentual e a comissão cadastrada nele.">
-                Comissão (%)
-              </FieldLabel>
+            <Field
+              label="Comissão (%)"
+              htmlFor="sale-commission-percentage"
+              hint="Percentual total da comissão sobre o valor da venda. O corte do corretor é o menor entre este percentual e a comissão cadastrada nele."
+            >
               <Input
                 id="sale-commission-percentage"
                 type="number"
@@ -283,26 +282,24 @@ export function SaleFormDialog({
                 step="0.01"
                 {...register('commission_percentage')}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel hint="Calculado no servidor, dividido entre corretor e imobiliária conforme a comissão cadastrada no corretor.">
-                Comissão total (estimada)
-              </FieldLabel>
+            </Field>
+            <Field
+              label="Comissão total (estimada)"
+              hint="Calculado no servidor, dividido entre corretor e imobiliária conforme a comissão cadastrada no corretor."
+            >
               <p className="text-muted-foreground flex h-9 items-center text-sm">
                 {formatPrice(commissionPreview)}
               </p>
-            </div>
+            </Field>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="sale-payment-notes">Condições de pagamento</FieldLabel>
+          <Field label="Condições de pagamento" htmlFor="sale-payment-notes">
             <Textarea id="sale-payment-notes" rows={2} {...register('payment_notes')} />
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="sale-notes">Observações</FieldLabel>
+          <Field label="Observações" htmlFor="sale-notes">
             <Textarea id="sale-notes" rows={2} {...register('notes')} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

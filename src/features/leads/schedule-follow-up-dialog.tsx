@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
@@ -86,23 +86,18 @@ export function ScheduleFollowUpDialog({
           <DialogDescription>Marque o próximo contato com {lead.name}.</DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="follow-up-date">Data e hora</FieldLabel>
+          <Field label="Data e hora" htmlFor="follow-up-date" error={errors.scheduled_at?.message}>
             <Input
               id="follow-up-date"
               type="datetime-local"
               {...register('scheduled_at')}
               aria-invalid={!!errors.scheduled_at}
             />
-            {errors.scheduled_at && (
-              <p className="text-destructive text-sm">{errors.scheduled_at.message}</p>
-            )}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Responsável</FieldLabel>
+          <Field label="Responsável" htmlFor="follow-up-broker">
             <Select value={watch('broker_id')} onValueChange={(v) => setValue('broker_id', v)}>
-              <SelectTrigger>
+              <SelectTrigger id="follow-up-broker">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -114,12 +109,11 @@ export function ScheduleFollowUpDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="follow-up-notes">Observações</FieldLabel>
+          <Field label="Observações" htmlFor="follow-up-notes">
             <Textarea id="follow-up-notes" rows={3} {...register('notes')} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

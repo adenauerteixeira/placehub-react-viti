@@ -8,7 +8,7 @@ import { CalendarPlus, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-state'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -184,10 +184,9 @@ export function NegotiationDetailPage() {
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>Anúncio</FieldLabel>
+            <Field label="Anúncio" htmlFor="negotiation-detail-announcement">
               <Select value={watch('announcement_id')} onValueChange={(v) => setValue('announcement_id', v)}>
-                <SelectTrigger>
+                <SelectTrigger id="negotiation-detail-announcement">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -199,13 +198,12 @@ export function NegotiationDetailPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel>Corretor</FieldLabel>
+              <Field label="Corretor" htmlFor="negotiation-detail-broker">
                 <Select value={watch('broker_id')} onValueChange={(v) => setValue('broker_id', v)}>
-                  <SelectTrigger>
+                  <SelectTrigger id="negotiation-detail-broker">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -217,21 +215,19 @@ export function NegotiationDetailPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel htmlFor="negotiation-detail-next-contact">Próximo contato</FieldLabel>
+              </Field>
+              <Field label="Próximo contato" htmlFor="negotiation-detail-next-contact">
                 <Input
                   id="negotiation-detail-next-contact"
                   type="datetime-local"
                   {...register('next_contact_at')}
                 />
-              </div>
+              </Field>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="negotiation-detail-notes">Observações</FieldLabel>
+            <Field label="Observações" htmlFor="negotiation-detail-notes">
               <Textarea id="negotiation-detail-notes" rows={4} {...register('notes')} />
-            </div>
+            </Field>
 
             <div className="flex justify-end">
               <Button type="submit" disabled={updateNegotiation.isPending}>

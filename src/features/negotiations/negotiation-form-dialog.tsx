@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
@@ -98,14 +98,13 @@ export function NegotiationFormDialog({
           <DialogDescription>Inicia o acompanhamento comercial de um lead.</DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel>Lead</FieldLabel>
+          <Field label="Lead" htmlFor="negotiation-lead" error={errors.lead_id?.message}>
             <Select
               value={watch('lead_id')}
               onValueChange={(v) => setValue('lead_id', v)}
               disabled={!!leadId}
             >
-              <SelectTrigger aria-invalid={!!errors.lead_id}>
+              <SelectTrigger id="negotiation-lead" aria-invalid={!!errors.lead_id}>
                 <SelectValue placeholder="Selecione um lead" />
               </SelectTrigger>
               <SelectContent>
@@ -116,15 +115,15 @@ export function NegotiationFormDialog({
                 ))}
               </SelectContent>
             </Select>
-            {errors.lead_id && <p className="text-destructive text-sm">{errors.lead_id.message}</p>}
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel hint="Opcional — o imóvel que está sendo negociado com esse lead.">
-              Anúncio
-            </FieldLabel>
+          <Field
+            label="Anúncio"
+            htmlFor="negotiation-announcement"
+            hint="Opcional — o imóvel que está sendo negociado com esse lead."
+          >
             <Select value={watch('announcement_id')} onValueChange={(v) => setValue('announcement_id', v)}>
-              <SelectTrigger>
+              <SelectTrigger id="negotiation-announcement">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -136,13 +135,12 @@ export function NegotiationFormDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>Corretor</FieldLabel>
+            <Field label="Corretor" htmlFor="negotiation-broker">
               <Select value={watch('broker_id')} onValueChange={(v) => setValue('broker_id', v)}>
-                <SelectTrigger>
+                <SelectTrigger id="negotiation-broker">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -154,19 +152,19 @@ export function NegotiationFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="negotiation-next-contact" hint="Próximo lembrete de contato com esse lead.">
-                Próximo contato
-              </FieldLabel>
+            </Field>
+            <Field
+              label="Próximo contato"
+              htmlFor="negotiation-next-contact"
+              hint="Próximo lembrete de contato com esse lead."
+            >
               <Input id="negotiation-next-contact" type="datetime-local" {...register('next_contact_at')} />
-            </div>
+            </Field>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="negotiation-notes">Observações</FieldLabel>
+          <Field label="Observações" htmlFor="negotiation-notes">
             <Textarea id="negotiation-notes" rows={3} {...register('notes')} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

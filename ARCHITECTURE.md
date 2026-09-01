@@ -185,6 +185,19 @@ passado como `style` inline no wrapper raiz (`AppShell`) do `TenantLayout` e do
 (erros continuam com a cor padrão do shadcn em todos os tenants). `resolvedTheme` decide se usa o
 conjunto claro ou escuro do tenant.
 
+**Portais e o escopo do tema (2026-09-01):** como as CSS variables só existem dentro da `<div>` do
+`AppShell`, qualquer conteúdo que renderiza fora dela (via `React Portal`) não as enxerga. Todo
+componente shadcn que abre em portal por padrão do Radix — `Dialog`, `AlertDialog`, `Sheet`,
+`DropdownMenu`, `Popover`, `Tooltip`, `Select` — portava direto em `document.body`, então um botão
+`primary`/conteúdo `accent` dentro de um diálogo ou menu saía com a cor padrão da plataforma, não a
+do tenant (achado por acaso testando a Fase 3 de UX/UI, não reportado antes). Corrigido com
+`ThemeScopeContext`/`useThemeScope()` (`src/lib/theme-scope.tsx`): o `AppShell` guarda seu próprio
+nó DOM num `useState` (callback ref, pra disparar re-render quando o elemento monta — uma `useRef`
+comum não notificaria os consumidores do contexto) e expõe via `ThemeScopeProvider`; os 7
+componentes acima leem `useThemeScope()` e portam `container={scope}` nele em vez do padrão do
+Radix. **Qualquer componente shadcn novo com Portal precisa do mesmo tratamento** — seguir o padrão
+já aplicado nos 7 arquivos de `src/components/ui/`.
+
 ## Casca de layout (`AppShell`)
 
 `src/components/app-shell.tsx` é o layout compartilhado por `TenantLayout`, `PlatformLayout`,

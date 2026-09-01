@@ -109,7 +109,7 @@ export function BrokersListPage() {
         <CardTitle>Corretores</CardTitle>
         <CardAction>
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> Novo corretor
+            <Plus className="size-4" /> <span className="hidden sm:inline">Novo corretor</span>
           </Button>
         </CardAction>
       </CardHeader>

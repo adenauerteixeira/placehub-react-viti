@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/phone-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -100,8 +100,7 @@ export function LeadFormDialog({
           <DialogDescription>Registre um contato interessado em algum imóvel.</DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="lead-name">Nome</FieldLabel>
+          <Field label="Nome" htmlFor="lead-name" error={errors.name?.message}>
             <Input
               id="lead-name"
               {...nameField}
@@ -111,30 +110,29 @@ export function LeadFormDialog({
               }}
               aria-invalid={!!errors.name}
             />
-            {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
-          </div>
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="lead-phone">Telefone</FieldLabel>
+            <Field label="Telefone" htmlFor="lead-phone" error={errors.phone?.message}>
               <Controller
                 control={control}
                 name="phone"
                 render={({ field }) => <PhoneInput id="lead-phone" value={field.value} onChange={field.onChange} />}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="lead-email">E-mail</FieldLabel>
+            </Field>
+            <Field label="E-mail" htmlFor="lead-email" error={errors.email?.message}>
               <Input id="lead-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
-              {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-            </div>
+            </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel hint="Como esse contato chegou até você.">Origem</FieldLabel>
+            <Field
+              label="Origem"
+              htmlFor="lead-source"
+              hint="Como esse contato chegou até você."
+            >
               <Select value={watch('source')} onValueChange={(v) => setValue('source', v as LeadSource)}>
-                <SelectTrigger>
+                <SelectTrigger id="lead-source">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -145,11 +143,14 @@ export function LeadFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel hint="Deixe em branco pra entrar na fila de leads não atribuídos.">Corretor</FieldLabel>
+            </Field>
+            <Field
+              label="Corretor"
+              htmlFor="lead-broker"
+              hint="Deixe em branco pra entrar na fila de leads não atribuídos."
+            >
               <Select value={watch('broker_id')} onValueChange={(v) => setValue('broker_id', v)}>
-                <SelectTrigger>
+                <SelectTrigger id="lead-broker">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -161,13 +162,12 @@ export function LeadFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="lead-notes">Observações</FieldLabel>
+          <Field label="Observações" htmlFor="lead-notes">
             <Textarea id="lead-notes" rows={3} {...register('notes')} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

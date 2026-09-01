@@ -84,7 +84,7 @@ export function LeadsListPage() {
         <CardTitle>Leads</CardTitle>
         <CardAction>
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> Novo lead
+            <Plus className="size-4" /> <span className="hidden sm:inline">Novo lead</span>
           </Button>
         </CardAction>
       </CardHeader>

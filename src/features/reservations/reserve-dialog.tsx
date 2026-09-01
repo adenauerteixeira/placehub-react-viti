@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/phone-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -117,8 +117,7 @@ export function ReserveDialog({
           <DialogDescription>Segura o anúncio pra um cliente por um período.</DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="reserve-customer-name">Cliente</FieldLabel>
+          <Field label="Cliente" htmlFor="reserve-customer-name" error={errors.customer_name?.message}>
             <Input
               id="reserve-customer-name"
               {...nameField}
@@ -128,14 +127,10 @@ export function ReserveDialog({
               }}
               aria-invalid={!!errors.customer_name}
             />
-            {errors.customer_name && (
-              <p className="text-destructive text-sm">{errors.customer_name.message}</p>
-            )}
-          </div>
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="reserve-customer-phone">Telefone</FieldLabel>
+            <Field label="Telefone" htmlFor="reserve-customer-phone">
               <Controller
                 control={control}
                 name="customer_phone"
@@ -143,38 +138,34 @@ export function ReserveDialog({
                   <PhoneInput id="reserve-customer-phone" value={field.value} onChange={field.onChange} />
                 )}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="reserve-customer-email">E-mail</FieldLabel>
+            </Field>
+            <Field label="E-mail" htmlFor="reserve-customer-email" error={errors.customer_email?.message}>
               <Input
                 id="reserve-customer-email"
                 type="email"
                 {...register('customer_email')}
                 aria-invalid={!!errors.customer_email}
               />
-              {errors.customer_email && (
-                <p className="text-destructive text-sm">{errors.customer_email.message}</p>
-              )}
-            </div>
+            </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="reserve-expires-at" hint="Depois dessa data a reserva expira sozinha e o anúncio volta a ficar publicado.">
-                Válida até
-              </FieldLabel>
+            <Field
+              label="Válida até"
+              htmlFor="reserve-expires-at"
+              hint="Depois dessa data a reserva expira sozinha e o anúncio volta a ficar publicado."
+              error={errors.expires_at?.message}
+            >
               <Input
                 id="reserve-expires-at"
                 type="datetime-local"
                 {...register('expires_at')}
                 aria-invalid={!!errors.expires_at}
               />
-              {errors.expires_at && <p className="text-destructive text-sm">{errors.expires_at.message}</p>}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>Corretor</FieldLabel>
+            </Field>
+            <Field label="Corretor" htmlFor="reserve-broker">
               <Select value={watch('broker_id')} onValueChange={(v) => setValue('broker_id', v)}>
-                <SelectTrigger>
+                <SelectTrigger id="reserve-broker">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -186,13 +177,12 @@ export function ReserveDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="reserve-notes">Observações</FieldLabel>
+          <Field label="Observações" htmlFor="reserve-notes">
             <Textarea id="reserve-notes" rows={2} {...register('notes')} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { errorMessage } from '@/lib/errors'
 import {
@@ -121,10 +121,12 @@ export function DevelopmentFormDialog({
           </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="dev-name" hint="Nome do empreendimento, como aparece pro visitante no anúncio.">
-              Nome
-            </FieldLabel>
+          <Field
+            label="Nome"
+            htmlFor="dev-name"
+            hint="Nome do empreendimento, como aparece pro visitante no anúncio."
+            error={errors.name?.message}
+          >
             <Input
               id="dev-name"
               {...nameField}
@@ -134,14 +136,16 @@ export function DevelopmentFormDialog({
               }}
               aria-invalid={!!errors.name}
             />
-            {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
-          </div>
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel hint="Categoria do empreendimento — loteamento, condomínio ou lançamento.">Tipo</FieldLabel>
+            <Field
+              label="Tipo"
+              htmlFor="dev-type"
+              hint="Categoria do empreendimento — loteamento, condomínio ou lançamento."
+            >
               <Select value={watch('type')} onValueChange={(v) => setValue('type', v as DevelopmentType)}>
-                <SelectTrigger>
+                <SelectTrigger id="dev-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -152,14 +156,17 @@ export function DevelopmentFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel hint="Só empreendimentos ativos ou concluídos aparecem pra vincular num anúncio.">Status</FieldLabel>
+            </Field>
+            <Field
+              label="Status"
+              htmlFor="dev-status"
+              hint="Só empreendimentos ativos ou concluídos aparecem pra vincular num anúncio."
+            >
               <Select
                 value={watch('status')}
                 onValueChange={(v) => setValue('status', v as DevelopmentStatus)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="dev-status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -170,15 +177,16 @@ export function DevelopmentFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="dev-developer" hint="Empresa responsável pela construção/incorporação, se houver.">
-              Incorporadora
-            </FieldLabel>
+          <Field
+            label="Incorporadora"
+            htmlFor="dev-developer"
+            hint="Empresa responsável pela construção/incorporação, se houver."
+          >
             <Input id="dev-developer" {...register('developer')} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

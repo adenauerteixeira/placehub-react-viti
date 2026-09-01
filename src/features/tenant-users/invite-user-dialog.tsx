@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { PasswordRequirements } from '@/components/password-requirements'
@@ -115,8 +115,7 @@ export function InviteUserDialog({
         </DialogHeader>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="invite-name">Nome</FieldLabel>
+          <Field label="Nome" htmlFor="invite-name">
             <Input
               id="invite-name"
               {...nameField}
@@ -125,52 +124,52 @@ export function InviteUserDialog({
                 setValue('fullName', capitalizeName(e.target.value))
               }}
             />
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel htmlFor="invite-email" hint="Usado pra fazer login — precisa ser único na plataforma inteira.">
-              E-mail
-            </FieldLabel>
+          <Field
+            label="E-mail"
+            htmlFor="invite-email"
+            hint="Usado pra fazer login — precisa ser único na plataforma inteira."
+            error={errors.email?.message}
+          >
             <Input id="invite-email" type="email" {...register('email')} aria-invalid={!!errors.email} />
-            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-          </div>
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="invite-password">Senha</FieldLabel>
+            <Field label="Senha" htmlFor="invite-password" error={errors.password?.message}>
               <PasswordInput
                 id="invite-password"
                 autoComplete="new-password"
                 {...register('password')}
                 aria-invalid={!!errors.password}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="invite-confirm-password">Confirmar senha</FieldLabel>
+            </Field>
+            <Field
+              label="Confirmar senha"
+              htmlFor="invite-confirm-password"
+              error={errors.confirmPassword?.message}
+            >
               <PasswordInput
                 id="invite-confirm-password"
                 autoComplete="new-password"
                 {...register('confirmPassword')}
                 aria-invalid={!!errors.confirmPassword}
               />
-              {errors.confirmPassword && (
-                <p className="text-destructive text-sm">{errors.confirmPassword.message}</p>
-              )}
-            </div>
+            </Field>
           </div>
           <PasswordRequirements value={watch('password')} />
 
           <div className="grid grid-cols-[1fr_auto] gap-4">
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel htmlFor="invite-creci" hint="Registro profissional, se este usuário for corretor. Opcional.">
-                CRECI
-              </FieldLabel>
+            <Field
+              label="CRECI"
+              htmlFor="invite-creci"
+              hint="Registro profissional, se este usuário for corretor. Opcional."
+            >
               <Input id="invite-creci" {...register('creci')} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel>UF</FieldLabel>
+            </Field>
+            <Field label="UF" htmlFor="invite-creci-state">
               <Select value={watch('creci_state')} onValueChange={(v) => setValue('creci_state', v)}>
-                <SelectTrigger className="w-20">
+                <SelectTrigger id="invite-creci-state" className="w-20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -182,18 +181,19 @@ export function InviteUserDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel hint="Define o nível de acesso padrão — tenant_admin e manager veem tudo do módulo liberado; corretor só o que é dele.">
-              Papel
-            </FieldLabel>
+          <Field
+            label="Papel"
+            htmlFor="invite-role"
+            hint="Define o nível de acesso padrão — tenant_admin e manager veem tudo do módulo liberado; corretor só o que é dele."
+          >
             <Select
               value={watch('role')}
               onValueChange={(value) => setValue('role', value as AssignableRole)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="invite-role">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -204,14 +204,14 @@ export function InviteUserDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel hint="Módulos que este usuário pode acessar no menu — tenant_admin sempre vê tudo, independente do que estiver marcado aqui.">
-              Permissões
-            </FieldLabel>
+          <Field
+            label="Permissões"
+            hint="Módulos que este usuário pode acessar no menu — tenant_admin sempre vê tudo, independente do que estiver marcado aqui."
+          >
             <PermissionCheckboxes selected={permissions} onChange={setPermissions} />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

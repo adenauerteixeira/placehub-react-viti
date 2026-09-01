@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { CurrencyInput } from '@/components/currency-input'
-import { FieldLabel } from '@/components/field-label'
+import { Field } from '@/components/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -407,29 +407,34 @@ export function AnnouncementFormPage() {
           <TabsContent value="basic">
             <Card>
               <CardContent className="flex flex-col gap-4 pt-6">
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-title" hint="Nome do imóvel, como aparece na listagem e no anúncio público.">
-                    Título
-                  </FieldLabel>
+                <Field
+                  label="Título"
+                  htmlFor="ann-title"
+                  hint="Nome do imóvel, como aparece na listagem e no anúncio público."
+                  error={errors.title?.message}
+                >
                   <Input id="ann-title" {...register('title')} aria-invalid={!!errors.title} />
-                  {errors.title && <p className="text-destructive text-sm">{errors.title.message}</p>}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-subtitle" hint="Complementa o título — aparece em destaque na página pública do anúncio.">
-                    Subtítulo
-                  </FieldLabel>
+                </Field>
+                <Field
+                  label="Subtítulo"
+                  htmlFor="ann-subtitle"
+                  hint="Complementa o título — aparece em destaque na página pública do anúncio."
+                >
                   <Input id="ann-subtitle" {...register('subtitle')} />
-                </div>
+                </Field>
 
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <FieldLabel hint="Categoria usada pra agrupar os anúncios no portal público.">Tipo de imóvel</FieldLabel>
+                  <Field
+                    label="Tipo de imóvel"
+                    htmlFor="ann-property-type"
+                    hint="Categoria usada pra agrupar os anúncios no portal público."
+                  >
                     <div className="flex gap-1.5">
                       <Select
                         value={watch('property_type')}
                         onValueChange={(v) => handlePropertyTypeChange(v as PropertyType)}
                       >
-                        <SelectTrigger className="flex-1">
+                        <SelectTrigger id="ann-property-type" className="flex-1">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -453,9 +458,8 @@ export function AnnouncementFormPage() {
                         </Button>
                       )}
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <FieldLabel hint="Se o imóvel é pra vender ou alugar.">Transação</FieldLabel>
+                  </Field>
+                  <Field label="Transação" htmlFor="ann-transaction-type" hint="Se o imóvel é pra vender ou alugar.">
                     {watch('property_type') === 'assignment' ? (
                       <div className="border-input bg-input/30 text-muted-foreground flex h-8 items-center rounded-lg border px-2.5 text-sm">
                         Cessão é sempre Venda
@@ -465,7 +469,7 @@ export function AnnouncementFormPage() {
                         value={watch('transaction_type')}
                         onValueChange={(v) => setValue('transaction_type', v as TransactionType)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id="ann-transaction-type">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -477,18 +481,23 @@ export function AnnouncementFormPage() {
                         </SelectContent>
                       </Select>
                     )}
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <FieldLabel htmlFor="ann-reference" hint="Código interno livre pra localizar o imóvel nos seus controles — não aparece pro visitante.">
-                      Referência
-                    </FieldLabel>
+                  </Field>
+                  <Field
+                    label="Referência"
+                    htmlFor="ann-reference"
+                    hint="Código interno livre pra localizar o imóvel nos seus controles — não aparece pro visitante."
+                  >
                     <Input id="ann-reference" {...register('reference_code')} />
-                  </div>
+                  </Field>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <FieldLabel htmlFor="ann-price" hint="Valor de venda ou aluguel do imóvel.">Preço</FieldLabel>
+                  <Field
+                    label="Preço"
+                    htmlFor="ann-price"
+                    hint="Valor de venda ou aluguel do imóvel."
+                    error={errors.price?.message}
+                  >
                     <Controller
                       control={control}
                       name="price"
@@ -501,15 +510,13 @@ export function AnnouncementFormPage() {
                         />
                       )}
                     />
-                    {errors.price && <p className="text-destructive text-sm">{errors.price.message}</p>}
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <FieldLabel
-                      htmlFor="ann-promo-price"
-                      hint="Se preenchido, aparece riscado ao lado do preço no portal público. Precisa ser menor ou igual ao preço."
-                    >
-                      Preço promocional
-                    </FieldLabel>
+                  </Field>
+                  <Field
+                    label="Preço promocional"
+                    htmlFor="ann-promo-price"
+                    hint="Se preenchido, aparece riscado ao lado do preço no portal público. Precisa ser menor ou igual ao preço."
+                    error={errors.promotional_price?.message}
+                  >
                     <Controller
                       control={control}
                       name="promotional_price"
@@ -522,10 +529,7 @@ export function AnnouncementFormPage() {
                         />
                       )}
                     />
-                    {errors.promotional_price && (
-                      <p className="text-destructive text-sm">{errors.promotional_price.message}</p>
-                    )}
-                  </div>
+                  </Field>
                 </div>
 
                 <div className="flex items-center gap-6">
@@ -545,32 +549,34 @@ export function AnnouncementFormPage() {
                   </label>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-description" hint="Texto livre exibido na página pública do anúncio.">
-                    Descrição
-                  </FieldLabel>
+                <Field
+                  label="Descrição"
+                  htmlFor="ann-description"
+                  hint="Texto livre exibido na página pública do anúncio."
+                >
                   <Textarea id="ann-description" rows={4} {...register('description')} />
-                </div>
+                </Field>
 
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel
-                    htmlFor="ann-video"
-                    hint="Link do YouTube, Vimeo ou um arquivo de vídeo direto (.mp4) — aparece embutido na página do anúncio."
-                  >
-                    Vídeo (YouTube/Vimeo ou link direto)
-                  </FieldLabel>
+                <Field
+                  label="Vídeo (YouTube/Vimeo ou link direto)"
+                  htmlFor="ann-video"
+                  hint="Link do YouTube, Vimeo ou um arquivo de vídeo direto (.mp4) — aparece embutido na página do anúncio."
+                >
                   <Input id="ann-video" {...register('video_url')} />
-                </div>
+                </Field>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <FieldLabel hint="Empreendimento ao qual este imóvel pertence, se houver.">Empreendimento</FieldLabel>
+                  <Field
+                    label="Empreendimento"
+                    htmlFor="ann-development"
+                    hint="Empreendimento ao qual este imóvel pertence, se houver."
+                  >
                     <div className="flex gap-1.5">
                       <Select
                         value={watch('development_id')}
                         onValueChange={(v) => setValue('development_id', v)}
                       >
-                        <SelectTrigger className="flex-1">
+                        <SelectTrigger id="ann-development" className="flex-1">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -595,15 +601,18 @@ export function AnnouncementFormPage() {
                         </Button>
                       )}
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <FieldLabel hint="Imobiliária ou pessoa parceira envolvida neste negócio, se houver.">Parceiro</FieldLabel>
+                  </Field>
+                  <Field
+                    label="Parceiro"
+                    htmlFor="ann-partner"
+                    hint="Imobiliária ou pessoa parceira envolvida neste negócio, se houver."
+                  >
                     <div className="flex gap-1.5">
                       <Select
                         value={watch('partner_id')}
                         onValueChange={(v) => setValue('partner_id', v)}
                       >
-                        <SelectTrigger className="flex-1">
+                        <SelectTrigger id="ann-partner" className="flex-1">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -628,15 +637,18 @@ export function AnnouncementFormPage() {
                         </Button>
                       )}
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <FieldLabel hint="Dono do imóvel — informação interna, não aparece no anúncio público.">Proprietário</FieldLabel>
+                  </Field>
+                  <Field
+                    label="Proprietário"
+                    htmlFor="ann-owner"
+                    hint="Dono do imóvel — informação interna, não aparece no anúncio público."
+                  >
                     <div className="flex gap-1.5">
                       <Select
                         value={watch('owner_id')}
                         onValueChange={(v) => setValue('owner_id', v)}
                       >
-                        <SelectTrigger className="flex-1">
+                        <SelectTrigger id="ann-owner" className="flex-1">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -661,12 +673,15 @@ export function AnnouncementFormPage() {
                         </Button>
                       )}
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <FieldLabel hint="Corretor que aparece pro visitante como responsável pelo imóvel na página pública.">Corretor</FieldLabel>
+                  </Field>
+                  <Field
+                    label="Corretor"
+                    htmlFor="ann-broker"
+                    hint="Corretor que aparece pro visitante como responsável pelo imóvel na página pública."
+                  >
                     <div className="flex gap-1.5">
                       <Select value={watch('broker_id')} onValueChange={handleBrokerChange}>
-                        <SelectTrigger className="flex-1">
+                        <SelectTrigger id="ann-broker" className="flex-1">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -691,16 +706,18 @@ export function AnnouncementFormPage() {
                         </Button>
                       )}
                     </div>
-                  </div>
-                  <div className="col-span-2 flex flex-col gap-1.5">
-                    <FieldLabel hint="Quem gerencia este registro internamente — controla quem pode ver/editar quando o corretor não tem acesso total.">
-                      Responsável interno
-                    </FieldLabel>
+                  </Field>
+                  <Field
+                    label="Responsável interno"
+                    htmlFor="ann-responsible"
+                    hint="Quem gerencia este registro internamente — controla quem pode ver/editar quando o corretor não tem acesso total."
+                    className="col-span-2"
+                  >
                     <Select
                       value={watch('responsible_profile_id')}
                       onValueChange={(v) => setValue('responsible_profile_id', v)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id="ann-responsible">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -716,7 +733,7 @@ export function AnnouncementFormPage() {
                       Preenchido automaticamente ao escolher um corretor com login vinculado — pode
                       trocar se quiser.
                     </p>
-                  </div>
+                  </Field>
                 </div>
               </CardContent>
             </Card>
@@ -725,42 +742,37 @@ export function AnnouncementFormPage() {
           <TabsContent value="address">
             <Card>
               <CardContent className="grid grid-cols-2 gap-4 pt-6">
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-zip" hint="Preenche rua, bairro, cidade e UF automaticamente ao sair do campo.">
-                    CEP
-                  </FieldLabel>
+                <Field
+                  label="CEP"
+                  htmlFor="ann-zip"
+                  hint="Preenche rua, bairro, cidade e UF automaticamente ao sair do campo."
+                >
                   <div className="relative">
                     <Input id="ann-zip" {...register('zip_code')} onBlur={handleCepBlur} />
                     {cepLoading && (
                       <Loader2 className="text-muted-foreground absolute top-1/2 right-2 size-4 -translate-y-1/2 animate-spin" />
                     )}
                   </div>
-                </div>
+                </Field>
                 <div />
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-street">Rua</FieldLabel>
+                <Field label="Rua" htmlFor="ann-street">
                   <Input id="ann-street" {...register('street')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-number">Número</FieldLabel>
+                </Field>
+                <Field label="Número" htmlFor="ann-number">
                   <Input id="ann-number" {...register('address_number')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-complement">Complemento</FieldLabel>
+                </Field>
+                <Field label="Complemento" htmlFor="ann-complement">
                   <Input id="ann-complement" {...register('complement')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-neighborhood">Bairro</FieldLabel>
+                </Field>
+                <Field label="Bairro" htmlFor="ann-neighborhood">
                   <Input id="ann-neighborhood" {...register('neighborhood')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-city">Cidade</FieldLabel>
+                </Field>
+                <Field label="Cidade" htmlFor="ann-city">
                   <Input id="ann-city" {...register('city')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel>UF</FieldLabel>
+                </Field>
+                <Field label="UF" htmlFor="ann-state">
                   <Select value={watch('state')} onValueChange={(v) => setValue('state', v)}>
-                    <SelectTrigger>
+                    <SelectTrigger id="ann-state">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -772,7 +784,7 @@ export function AnnouncementFormPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </Field>
               </CardContent>
             </Card>
           </TabsContent>
@@ -780,46 +792,40 @@ export function AnnouncementFormPage() {
           <TabsContent value="features">
             <Card>
               <CardContent className="grid grid-cols-3 gap-4 pt-6">
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-bedrooms">Quartos</FieldLabel>
+                <Field label="Quartos" htmlFor="ann-bedrooms">
                   <Input id="ann-bedrooms" type="number" {...register('bedrooms')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-suites" hint="Quartos com banheiro privativo — já contam dentro do total de quartos.">
-                    Suítes
-                  </FieldLabel>
+                </Field>
+                <Field
+                  label="Suítes"
+                  htmlFor="ann-suites"
+                  hint="Quartos com banheiro privativo — já contam dentro do total de quartos."
+                >
                   <Input id="ann-suites" type="number" {...register('suites')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-bathrooms">Banheiros</FieldLabel>
+                </Field>
+                <Field label="Banheiros" htmlFor="ann-bathrooms">
                   <Input id="ann-bathrooms" type="number" {...register('bathrooms')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-parking">Vagas</FieldLabel>
+                </Field>
+                <Field label="Vagas" htmlFor="ann-parking">
                   <Input id="ann-parking" type="number" {...register('parking_spaces')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-land-area" hint="Área total do terreno/lote.">
-                    Área do terreno (m²)
-                  </FieldLabel>
+                </Field>
+                <Field label="Área do terreno (m²)" htmlFor="ann-land-area" hint="Área total do terreno/lote.">
                   <Input id="ann-land-area" type="number" step="0.01" {...register('land_area')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-built-area" hint="Área total construída, incluindo áreas comuns quando aplicável.">
-                    Área construída (m²)
-                  </FieldLabel>
+                </Field>
+                <Field
+                  label="Área construída (m²)"
+                  htmlFor="ann-built-area"
+                  hint="Área total construída, incluindo áreas comuns quando aplicável."
+                >
                   <Input id="ann-built-area" type="number" step="0.01" {...register('built_area')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-private-area" hint="Área de uso exclusivo da unidade (sem áreas comuns).">
-                    Área privativa (m²)
-                  </FieldLabel>
+                </Field>
+                <Field
+                  label="Área privativa (m²)"
+                  htmlFor="ann-private-area"
+                  hint="Área de uso exclusivo da unidade (sem áreas comuns)."
+                >
                   <Input id="ann-private-area" type="number" step="0.01" {...register('private_area')} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-condo-fee" hint="Valor mensal do condomínio.">
-                    Condomínio
-                  </FieldLabel>
+                </Field>
+                <Field label="Condomínio" htmlFor="ann-condo-fee" hint="Valor mensal do condomínio.">
                   <Controller
                     control={control}
                     name="condominium_fee"
@@ -827,17 +833,14 @@ export function AnnouncementFormPage() {
                       <CurrencyInput id="ann-condo-fee" value={field.value} onChange={field.onChange} />
                     )}
                   />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel htmlFor="ann-iptu" hint="Valor anual do IPTU.">
-                    IPTU
-                  </FieldLabel>
+                </Field>
+                <Field label="IPTU" htmlFor="ann-iptu" hint="Valor anual do IPTU.">
                   <Controller
                     control={control}
                     name="iptu"
                     render={({ field }) => <CurrencyInput id="ann-iptu" value={field.value} onChange={field.onChange} />}
                   />
-                </div>
+                </Field>
               </CardContent>
             </Card>
           </TabsContent>

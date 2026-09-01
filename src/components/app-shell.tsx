@@ -1,4 +1,5 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
+import { ThemeScopeProvider } from '@/lib/theme-scope'
 import { cn } from '@/lib/utils'
 
 // Shell comum a todas as telas: cabeçalho e rodapé de verdade "fixos"
@@ -23,23 +24,31 @@ export function AppShell({
   footer?: ReactNode
   style?: CSSProperties
 }) {
+  // Callback ref (em vez de useRef) porque precisa disparar um re-render
+  // quando o nó monta — é isso que faz o ThemeScopeProvider propagar o
+  // elemento de verdade pros portais do Radix (Dialog/Select/etc.), que
+  // teriam renderizado com container=null se dependessem de uma ref comum.
+  const [scopeEl, setScopeEl] = useState<HTMLDivElement | null>(null)
+
   return (
-    <div className="relative h-dvh overflow-hidden" style={style}>
-      <header className="bg-background/70 fixed inset-x-0 top-0 z-30 h-16 border-b backdrop-blur-xl">
-        <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between gap-4 px-6">
-          {header}
-        </div>
-      </header>
-      <main
-        className={cn(
-          'absolute inset-x-0 top-16 bottom-11 overflow-y-auto',
-          centerMain && 'flex items-center justify-center',
-        )}
-      >
-        <div className={cn('mx-auto w-full max-w-7xl px-6 py-8')}>{children}</div>
-      </main>
-      {footer ?? <AppFooter />}
-    </div>
+    <ThemeScopeProvider value={scopeEl}>
+      <div ref={setScopeEl} className="relative h-dvh overflow-hidden" style={style}>
+        <header className="bg-background/70 fixed inset-x-0 top-0 z-30 h-16 border-b backdrop-blur-xl">
+          <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between gap-4 px-6">
+            {header}
+          </div>
+        </header>
+        <main
+          className={cn(
+            'absolute inset-x-0 top-16 bottom-11 overflow-y-auto',
+            centerMain && 'flex items-center justify-center',
+          )}
+        >
+          <div className={cn('mx-auto w-full max-w-7xl px-6 py-8')}>{children}</div>
+        </main>
+        {footer ?? <AppFooter />}
+      </div>
+    </ThemeScopeProvider>
   )
 }
 

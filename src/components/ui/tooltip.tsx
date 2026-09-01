@@ -2,6 +2,7 @@ import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useThemeScope } from "@/lib/theme-scope"
 
 function TooltipProvider({
   delayDuration = 0,
@@ -34,8 +35,9 @@ function TooltipContent({
   children,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  const scope = useThemeScope()
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={scope ?? undefined}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}

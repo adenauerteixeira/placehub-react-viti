@@ -99,8 +99,16 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
       }
       footer={
         <AppFooter>
-          © {new Date().getFullYear()} {tenant.name} — Conectando imóveis, corretores e
-          oportunidades.
+          <span className="hidden sm:inline">
+            © {new Date().getFullYear()} {tenant.name} — Conectando imóveis, corretores e
+            oportunidades.
+          </span>
+          <span className="flex flex-col text-[11px] leading-tight sm:hidden">
+            <span>
+              © {new Date().getFullYear()} Place Hub — {tenant.name}
+            </span>
+            <span>Conectando imóveis, corretores e oportunidades.</span>
+          </span>
         </AppFooter>
       }
     >

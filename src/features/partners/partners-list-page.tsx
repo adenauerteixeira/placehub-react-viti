@@ -97,7 +97,7 @@ export function PartnersListPage() {
         <CardTitle>Parceiros</CardTitle>
         <CardAction>
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> Novo parceiro
+            <Plus className="size-4" /> <span className="hidden sm:inline">Novo parceiro</span>
           </Button>
         </CardAction>
       </CardHeader>
