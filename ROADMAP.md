@@ -14,10 +14,15 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
 - [x] Documentação de continuidade (README, ROADMAP, CONTINUITY, CHANGELOG, ARCHITECTURE).
 - [x] Projeto Supabase real criado (nuvem) e credenciais em `.env.local`.
 - [x] Migration inicial aplicada no projeto Supabase real (via SQL Editor).
-- [ ] Projeto Vercel conectado ao repositório, com preview deployments.
-- [ ] Domínio `placehub.app` com wildcard (`*.placehub.app`) apontando para a Vercel.
-- [ ] CI (GitHub Actions): lint + typecheck + build em cada push/PR.
-- [ ] Conta Resend criada e domínio de envio verificado.
+- [x] Projeto Vercel conectado ao repositório (`place-hub1/placehub`), deploy automático a cada
+      push em `trunk` (2026-08-28/29) — sem preview deployments configurados ainda (só produção).
+- [x] Domínio raiz da plataforma com wildcard apontando para a Vercel — **não é `placehub.app`**
+      (já estava registrado por terceiros): é **`placehubapp.com.br`**, apex + `*.placehubapp.com.br`
+      (2026-08-29). Ver ARCHITECTURE.md — "Deploy" pros detalhes de DNS/certificado.
+- [ ] CI (GitHub Actions): lint + typecheck + build em cada push/PR — o build da Vercel já roda
+      `tsc -b && vite build` a cada push (bloqueia deploy com erro de tipo), mas não é GitHub
+      Actions nem roda lint; falta isso rodar em PR antes do merge, não só no deploy.
+- [x] Conta Resend criada e domínio de envio verificado (`casah.imb.br`, ver Fase 5 abaixo).
 
 ## Fase 1 — Plataforma, autenticação e tenants
 
@@ -201,7 +206,20 @@ Fase 5 completa — os 4 e-mails transacionais funcionando ponta a ponta contra 
       foi a escolha quando/se retomado — compatível com o SDK `@sentry/react`, só muda o DSN).
 - [ ] Revisão de acessibilidade (foco, contraste, navegação por teclado) nos temas claro/escuro.
 - [ ] Domínio próprio por tenant (`custom_domain → tenant_id`), como evolução do roteamento
-      por subdomínio.
+      por subdomínio — **ainda não é uma feature self-serve no banco.** O que existe hoje
+      (2026-08/09-01) é uma configuração *manual*: `casah.imb.br` apontado direto no projeto da
+      Vercel + `KNOWN_ROOT_DOMAINS` hardcoded em `src/lib/hostname.ts`, feito por fora do produto
+      pra esse tenant específico. Ver ARCHITECTURE.md — "Multi-tenancy" e "Deploy" pro que
+      precisaria virar tela/tabela de verdade (mapa `custom_domain → tenant_id`, automação de DNS
+      na Vercel via API).
+- [x] Identidade Visual da plataforma (favicon, logo claro/escuro, imagem de fundo) — configurável
+      pelo super_admin, aplicada no login/console (2026-08-31). Ver bloco próprio no CHANGELOG.
+- [x] Manual do Corretor — PDF (34 páginas, testado ponta a ponta no fluxo real) + página de
+      treinamento web equivalente dentro do app, habilitável por tenant (2026-09-01). Ver bloco
+      próprio no CHANGELOG.
+- [x] "Resetar dados" (Administração, só tenant_admin, senha reconferida no servidor) — limpa o
+      funil comercial gerado em treinamento, com opção de incluir Anúncios (2026-09-01). Ver bloco
+      próprio no CHANGELOG.
 - [ ] Testar de verdade o job de expiração automática (`funnel-expirations`, Fase 3) — nunca foi
       observado expirando uma reserva/proposta de verdade, só revisado no código.
 

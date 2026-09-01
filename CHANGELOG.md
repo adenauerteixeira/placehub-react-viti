@@ -5,6 +5,127 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Corrigido (Property Story — foto de capa clicável e navegação de volta, 2026-08-28)
+
+- **Foto de capa da home animada agora é um link** pro anúncio (mesmo destino do botão "Ver
+  imóvel"), com `cursor-pointer` e `hover:scale-1.2` — escala aplicada no wrapper `<Link>`, não na
+  `<img>`, pra não conflitar com o `transform` que o GSAP já anima nela via ref.
+- **Link "← Voltar aos anúncios" (detalhe do anúncio) agora usa `navigate(-1)`** em vez de sempre
+  voltar pra home no topo — preserva a posição de rolagem/animação de onde o usuário veio (mesmo
+  mecanismo do botão voltar do navegador, `history.go(-1)`), com fallback pra `/` quando não há
+  histórico do app (acesso direto por URL).
+
+### Adicionado (Primeiro deploy em produção — Vercel + domínio próprio, 2026-08-28/29)
+
+- **App no ar pela primeira vez.** Projeto Vercel (`place-hub1/placehub`) conectado ao GitHub
+  (`adenauerteixeira/placehub-react-viti`, branch `trunk`) — deploy automático a cada push.
+  `vercel.json` com rewrite de SPA (`/* → /index.html`), essencial pro React Router funcionar em
+  rotas diretas (sem isso, `/dashboard` direto na URL dava 404 da Vercel).
+- **Domínio raiz da plataforma:** `placehub.app` já estava registrado por terceiros — o usuário
+  registrou **`placehubapp.com.br`** no lugar. Apex + wildcard (`*.placehubapp.com.br`) apontados
+  pra Vercel; certificado HTTPS emitido automaticamente depois do DNS propagar.
+- **Domínio próprio do tenant Casah:** `casah.imb.br` (já usado pra e-mail via Resend) também
+  atrelado ao mesmo projeto Vercel e resolvendo pro tenant `casah` — funciona porque a resolução
+  de subdomínio (`src/lib/hostname.ts`) é agnóstica de domínio, não hardcoded pra
+  `placehubapp.com.br`.
+- **Bug real achado e corrigido: domínios `.com.br` de 3 labels quebravam a resolução de
+  tenant/plataforma.** `rootDomain()` assumia "sempre os últimos 2 labels" do hostname — funciona
+  pra domínios de 2 labels (`placehub.app`, `imb.br`), mas pra `placehubapp.com.br` calculava a
+  raiz como `com.br` e tratava `placehubapp` como se fosse label de tenant, causando "Imobiliária
+  não encontrada" na home da própria plataforma. Uma Public Suffix List também não resolveria (
+  testado com a lib `tldts`, depois removida): o `*.br` genérico da PSL trataria `imb.br` como
+  categoria tipo `com.br`, quebrando o caso do domínio de tenant pro lado oposto. Fix: lista
+  explícita (`KNOWN_ROOT_DOMAINS`) dos domínios raiz que a aplicação de fato serve, com fallback
+  pro heurístico genérico nos demais casos (dev, preview da Vercel).
+- Formulário de criar/editar imobiliária (console da plataforma) trocou o sufixo de subdomínio
+  fixo `.placehub.app` por `rootDomain()` — mostra o domínio raiz de verdade, dinamicamente.
+
+### Corrigido (Login quebrado em domínio próprio de tenant, 2026-09-01)
+
+- **`casah.imb.br` travava em "Não foi possível carregar seu perfil" pra qualquer usuário logado**
+  (reportado pelo usuário, mesma sintomatologia visual do bug de resolução de domínio acima, mas
+  causa raiz diferente). O navegador rejeitava silenciosamente o cookie de sessão com
+  `Domain=.imb.br` — mesma proteção "public suffix" já documentada pro `.localhost` em dev,
+  só que o Chrome aplica a alguns domínios `.br` de 2 labels mesmo depois do registro.br permitir
+  registro direto (confirmado com um teste manual de `document.cookie =` simples, sem nada do
+  Supabase envolvido). Sem o cookie salvo, toda requisição seguinte ia só com a anon key (sem
+  usuário autenticado de verdade) — RLS de `profiles` retornava 0 linhas, e a busca do perfil
+  falhava com 406. `writeCookie()` agora confirma se a escrita com `Domain=` realmente colou (lê
+  de volta) e cai pra cookie host-only se não colou; `removeCookie()` limpa as duas variantes
+  possíveis, já que não dá pra saber de antemão qual delas ficou de pé.
+
+### Adicionado (Identidade Visual da Plataforma, 2026-08-31)
+
+- **Novo menu "Identidade Visual" pro super_admin** (console da plataforma), espelhando o que já
+  existe pro tenant: favicon, logo (tema claro/escuro) e imagem de fundo (tema claro/escuro),
+  configuração única pra aplicação inteira (`platform_settings`, singleton via
+  `id boolean primary key check (id)`, bucket `platform-branding`).
+- **Tela de login da plataforma redesenhada** com a identidade configurada: painel de fundo do
+  tamanho do conteúdo (mesma largura da tabela de imobiliárias, não full-bleed na viewport),
+  imagem sem filtro/overlay (cores originais, `object-contain` pra não cortar as laterais — trocado
+  depois de `object-cover` cortar a arte), card de login em **glassmorfismo** de verdade (fundo
+  translúcido + blur, tint mais forte pra contraste — sem forçar texto branco, o próprio
+  `--card-foreground` do tema já resolve o contraste certo). Logo e slogan (**"Conecta pessoas à
+  lugares. Realiza sonhos!"**) saíram de dentro do hero (a imagem já carrega isso) e viraram parte
+  do cabeçalho da página.
+- **Console da plataforma:** logo (conforme o tema) antes do texto "PlaceHub" no cabeçalho de
+  todas as páginas; "Identidade Visual" e "Changelog" agrupados num menu "Administração" (mesmo
+  padrão já usado no tenant); rótulo `| Plataforma – <página> |` perto do `ThemeToggle`.
+- **Lista de imobiliárias:** banner com a imagem de fundo da plataforma (conforme o tema), ~1/3 da
+  largura da tabela, fora e acima do card da lista — altura da moldura acompanha a altura real da
+  imagem (sem aspect-ratio fixo cortando/sobrando espaço).
+- Nova opção **"Mostrar borda ao redor da imagem"**, uma por tema, controlando a borda tanto do
+  banner da lista de imobiliárias quanto do hero do login (mesma imagem usada nos dois lugares).
+- Nova coluna **"Administrador"** na lista de imobiliárias — e-mail de cada `tenant_admin`
+  vinculado ao tenant (via `profiles`, RLS já deixa super_admin ver perfis de qualquer tenant).
+- Componentes compartilhados novos: `NavGroup` (extraído de `tenant-layout.tsx`, que já usava esse
+  padrão de dropdown pra "Comercial"/"Administração") e `PlatformPageLabel`.
+
+### Adicionado (Manual do Corretor — PDF + página de treinamento web, 2026-09-01)
+
+- **PDF de treinamento** (34 páginas): capa, sumário, 13 capítulos cobrindo a jornada completa do
+  corretor (Painel, Leads, Negociações, Reservas, Propostas, Vendas, Comissões, Anúncios, perfil
+  público, boas práticas, referência de status) com capturas de tela reais — testado ao vivo no
+  tenant Casah criando um lead de exemplo ("Mariana Ferreira Souza") e levando ele até a venda
+  fechada e a comissão, pra garantir que cada tela documentada bate com o sistema de verdade.
+  Gerado via HTML + CSS de impressão renderizado a PDF pelo Chromium (Playwright `page.pdf()`),
+  sem serviço externo.
+- **Página de treinamento dentro do app** (`/treinamento`), mesmo conteúdo do PDF reaproveitado
+  como página web navegável por capítulo (nav lateral com âncoras), com o tema do tenant aplicado
+  automaticamente. Habilitável por tenant — toggle **"Habilitar página de treinamento pra equipe"**
+  em Identidade Visual → Página pública (`tenants.training_enabled`). Item "Treinamento" no menu
+  só aparece quando habilitado; acesso direto pela URL sem habilitar mostra uma mensagem amigável
+  em vez de 404. Sem exigir permissão de módulo específica — qualquer usuário logado do tenant vê,
+  uma vez habilitado pelo admin. Capturas de tela vivem em `public/training/` (assets estáticos,
+  reaproveitados do mesmo material do PDF).
+
+### Adicionado ("Resetar dados" — limpeza pós-treinamento, 2026-09-01)
+
+- **Novo item "Resetar dados" no menu Administração** (`/resetar-dados`, só `tenant_admin`), pra
+  limpar o que os corretores geram praticando o manual sem mexer em cadastro. Duas opções de
+  escopo, cada uma com o risco explicado na própria tela: **Funil comercial** (Leads, Negociações,
+  Propostas, Reservas, Vendas e Comissões — Anúncios ficam intactos) ou **Funil comercial +
+  Anúncios** (também apaga os imóveis cadastrados, fotos e amenidades inclusas).
+- **Senha reconferida no servidor** antes de apagar qualquer coisa (Edge Function
+  `reset-tenant-data` reautentica com `signInWithPassword` descartável — não dá pra pular a
+  confirmação chamando a API direto) + `window.confirm()` final na tela, mesmo padrão já usado em
+  outras ações destrutivas do app.
+- Função de banco `reset_tenant_commercial_data` (`SECURITY DEFINER`, `EXECUTE` revogado de
+  `authenticated`/`anon` — só a Edge Function chama, via `service_role`) desliga temporariamente
+  dois triggers de validação de negócio que bloqueariam o apagamento em massa
+  (`proposals_guard_delete`, que impede excluir proposta aceita, e
+  `announcements_validate_publish`, que exige descrição/cidade/UF/preço pra publicar) e deleta na
+  ordem certa pra respeitar as FKs. `tenant_id` nunca vem do client — é sempre o do perfil de quem
+  chamou, então um `tenant_admin` só consegue resetar o próprio tenant.
+- **Dois bugs reais achados testando ao vivo em produção antes de dar por pronto:** (1) anúncio
+  marcado "Vendido"/"Reservado" ficava travado nesse status mesmo depois da venda/reserva que
+  justificava isso ser apagada — corrigido revertendo pra "Publicado" quando o reset não inclui
+  Anúncios; (2) esse revert de status esbarrava na validação de publicação (dados incompletos em
+  fixtures de QA antigas), derrubando a transação inteira — corrigido desligando o mesmo tipo de
+  trigger-guard durante o reset.
+- **Limitação conhecida, avisada na própria tela:** fotos de anúncio e comprovantes já enviados não
+  são removidos do Storage — só as referências no banco somem.
+
 ### Alterado (Property Story — "deck panorâmico" virou colagem, 2026-08-28)
 
 - **Coreografia de entrada dos imóveis redesenhada do zero**, a pedido do usuário com imagem de

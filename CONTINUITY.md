@@ -5,8 +5,38 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-08-28
+## Estado atual — 2026-09-01
 
+- **App no ar em produção pela primeira vez (2026-08-28/09-01) — Vercel + domínio próprio.**
+  Projeto `place-hub1/placehub` conectado ao GitHub, deploy automático a cada push em `trunk`.
+  Domínio raiz da plataforma é **`placehubapp.com.br`** (não `placehub.app` — já registrado por
+  terceiros), apex + wildcard, DNS na própria Vercel (precisou ser ela mesma a autoridade DNS pra
+  emitir certificado wildcard — challenge `dns-01`, não dá com DNS de terceiro). Tenant Casah
+  também respondendo em domínio próprio, **`casah.imb.br`**. Dois bugs reais de produção achados e
+  corrigidos no processo (ambos ficam registrados em ARCHITECTURE.md — "Multi-tenancy"/"Deploy",
+  não só aqui): (1) `rootDomain()` calculava errado a raiz de domínios `.com.br` de 3 labels,
+  quebrando a resolução de tenant/plataforma; (2) alguns domínios `.br` de 2 labels são tratados
+  como *public suffix* pelo Chrome — o cookie de sessão com `Domain=` era rejeitado
+  silenciosamente em `casah.imb.br`, travando qualquer login lá em "Não foi possível carregar seu
+  perfil". Ver `README.md` — "Produção" pros links, e ROADMAP.md (Fase 0 + item "Domínio próprio
+  por tenant") pro que ainda falta virar self-serve de verdade.
+- **Identidade Visual da Plataforma (2026-08-31)** — favicon/logo/fundo configuráveis pelo
+  super_admin (`platform_settings`, bucket `platform-branding`), aplicados no login/console:
+  hero glassmórfico na tela de login, logo nos cabeçalhos, banner na lista de imobiliárias. Nav
+  da plataforma reorganizada (menu "Administração" agrupando Identidade Visual/Resetar
+  dados/Changelog, mesmo padrão do tenant). Ver bloco completo no CHANGELOG.md.
+- **Manual do Corretor — PDF (34 páginas) + página de treinamento web (2026-09-01).** PDF testado
+  contra o fluxo real (lead → negociação → reserva → proposta → venda → comissão, criado ao vivo
+  no tenant Casah pra garantir que as telas documentadas batem com o sistema). Página web
+  equivalente em `/treinamento`, habilitável por tenant (`tenants.training_enabled`, toggle em
+  Identidade Visual → Página pública). Capturas de tela em `public/training/` (26 imagens,
+  reaproveitadas do mesmo material do PDF). Ver bloco completo no CHANGELOG.md.
+- **"Resetar dados" (2026-09-01)** — `/resetar-dados`, só `tenant_admin`, senha reconferida no
+  servidor (Edge Function `reset-tenant-data` + função `reset_tenant_commercial_data`). Limpa o
+  funil comercial gerado em treinamento (com opção de incluir Anúncios), preservando cadastro.
+  Testado ao vivo em produção — achou e corrigiu 2 bugs reais (anúncio travando em
+  "Vendido"/"Reservado" depois do reset, trigger de validação de publicação bloqueando o revert de
+  status em dados de QA incompletos). Ver bloco completo no CHANGELOG.md.
 - **Property Story trocou de "deck panorâmico" pra "colagem" (2026-08-28), a pedido do usuário
   com imagem de referência, iterado bastante até fechar.** `property-type-section.tsx` +
   `property-story-variants.ts` + `property-gallery.tsx`: por imóvel, as fotos secundárias agora
@@ -66,20 +96,27 @@
   `tsc` do projeto nunca via esses arquivos mesmo). Precisa da extensão "Deno" instalada no VS
   Code pra funcionar de fato — não é algo que dá pra verificar/instalar por aqui.
 - **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
-  commitado e enviado (push sem pedir confirmação — permissão permanente do usuário).
+  commitado e enviado (push sem pedir confirmação — permissão permanente do usuário). Deploy
+  automático a cada push (Vercel, ver bloco de produção acima).
+- **Vercel:** projeto `place-hub1/placehub`. `VERCEL_ACCESS_TOKEN`/deploys via CLI (`npx vercel`)
+  autenticado nesta sessão via `vercel login` (device code) — token não persiste entre sessões,
+  uma sessão nova precisa logar de novo se for mexer em domínio/env vars por CLI (dá pra pedir pro
+  usuário, é rápido).
 - **Supabase:** projeto real em uso (`placehub.plataforma's Project`). Todas as migrations até
-  `20260825120000_announcement_agio_calculation.sql` aplicadas com sucesso via SQL Editor (CLI
-  ainda não autenticado neste ambiente — ver nota abaixo). Extensão **pg_cron habilitada** (passo
-  manual do usuário no painel, Database → Extensions) — job `funnel-expirations` rodando a cada
-  minuto.
-  Cinco Edge Functions no ar: `create-tenant-admin`, `invite-tenant-user`,
-  `update-tenant-user-email`, `reset-tenant-user-password` e `send-notification-email` (nova,
-  Fase 5). Secrets configurados nela: `RESEND_API_KEY`, `RESEND_FROM_EMAIL` =
-  `naoresponda@casah.imb.br` (domínio verificado no Resend é o do tenant de teste Casah,
-  `casah.imb.br` — **não** `placehub.app`, que ainda não foi verificado lá; ver nota em "Notas
-  técnicas" abaixo sobre a implicação disso pra multi-tenant). Buckets: `tenant-branding`,
-  `catalog-media` (Fase 2), `sale-documents` (Fase 3/4, comprovantes de pagamento e de repasse de
-  comissão, privado).
+  `20260901020000_reset_bypasses_publish_validation.sql` aplicadas com sucesso. **CLI autenticado
+  nesta sessão** via Personal Access Token que o usuário gerou em
+  `supabase.com/dashboard/account/tokens` (`SUPABASE_ACCESS_TOKEN` env var) — `supabase db push`
+  funciona direto depois disso; token também não persiste entre sessões (pedir um novo). Extensão
+  **pg_cron habilitada** (passo manual do usuário no painel, Database → Extensions) — job
+  `funnel-expirations` rodando a cada minuto.
+  Seis Edge Functions no ar: `create-tenant-admin`, `invite-tenant-user`,
+  `update-tenant-user-email`, `reset-tenant-user-password`, `send-notification-email` (Fase 5) e
+  `reset-tenant-data` (nova, 2026-09-01). Secrets configurados: `RESEND_API_KEY`,
+  `RESEND_FROM_EMAIL` = `naoresponda@casah.imb.br` (domínio verificado no Resend é o do tenant de
+  teste Casah — **não** o domínio da plataforma; ver nota em "Notas técnicas" abaixo sobre a
+  implicação disso pra multi-tenant, ainda vale mesmo agora que a plataforma tem domínio próprio
+  de verdade). Buckets: `tenant-branding`, `catalog-media` (Fase 2), `sale-documents` (Fase 3/4,
+  comprovantes, privado), `platform-branding` (2026-08-31, favicon/logo/fundo da plataforma).
 - **Fase 3 — Funil comercial: COMPLETA.** Leads + Agenda, Negociações, Propostas, Reservas e
   Vendas — todas testadas ponta a ponta contra o Supabase real. Branch de snapshot
   `fase-3-funil-comercial` criada. Ver bloco "Fase 3" logo abaixo.
@@ -512,6 +549,24 @@
     relatórios — todos testados ponta a ponta contra o Supabase real.
 
 ## Próximos passos imediatos
+
+**Sem pendência bloqueante desta sessão (2026-09-01).** App em produção, treinamento entregue
+(PDF + página web), reset de dados no ar — tudo testado ao vivo, nada quebrado conhecido. Se
+retomar, os itens reais em aberto são:
+- Preview deployments na Vercel (hoje só produção — Fase 0, ROADMAP.md).
+- CI de verdade (GitHub Actions com lint + typecheck + build em PR, não só o build da Vercel no
+  deploy — Fase 0).
+- `domínio próprio por tenant` virar self-serve de banco (hoje é manual, feito fora do produto
+  pra `casah.imb.br` — ver ARCHITECTURE.md/ROADMAP.md).
+- Storage cleanup no "Resetar dados" (fotos de anúncio/comprovantes ficam órfãs, avisado na
+  própria tela — não implementado por escopo desta rodada).
+- Testar de verdade o job de expiração automática (`funnel-expirations`) — pendência antiga, ainda
+  não observada expirando nada de fato.
+- Se o usuário mencionar `RESEND_FROM_EMAIL`/domínio de e-mail de novo: hoje todo e-mail do
+  sistema sai como `casah.imb.br` independente do tenant dono da ação (nota já registrada acima em
+  "Supabase" e detalhada mais abaixo).
+
+---
 
 **Fase 5 fechada de vez (2026-08-26), incluindo o redesign visual dos 4 templates.** Depois do
 fechamento inicial (função + 4 gatilhos testados com o envelope simples), o usuário pediu um

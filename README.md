@@ -10,6 +10,14 @@ o porquê de cada uma estão em [ARCHITECTURE.md](./ARCHITECTURE.md); o plano de
 [ROADMAP.md](./ROADMAP.md); o histórico de mudanças em [CHANGELOG.md](./CHANGELOG.md); e o
 estado atual do trabalho (onde paramos) em [CONTINUITY.md](./CONTINUITY.md).
 
+## Produção
+
+- Plataforma: [app.placehubapp.com.br](https://app.placehubapp.com.br) (apex redireciona pra lá).
+- Tenant de teste (Casah): [casah.placehubapp.com.br](https://casah.placehubapp.com.br) e também
+  em domínio próprio, [casah.imb.br](https://casah.imb.br).
+- Deploy automático a cada push em `trunk` (Vercel). Ver [ARCHITECTURE.md](./ARCHITECTURE.md) —
+  "Deploy" pra domínios/DNS e "Multi-tenancy" pro roteamento por subdomínio.
+
 ## Stack
 
 - **Front-end:** Vite + React 19 + TypeScript, Tailwind CSS v4, shadcn/ui, TanStack Query,

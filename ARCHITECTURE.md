@@ -22,34 +22,51 @@ dessas decisões.
 
 ## Multi-tenancy
 
-- Cada imobiliária (`tenant`) é servida em `{slug}.placehub.app`. A plataforma (super-admin)
-  fica em `app.placehub.app`. O domínio apex (`placehub.app`) redireciona para `app.`.
+- Cada imobiliária (`tenant`) é servida em `{slug}.{domínio raiz}`. A plataforma (super-admin)
+  fica em `app.{domínio raiz}`. O domínio apex redireciona (client-side) para `app.`. O domínio
+  raiz da plataforma é **`placehubapp.com.br`** (não `placehub.app` — já estava registrado por
+  terceiros quando chegou a hora do primeiro deploy real; ver "Deploy" abaixo). Um tenant também
+  pode ter **domínio próprio** servindo o mesmo deployment — hoje só `casah.imb.br`, configurado
+  manualmente (ver ROADMAP.md, item "Domínio próprio por tenant", pro que falta pra virar
+  self-serve).
 - A resolução de qual tenant está sendo servido é **client-side**: lê-se
   `window.location.hostname`, extrai o primeiro label e busca o tenant no Supabase. Não há
   Edge Middleware — a SPA é estática na Vercel, com domínio wildcard apontando para o mesmo
-  deployment.
+  deployment. Essa resolução é **agnóstica de qual domínio raiz está em jogo** — funciona igual
+  pra `placehubapp.com.br` e pra `imb.br`, sem hardcoded pra um específico (ver
+  `src/lib/hostname.ts`, `rootDomain()`/`subdomainLabel()`).
 - **Home pública vs. área logada**: a home do tenant (`/`) é **pública** — portal de anúncios
   (catálogo real chega na Fase 2; por enquanto é um placeholder), sem exigir login, com um botão
   "Entrar" levando para `/login`. A plataforma não tem conteúdo público (mesmo comportamento do
-  sistema anterior: `/plataforma` sempre foi só o login) — `app.placehub.app/` sem sessão
+  sistema anterior: `/plataforma` sempre foi só o login) — `app.{domínio raiz}/` sem sessão
   redireciona direto para `/login`. Rotas protegidas (`/dashboard`, `/tenants`, etc.) redirecionam
   para `/login` quando não há sessão, em vez de a aplicação inteira virar uma tela de login.
 - **Login único**: o mesmo formulário de login é servido em qualquer subdomínio. A sessão do
-  Supabase Auth usa um storage baseado em **cookie no domínio raiz** (`.placehub.app`, ver
+  Supabase Auth usa um storage baseado em **cookie no domínio raiz** (ver
   `src/lib/cookie-storage.ts`) em vez do `localStorage` padrão — assim, autenticar em
-  `app.placehub.app` também vale em `casah.placehub.app`, sem pedir login de novo. Pós-login,
-  o app lê o `profile` do usuário e redireciona: `tenant_id IS NULL` (role `super_admin`) →
-  console da plataforma; caso contrário → `{tenant.slug}.placehub.app/dashboard`.
-- O cookie compartilhado é só uma conveniência de SSO entre os *nossos* subdomínios — não
-  afeta o isolamento de dados, que é garantido pela RLS (abaixo), nem funciona em domínio
-  próprio de tenant (esse caso pede login de novo, é aceitável).
-- **Dev local:** o Chrome trata `localhost` como *public suffix* (proteção anti-supercookie) e
-  **rejeita silenciosamente** um cookie `Domain=.localhost` setado a partir de um subdomínio
-  (`app.localhost` → falha até para si mesmo, não só entre subdomínios). Isso não acontece em
-  produção com um domínio registrado de verdade. `cookie-storage.ts` detecta esse caso e usa
-  cookie host-only em `localhost` — login funciona normalmente em cada subdomínio, só o SSO
-  *entre* subdomínios não é testável via `*.localhost` puro (para isso, um domínio de dois
-  labels via hosts file, ex. `*.placehub.test`, seria necessário — não configurado ainda).
+  `app.placehubapp.com.br` também vale em `casah.placehubapp.com.br`, sem pedir login de novo.
+  Pós-login, o app lê o `profile` do usuário e redireciona: `tenant_id IS NULL` (role
+  `super_admin`) → console da plataforma; caso contrário → `{tenant.slug}.{domínio raiz}/dashboard`.
+- O cookie compartilhado é só uma conveniência de SSO entre os *nossos* subdomínios sob o mesmo
+  domínio raiz — não afeta o isolamento de dados, que é garantido pela RLS (abaixo). Um domínio
+  próprio de tenant (`casah.imb.br`) tem raiz diferente da plataforma, então não compartilha
+  sessão com ela (login de novo lá, é aceitável) — mas o login *dentro* desse domínio próprio
+  funciona normalmente (ver gotcha de cookie abaixo).
+- **Gotcha real (não só de dev local): alguns domínios raiz de 2 labels são tratados como
+  *public suffix* pelo navegador**, e um cookie `Domain=.{raiz}` setado a partir de um subdomínio
+  é **rejeitado silenciosamente** (nem host-only fica — o cookie simplesmente não é escrito).
+  Isso é bem conhecido pra `localhost` em dev (`app.localhost` → falha até pra si mesmo), mas
+  **também aconteceu em produção com `imb.br`** (2026-09-01): o Chrome recusou
+  `Domain=.imb.br`, o cookie de sessão nunca era persistido, e toda requisição seguinte ia só com
+  a *anon key* (sem usuário autenticado de verdade) — RLS de `profiles` retornava 0 linhas e a
+  tela travava em "Não foi possível carregar seu perfil" pra qualquer login em `casah.imb.br`.
+  Não dá pra prever de antemão quais domínios caem nessa lista (a Public Suffix List pública erra
+  pro lado oposto do que precisamos pra resolução de tenant — ver `hostname.ts`). Fix genérico,
+  não hardcoded a um domínio: `writeCookie()` (`cookie-storage.ts`) escreve com `Domain=`, **lê de
+  volta pra confirmar que colou**, e cai pra cookie host-only se não colou — login local naquele
+  domínio funciona normalmente, só não tem SSO entre subdomínios dele (irrelevante pra domínio
+  próprio de tenant, que não tem outros subdomínios mesmo). `removeCookie()` limpa as duas
+  variantes possíveis, já que não dá pra saber qual delas ficou de pé sem tentar as duas.
 
 ## Isolamento de dados (segurança)
 
@@ -76,9 +93,34 @@ policies. Ver `supabase/migrations/20260822004432_init_platform_schema.sql`.
 
 ## Storage
 
-Três buckets, cada um já nascendo com a política de acesso certa: `tenant-branding` (logos,
-leitura pública), `property-photos` (leitura pública), `sale-documents` (comprovantes/recibos,
-**privado**, só URL assinada).
+Buckets, cada um já nascendo com a política de acesso certa (`storage.foldername(name))[1]` =
+`tenant_id`, exceto `platform-branding`, que é global): `tenant-branding` (logos/favicon/fundo do
+tenant, leitura pública), `catalog-media` (fotos de corretor e galeria de anúncio, leitura
+pública, 5 MB/arquivo), `sale-documents` (comprovantes de pagamento/repasse de comissão,
+**privado**, só quem tem permissão `sales`/`commissions`), `platform-branding` (favicon/logo/fundo
+da plataforma, singleton, leitura pública, escrita só `super_admin`).
+
+## Deploy
+
+- **Vercel** (`place-hub1/placehub`, projeto conectado ao GitHub, deploy automático a cada push em
+  `trunk`). `vercel.json` com rewrite de SPA (`/(.*) → /index.html`) — sem isso, qualquer rota
+  além de `/` dá 404 direto da Vercel num load/refresh (React Router só resolve client-side).
+- **Domínio raiz da plataforma:** `placehubapp.com.br` (apex + `*.placehubapp.com.br`), DNS pela
+  própria Vercel (nameservers `ns1`/`ns2.vercel-dns.com` — precisou trocar pra isso: um provedor
+  terceiro (Cloudflare) com registro A resolve o tráfego normal, mas a Vercel só consegue emitir
+  **certificado wildcard** automaticamente se for ela mesma a autoridade DNS, porque isso exige
+  challenge ACME `dns-01` — não dá certo via `http-01`, que é o único que funciona com DNS de
+  terceiro). Variáveis `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` configuradas em
+  Production/Preview/Development na Vercel (não só `.env.local`).
+- **Domínio próprio do tenant Casah:** `casah.imb.br`, atrelado ao mesmo projeto Vercel. Mesmo
+  motivo do wildcard acima se aplicou aqui também — precisou apontar o domínio inteiro pra Vercel
+  (não só um registro A) pra funcionar de verdade com HTTPS.
+- **Gotcha de registrador:** o painel "DNS simples" do registro.br (inclusive o modo "avançado" da
+  própria interface deles) rejeita `*` como nome de registro pra wildcard, mesmo sendo uma entrada
+  de DNS totalmente válida — não tem workaround pela interface deles. Resolvido apontando os
+  nameservers do domínio pra Vercel em vez de tentar cadastrar o registro manualmente lá.
+- Ver "Multi-tenancy" acima pro porquê do domínio raiz não ser `placehub.app` (já registrado por
+  terceiros) e pro gotcha de cookie de sessão que apareceu com `imb.br`.
 
 ## Regras de negócio que viram constraint/trigger, não só validação de UI
 
