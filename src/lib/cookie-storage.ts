@@ -31,22 +31,37 @@ function readCookie(name: string): string | null {
 
 function writeCookie(name: string, value: string): void {
   const domain = cookieDomain()
-  const parts = [
+  const common = [
     `${name}=${encodeURIComponent(value)}`,
     'Path=/',
     `Max-Age=${COOKIE_MAX_AGE_SECONDS}`,
     'SameSite=Lax',
   ]
-  if (domain) parts.push(`Domain=${domain}`)
-  if (window.location.protocol === 'https:') parts.push('Secure')
-  document.cookie = parts.join('; ')
+  if (window.location.protocol === 'https:') common.push('Secure')
+
+  if (domain) {
+    document.cookie = [...common, `Domain=${domain}`].join('; ')
+    // Alguns domínios raiz de 2 labels (ex: certos .br) ainda são tratados
+    // pelo navegador como "public suffix" — mesmo caso do `.localhost` já
+    // documentado acima, só que sem dar pra prever antecipadamente quais
+    // (a lista pública trata todo *.br como sufixo, o que erra pro lado
+    // oposto do nosso roteamento — ver hostname.ts). O navegador REJEITA
+    // silenciosamente um `Domain=` assim: confirma se colou e, se não,
+    // cai pra cookie host-only (funciona pro próprio domínio, só não daria
+    // SSO entre subdomínios dele — não é o caso de domínio próprio de
+    // tenant, que não tem outros subdomínios mesmo).
+    if (readCookie(name) === value) return
+  }
+  document.cookie = common.join('; ')
 }
 
 function removeCookie(name: string): void {
   const domain = cookieDomain()
-  const parts = [`${name}=`, 'Path=/', 'Max-Age=0']
-  if (domain) parts.push(`Domain=${domain}`)
-  document.cookie = parts.join('; ')
+  const base = [`${name}=`, 'Path=/', 'Max-Age=0']
+  // Remove as duas variantes possíveis (host-only e Domain=) sem saber qual
+  // delas ficou de pé de fato — a que não existir é um no-op inofensivo.
+  document.cookie = base.join('; ')
+  if (domain) document.cookie = [...base, `Domain=${domain}`].join('; ')
 }
 
 export const cookieStorage = {
