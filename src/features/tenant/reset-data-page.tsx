@@ -21,7 +21,7 @@ const SCOPES: {
     value: 'funnel',
     title: 'Funil comercial',
     description:
-      'Apaga Leads, Negociações, Propostas, Reservas, Vendas e Comissões de toda a imobiliária. Anúncios, Corretores e Usuários continuam intactos.',
+      'Apaga Leads, Negociações, Propostas, Reservas, Vendas e Comissões de toda a imobiliária. Anúncios, Corretores e Usuários continuam intactos (anúncios "Vendido"/"Reservado" voltam a "Publicado", já que a venda/reserva que justificava isso deixa de existir).',
     risk: 'Isso remove QUALQUER lead, negociação, proposta, reserva, venda e comissão da imobiliária — não só as geradas em treinamento. Fotos de anúncios continuam no ar; comprovantes já enviados (recibos de parcela, repasse) ficam órfãos no armazenamento, mas não aparecem mais em lugar nenhum do sistema.',
     riskLevel: 'default',
   },
