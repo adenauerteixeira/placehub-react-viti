@@ -3,8 +3,9 @@ import { Pencil, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useDevelopments, type Development } from './api'
 import { DevelopmentFormDialog } from './development-form-dialog'
@@ -12,10 +13,54 @@ import { DEVELOPMENT_STATUS_LABELS, DEVELOPMENT_STATUS_VARIANT, DEVELOPMENT_TYPE
 
 export function DevelopmentsListPage() {
   const { tenant } = useTenantOutletContext()
-  const { data: developments, isLoading, isError } = useDevelopments(tenant.id)
+  const { data: developments, isLoading, isError, refetch } = useDevelopments(tenant.id)
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editing, setEditing] = useState<Development | null>(null)
+
+  const columns: DataTableColumn<Development>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Nome',
+      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    },
+    {
+      id: 'type',
+      accessorFn: (row) => DEVELOPMENT_TYPE_LABELS[row.type],
+      header: 'Tipo',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      accessorKey: 'developer',
+      header: 'Incorporadora',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{row.original.developer || '—'}</span>
+      ),
+    },
+    {
+      id: 'status',
+      accessorFn: (row) => DEVELOPMENT_STATUS_LABELS[row.status],
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={DEVELOPMENT_STATUS_VARIANT[row.original.status]}>
+          {DEVELOPMENT_STATUS_LABELS[row.original.status]}
+        </Badge>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Button variant="ghost" size="icon" aria-label="Editar" onClick={() => setEditing(row.original)}>
+            <Pencil className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <Card>
@@ -31,53 +76,18 @@ export function DevelopmentsListPage() {
         {isLoading && <Skeleton className="h-40 w-full" />}
 
         {isError && (
-          <p className="text-destructive text-sm">Não foi possível carregar os empreendimentos.</p>
+          <ErrorState
+            title="Não foi possível carregar os empreendimentos."
+            onRetry={() => refetch()}
+          />
         )}
 
         {developments && developments.length === 0 && (
-          <p className="text-muted-foreground text-sm">Nenhum empreendimento cadastrado ainda.</p>
+          <EmptyState title="Nenhum empreendimento cadastrado ainda." />
         )}
 
         {developments && developments.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Incorporadora</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {developments.map((development) => (
-                <TableRow key={development.id}>
-                  <TableCell className="font-medium">{development.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {DEVELOPMENT_TYPE_LABELS[development.type]}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {development.developer || '—'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={DEVELOPMENT_STATUS_VARIANT[development.status]}>
-                      {DEVELOPMENT_STATUS_LABELS[development.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Editar"
-                      onClick={() => setEditing(development)}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={developments} searchPlaceholder="Buscar por nome..." />
         )}
       </CardContent>
 

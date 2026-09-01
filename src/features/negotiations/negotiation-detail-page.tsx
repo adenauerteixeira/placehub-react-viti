@@ -20,6 +20,7 @@ import { ProposalList } from '@/features/proposals/proposal-list'
 import { useActiveReservationForAnnouncement } from '@/features/reservations/api'
 import { ReserveDialog } from '@/features/reservations/reserve-dialog'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
+import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
 import { useNegotiation, useUpdateNegotiation, type NegotiationStatus } from './api'
 import { NEGOTIATION_STATUS_LABELS, NEGOTIATION_STATUS_VARIANT } from './labels'
@@ -47,6 +48,7 @@ export function NegotiationDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { tenant } = useTenantOutletContext()
   const [reserving, setReserving] = useState(false)
+  const { confirmWithReason } = useConfirm()
 
   const { data: negotiation, isLoading, isError } = useNegotiation(id)
   const { data: lead } = useLead(negotiation?.lead_id)
@@ -104,7 +106,14 @@ export function NegotiationDetailPage() {
   async function handleStatusChange(status: NegotiationStatus) {
     let lost_reason: string | undefined
     if (status === 'lost') {
-      lost_reason = window.prompt('Motivo da perda (opcional):') ?? ''
+      const reason = await confirmWithReason({
+        title: 'Marcar negociação como perdida',
+        reasonLabel: 'Motivo (opcional)',
+        reasonPlaceholder: 'Por que essa negociação foi perdida?',
+        confirmLabel: 'Marcar como perdida',
+      })
+      if (reason === null) return
+      lost_reason = reason
     }
     try {
       await updateNegotiation.mutateAsync({

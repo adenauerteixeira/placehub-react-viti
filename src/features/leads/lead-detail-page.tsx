@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useBrokers } from '@/features/brokers/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
+import { useConfirm } from '@/hooks/use-confirm'
 import { capitalizeName } from '@/lib/capitalize'
 import { errorMessage } from '@/lib/errors'
 import { useDeleteLead, useLead, useLeadFollowUps, useUpdateLead, type LeadSource, type LeadStatus } from './api'
@@ -44,6 +45,7 @@ export function LeadDetailPage() {
   const navigate = useNavigate()
   const { tenant } = useTenantOutletContext()
   const [scheduleOpen, setScheduleOpen] = useState(false)
+  const { confirm } = useConfirm()
 
   const { data: lead, isLoading, isError } = useLead(id)
   const { data: followUps } = useLeadFollowUps(id)
@@ -116,7 +118,13 @@ export function LeadDetailPage() {
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Excluir o lead "${lead!.name}"? Essa ação não pode ser desfeita.`)) return
+    const confirmed = await confirm({
+      title: `Excluir o lead "${lead!.name}"?`,
+      description: 'Essa ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      variant: 'destructive',
+    })
+    if (!confirmed) return
     try {
       await deleteLead.mutateAsync(lead!.id)
       toast.success('Lead excluído.')

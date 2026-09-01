@@ -4,9 +4,10 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDocument } from '@/lib/cpf-cnpj'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { usePartners, useTogglePartnerActive, type Partner } from './api'
@@ -15,7 +16,7 @@ import { errorMessage } from '@/lib/errors'
 
 export function PartnersListPage() {
   const { tenant } = useTenantOutletContext()
-  const { data: partners, isLoading, isError } = usePartners(tenant.id)
+  const { data: partners, isLoading, isError, refetch } = usePartners(tenant.id)
   const toggleActive = useTogglePartnerActive(tenant.id)
 
   const [createOpen, setCreateOpen] = useState(false)
@@ -32,6 +33,64 @@ export function PartnersListPage() {
     }
   }
 
+  const columns: DataTableColumn<Partner>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Nome',
+      cell: ({ row }) => (
+        <span className="font-medium">
+          {row.original.name}{' '}
+          <span className="text-muted-foreground font-normal">({row.original.person_type})</span>
+        </span>
+      ),
+    },
+    {
+      id: 'document',
+      accessorFn: (row) => (row.document ? formatDocument(row.person_type, row.document) : '—'),
+      header: 'Documento',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      id: 'contact',
+      accessorFn: (row) => row.phone || row.email || '—',
+      header: 'Contato',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      id: 'active',
+      accessorFn: (row) => (row.active ? 'Ativo' : 'Inativo'),
+      header: 'Status',
+      cell: ({ row }) => {
+        const partner = row.original
+        return (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={partner.active}
+              onCheckedChange={(checked) => handleToggleActive(partner, checked)}
+              aria-label={partner.active ? 'Desativar parceiro' : 'Ativar parceiro'}
+            />
+            <Badge variant={partner.active ? 'default' : 'secondary'}>
+              {partner.active ? 'Ativo' : 'Inativo'}
+            </Badge>
+          </div>
+        )
+      },
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Button variant="ghost" size="icon" aria-label="Editar" onClick={() => setEditing(row.original)}>
+            <Pencil className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
   return (
     <Card>
       <CardHeader>
@@ -45,62 +104,14 @@ export function PartnersListPage() {
       <CardContent>
         {isLoading && <Skeleton className="h-40 w-full" />}
 
-        {isError && <p className="text-destructive text-sm">Não foi possível carregar os parceiros.</p>}
-
-        {partners && partners.length === 0 && (
-          <p className="text-muted-foreground text-sm">Nenhum parceiro cadastrado ainda.</p>
+        {isError && (
+          <ErrorState title="Não foi possível carregar os parceiros." onRetry={() => refetch()} />
         )}
 
+        {partners && partners.length === 0 && <EmptyState title="Nenhum parceiro cadastrado ainda." />}
+
         {partners && partners.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Documento</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {partners.map((partner) => (
-                <TableRow key={partner.id}>
-                  <TableCell className="font-medium">
-                    {partner.name}{' '}
-                    <span className="text-muted-foreground font-normal">({partner.person_type})</span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {partner.document ? formatDocument(partner.person_type, partner.document) : '—'}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {partner.phone || partner.email || '—'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={partner.active}
-                        onCheckedChange={(checked) => handleToggleActive(partner, checked)}
-                        aria-label={partner.active ? 'Desativar parceiro' : 'Ativar parceiro'}
-                      />
-                      <Badge variant={partner.active ? 'default' : 'secondary'}>
-                        {partner.active ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Editar"
-                      onClick={() => setEditing(partner)}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={partners} searchPlaceholder="Buscar por nome, documento..." />
         )}
       </CardContent>
 

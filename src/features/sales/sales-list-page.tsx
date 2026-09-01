@@ -3,12 +3,13 @@ import { Eye } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useSales } from './api'
+import { useSales, type Sale } from './api'
 import { SALE_STATUS_LABELS, SALE_STATUS_VARIANT } from './labels'
 
 function formatPrice(value: number) {
@@ -22,12 +23,69 @@ function formatDate(value: string) {
 export function SalesListPage() {
   const navigate = useNavigate()
   const { tenant } = useTenantOutletContext()
-  const { data: sales, isLoading, isError } = useSales(tenant.id)
+  const { data: sales, isLoading, isError, refetch } = useSales(tenant.id)
   const { data: announcements } = useAnnouncements(tenant.id)
   const { data: brokers } = useBrokers(tenant.id)
 
   const announcementTitle = (id: string | null) => announcements?.find((a) => a.id === id)?.title ?? '—'
   const brokerName = (id: string | null) => brokers?.find((b) => b.id === id)?.name ?? '—'
+
+  const columns: DataTableColumn<Sale>[] = [
+    {
+      id: 'announcement',
+      accessorFn: (row) => announcementTitle(row.announcement_id),
+      header: 'Anúncio',
+      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    },
+    {
+      id: 'broker',
+      accessorFn: (row) => brokerName(row.broker_id),
+      header: 'Corretor',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      accessorKey: 'amount',
+      header: 'Valor',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{formatPrice(row.original.amount)}</span>
+      ),
+    },
+    {
+      id: 'status',
+      accessorFn: (row) => SALE_STATUS_LABELS[row.status],
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={SALE_STATUS_VARIANT[row.original.status]}>
+          {SALE_STATUS_LABELS[row.original.status]}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'sold_at',
+      header: 'Vendido em',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{formatDate(row.original.sold_at)}</span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Ver detalhes"
+            onClick={() => navigate(`/sales/${row.original.id}`)}
+          >
+            <Eye className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <Card>
@@ -36,48 +94,15 @@ export function SalesListPage() {
       </CardHeader>
       <CardContent>
         {isLoading && <Skeleton className="h-40 w-full" />}
-        {isError && <p className="text-destructive text-sm">Não foi possível carregar as vendas.</p>}
+        {isError && <ErrorState title="Não foi possível carregar as vendas." onRetry={() => refetch()} />}
         {sales && sales.length === 0 && (
-          <p className="text-muted-foreground text-sm">
-            Nenhuma venda ainda — feche uma venda a partir de uma proposta aceita, no hub da negociação.
-          </p>
+          <EmptyState
+            title="Nenhuma venda ainda"
+            description="Feche uma venda a partir de uma proposta aceita, no hub da negociação."
+          />
         )}
         {sales && sales.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Anúncio</TableHead>
-                <TableHead>Corretor</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Vendido em</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sales.map((sale) => (
-                <TableRow key={sale.id}>
-                  <TableCell className="font-medium">{announcementTitle(sale.announcement_id)}</TableCell>
-                  <TableCell className="text-muted-foreground">{brokerName(sale.broker_id)}</TableCell>
-                  <TableCell className="text-muted-foreground">{formatPrice(sale.amount)}</TableCell>
-                  <TableCell>
-                    <Badge variant={SALE_STATUS_VARIANT[sale.status]}>{SALE_STATUS_LABELS[sale.status]}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(sale.sold_at)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Ver detalhes"
-                      onClick={() => navigate(`/sales/${sale.id}`)}
-                    >
-                      <Eye className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={sales} searchPlaceholder="Buscar por anúncio, corretor..." />
         )}
       </CardContent>
     </Card>

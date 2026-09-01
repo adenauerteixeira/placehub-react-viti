@@ -4,13 +4,14 @@ import { Eye, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
 import { useLeads } from '@/features/leads/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useNegotiations } from './api'
+import { useNegotiations, type Negotiation } from './api'
 import { NegotiationFormDialog } from './negotiation-form-dialog'
 import { NEGOTIATION_STATUS_LABELS, NEGOTIATION_STATUS_VARIANT } from './labels'
 
@@ -21,7 +22,7 @@ function formatDate(value: string) {
 export function NegotiationsListPage() {
   const navigate = useNavigate()
   const { tenant } = useTenantOutletContext()
-  const { data: negotiations, isLoading, isError } = useNegotiations(tenant.id)
+  const { data: negotiations, isLoading, isError, refetch } = useNegotiations(tenant.id)
   const { data: leads } = useLeads(tenant.id)
   const { data: announcements } = useAnnouncements(tenant.id)
   const { data: brokers } = useBrokers(tenant.id)
@@ -30,6 +31,62 @@ export function NegotiationsListPage() {
   const leadName = (id: string) => leads?.find((l) => l.id === id)?.name ?? '—'
   const announcementTitle = (id: string | null) => announcements?.find((a) => a.id === id)?.title ?? '—'
   const brokerName = (id: string | null) => brokers?.find((b) => b.id === id)?.name ?? '—'
+
+  const columns: DataTableColumn<Negotiation>[] = [
+    {
+      id: 'lead',
+      accessorFn: (row) => leadName(row.lead_id),
+      header: 'Lead',
+      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    },
+    {
+      id: 'announcement',
+      accessorFn: (row) => announcementTitle(row.announcement_id),
+      header: 'Anúncio',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      id: 'broker',
+      accessorFn: (row) => brokerName(row.broker_id),
+      header: 'Corretor',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      id: 'status',
+      accessorFn: (row) => NEGOTIATION_STATUS_LABELS[row.status],
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={NEGOTIATION_STATUS_VARIANT[row.original.status]}>
+          {NEGOTIATION_STATUS_LABELS[row.original.status]}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'created_at',
+      header: 'Criada em',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{formatDate(row.original.created_at)}</span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Ver detalhes"
+            onClick={() => navigate(`/negotiations/${row.original.id}`)}
+          >
+            <Eye className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <Card>
@@ -43,50 +100,14 @@ export function NegotiationsListPage() {
       </CardHeader>
       <CardContent>
         {isLoading && <Skeleton className="h-40 w-full" />}
-        {isError && <p className="text-destructive text-sm">Não foi possível carregar as negociações.</p>}
+        {isError && (
+          <ErrorState title="Não foi possível carregar as negociações." onRetry={() => refetch()} />
+        )}
         {negotiations && negotiations.length === 0 && (
-          <p className="text-muted-foreground text-sm">Nenhuma negociação cadastrada ainda.</p>
+          <EmptyState title="Nenhuma negociação cadastrada ainda." />
         )}
         {negotiations && negotiations.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Lead</TableHead>
-                <TableHead>Anúncio</TableHead>
-                <TableHead>Corretor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Criada em</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {negotiations.map((negotiation) => (
-                <TableRow key={negotiation.id}>
-                  <TableCell className="font-medium">{leadName(negotiation.lead_id)}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {announcementTitle(negotiation.announcement_id)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{brokerName(negotiation.broker_id)}</TableCell>
-                  <TableCell>
-                    <Badge variant={NEGOTIATION_STATUS_VARIANT[negotiation.status]}>
-                      {NEGOTIATION_STATUS_LABELS[negotiation.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(negotiation.created_at)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Ver detalhes"
-                      onClick={() => navigate(`/negotiations/${negotiation.id}`)}
-                    >
-                      <Eye className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={negotiations} searchPlaceholder="Buscar por lead, anúncio..." />
         )}
       </CardContent>
 

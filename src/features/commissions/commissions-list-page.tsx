@@ -3,13 +3,14 @@ import { Eye } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
 import { useSales } from '@/features/sales/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useCommissions } from './api'
+import { useCommissions, type Commission } from './api'
 import { COMMISSION_STATUS_LABELS, COMMISSION_STATUS_VARIANT } from './labels'
 
 function formatPrice(value: number) {
@@ -23,7 +24,7 @@ function formatDate(value: string) {
 export function CommissionsListPage() {
   const navigate = useNavigate()
   const { tenant } = useTenantOutletContext()
-  const { data: commissions, isLoading, isError } = useCommissions(tenant.id)
+  const { data: commissions, isLoading, isError, refetch } = useCommissions(tenant.id)
   const { data: sales } = useSales(tenant.id)
   const { data: announcements } = useAnnouncements(tenant.id)
   const { data: brokers } = useBrokers(tenant.id)
@@ -34,6 +35,63 @@ export function CommissionsListPage() {
   }
   const brokerName = (id: string | null) => brokers?.find((b) => b.id === id)?.name ?? '—'
 
+  const columns: DataTableColumn<Commission>[] = [
+    {
+      id: 'announcement',
+      accessorFn: (row) => announcementTitle(row.sale_id),
+      header: 'Anúncio',
+      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    },
+    {
+      id: 'broker',
+      accessorFn: (row) => brokerName(row.broker_id),
+      header: 'Corretor',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      accessorKey: 'gross_amount',
+      header: 'Valor bruto',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{formatPrice(row.original.gross_amount)}</span>
+      ),
+    },
+    {
+      id: 'status',
+      accessorFn: (row) => COMMISSION_STATUS_LABELS[row.status],
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={COMMISSION_STATUS_VARIANT[row.original.status]}>
+          {COMMISSION_STATUS_LABELS[row.original.status]}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'created_at',
+      header: 'Criada em',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{formatDate(row.original.created_at)}</span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Ver detalhes"
+            onClick={() => navigate(`/commissions/${row.original.id}`)}
+          >
+            <Eye className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
   return (
     <Card>
       <CardHeader>
@@ -41,50 +99,17 @@ export function CommissionsListPage() {
       </CardHeader>
       <CardContent>
         {isLoading && <Skeleton className="h-40 w-full" />}
-        {isError && <p className="text-destructive text-sm">Não foi possível carregar as comissões.</p>}
+        {isError && (
+          <ErrorState title="Não foi possível carregar as comissões." onRetry={() => refetch()} />
+        )}
         {commissions && commissions.length === 0 && (
-          <p className="text-muted-foreground text-sm">
-            Nenhuma comissão ainda — elas são geradas automaticamente ao fechar uma venda.
-          </p>
+          <EmptyState
+            title="Nenhuma comissão ainda"
+            description="Elas são geradas automaticamente ao fechar uma venda."
+          />
         )}
         {commissions && commissions.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Anúncio</TableHead>
-                <TableHead>Corretor</TableHead>
-                <TableHead>Valor bruto</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Criada em</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {commissions.map((commission) => (
-                <TableRow key={commission.id}>
-                  <TableCell className="font-medium">{announcementTitle(commission.sale_id)}</TableCell>
-                  <TableCell className="text-muted-foreground">{brokerName(commission.broker_id)}</TableCell>
-                  <TableCell className="text-muted-foreground">{formatPrice(commission.gross_amount)}</TableCell>
-                  <TableCell>
-                    <Badge variant={COMMISSION_STATUS_VARIANT[commission.status]}>
-                      {COMMISSION_STATUS_LABELS[commission.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(commission.created_at)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Ver detalhes"
-                      onClick={() => navigate(`/commissions/${commission.id}`)}
-                    >
-                      <Eye className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={commissions} searchPlaceholder="Buscar por anúncio, corretor..." />
         )}
       </CardContent>
     </Card>

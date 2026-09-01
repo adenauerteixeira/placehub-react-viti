@@ -5,6 +5,54 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Refinamento de UX/UI — Fase 2: busca/ordenação/paginação nas listagens, 2026-09-01)
+
+- **`DataTable`** (`src/components/data-table.tsx`), componente reutilizável de listagem — busca
+  global, ordenação por coluna (clique no cabeçalho) e paginação, tudo client-side (os dados já
+  vêm inteiros do Supabase, sem paginação no servidor). Construído sobre `@tanstack/react-table`,
+  que já era a escolha documentada em ARCHITECTURE.md — mas o pacote instalado é a **v9**, cuja API
+  padrão (`useTable`) é baseada em atoms/store e bem diferente da v8 clássica que a maioria dos
+  exemplos/shadcn assume. Em vez de arriscar uma implementação numa arquitetura experimental para
+  uma tarefa de UI de baixo risco, usei a camada de compatibilidade oficial
+  `@tanstack/react-table/legacy` (`useLegacyTable` + `getCoreRowModel`/`getSortedRowModel`/
+  `getFilteredRowModel`/`getPaginationRowModel`, API idêntica à v8). Ver nota em ARCHITECTURE.md.
+- **Aplicado em 12 listagens**: anúncios, leads, imobiliárias (console da plataforma), corretores,
+  proprietários, parceiros, empreendimentos, reservas, negociações, vendas, comissões, usuários do
+  tenant — cada uma mantendo sua renderização custom por coluna (badges de status, avatar do
+  corretor, preço formatado, switch de ativo/inativo), só reorganizada em `column defs` do
+  TanStack. Nenhuma regra de negócio mudou, só a apresentação da tabela.
+- **Deixados de fora, deliberadamente**: lista de propostas (`proposal-list.tsx`, embutida numa
+  aba do hub de negociação, tipicamente poucos itens — busca ali seria ruído) e Relatórios
+  (`reports-page.tsx`, que usa `window.print()`; paginar cortaria linhas do PDF/impressão,
+  quebrando a função de imprimir o relatório completo — já tem filtros próprios de
+  tipo/período/corretor/status que cobrem a necessidade de recorte).
+
+### Adicionado (Refinamento de UX/UI — Fase 1: fundação de componentes, 2026-09-01)
+
+Início de uma iniciativa de refinamento visual/UX pedida pelo usuário (diagnóstico completo do
+app, problemas priorizados por impacto, depois evolução em fases preservando toda regra de
+negócio existente). Primeira fase: componentes de base reutilizáveis, sem tocar em fluxos.
+
+- **`useConfirm()`** (`src/hooks/use-confirm.tsx`, `ConfirmProvider` montado em `main.tsx`)
+  substitui todo `window.confirm`/`window.prompt` do app por um `AlertDialog` estilizado (tema,
+  cores, radius do sistema) — eram 8 pontos: excluir anúncio (lista e formulário), excluir lead,
+  excluir proposta, cancelar venda, cancelar reserva, marcar negociação como perdida, resetar
+  dados. **Duas mudanças de comportamento, não só visuais**, feitas de propósito porque a troca
+  expôs a inconsistência: cancelar reserva não tinha nenhuma confirmação real antes (o prompt de
+  motivo era só cosmético — clicar "Cancelar" no popup nativo cancelava a reserva do mesmo jeito);
+  e marcar negociação como "perdida" prosseguia mesmo cancelando o prompt de motivo. Agora, nos
+  dois casos, clicar "Cancelar" no diálogo aborta a ação de verdade.
+- **Menu mobile** (`src/components/mobile-nav.tsx`, `Sheet` lateral) no header do tenant e da
+  plataforma — antes a navegação horizontal simplesmente não tinha nenhum tratamento pra telas
+  estreitas (sem hambúrguer, sem `overflow`/`flex-wrap`), ficando inutilizável em tablet/celular.
+- **`EmptyState`/`ErrorState`** (`src/components/list-state.tsx`) padronizam os estados vazio/erro
+  em 15 listagens — o erro agora sempre tem botão "Tentar novamente" (`refetch` do TanStack
+  Query), que não existia antes (usuário travava sem opção além de recarregar a página inteira).
+- Primitivas shadcn novas instaladas: `alert-dialog`, `sheet`, `alert`.
+- Validado com `tsc -b`/`oxlint` limpos e testes ao vivo (login real, tenant Casah e console da
+  plataforma) via automação de navegador: menu mobile abrindo nos dois contextos, diálogo de
+  confirmação de exclusão, empty state de listagem — zero erro de console.
+
 ### Corrigido (Property Story — foto de capa clicável e navegação de volta, 2026-08-28)
 
 - **Foto de capa da home animada agora é um link** pro anúncio (mesmo destino do botão "Ver

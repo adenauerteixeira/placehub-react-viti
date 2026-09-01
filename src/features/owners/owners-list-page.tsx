@@ -4,9 +4,10 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDocument } from '@/lib/cpf-cnpj'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useOwners, useToggleOwnerActive, type Owner } from './api'
@@ -15,7 +16,7 @@ import { errorMessage } from '@/lib/errors'
 
 export function OwnersListPage() {
   const { tenant } = useTenantOutletContext()
-  const { data: owners, isLoading, isError } = useOwners(tenant.id)
+  const { data: owners, isLoading, isError, refetch } = useOwners(tenant.id)
   const toggleActive = useToggleOwnerActive(tenant.id)
 
   const [createOpen, setCreateOpen] = useState(false)
@@ -32,6 +33,64 @@ export function OwnersListPage() {
     }
   }
 
+  const columns: DataTableColumn<Owner>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Nome',
+      cell: ({ row }) => (
+        <span className="font-medium">
+          {row.original.name}{' '}
+          <span className="text-muted-foreground font-normal">({row.original.person_type})</span>
+        </span>
+      ),
+    },
+    {
+      id: 'document',
+      accessorFn: (row) => (row.document ? formatDocument(row.person_type, row.document) : '—'),
+      header: 'Documento',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      id: 'contact',
+      accessorFn: (row) => row.phone || row.email || '—',
+      header: 'Contato',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      id: 'active',
+      accessorFn: (row) => (row.active ? 'Ativo' : 'Inativo'),
+      header: 'Status',
+      cell: ({ row }) => {
+        const owner = row.original
+        return (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={owner.active}
+              onCheckedChange={(checked) => handleToggleActive(owner, checked)}
+              aria-label={owner.active ? 'Desativar proprietário' : 'Ativar proprietário'}
+            />
+            <Badge variant={owner.active ? 'default' : 'secondary'}>
+              {owner.active ? 'Ativo' : 'Inativo'}
+            </Badge>
+          </div>
+        )
+      },
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Button variant="ghost" size="icon" aria-label="Editar" onClick={() => setEditing(row.original)}>
+            <Pencil className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
   return (
     <Card>
       <CardHeader>
@@ -45,62 +104,14 @@ export function OwnersListPage() {
       <CardContent>
         {isLoading && <Skeleton className="h-40 w-full" />}
 
-        {isError && <p className="text-destructive text-sm">Não foi possível carregar os proprietários.</p>}
-
-        {owners && owners.length === 0 && (
-          <p className="text-muted-foreground text-sm">Nenhum proprietário cadastrado ainda.</p>
+        {isError && (
+          <ErrorState title="Não foi possível carregar os proprietários." onRetry={() => refetch()} />
         )}
 
+        {owners && owners.length === 0 && <EmptyState title="Nenhum proprietário cadastrado ainda." />}
+
         {owners && owners.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Documento</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {owners.map((owner) => (
-                <TableRow key={owner.id}>
-                  <TableCell className="font-medium">
-                    {owner.name}{' '}
-                    <span className="text-muted-foreground font-normal">({owner.person_type})</span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {owner.document ? formatDocument(owner.person_type, owner.document) : '—'}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {owner.phone || owner.email || '—'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={owner.active}
-                        onCheckedChange={(checked) => handleToggleActive(owner, checked)}
-                        aria-label={owner.active ? 'Desativar proprietário' : 'Ativar proprietário'}
-                      />
-                      <Badge variant={owner.active ? 'default' : 'secondary'}>
-                        {owner.active ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Editar"
-                      onClick={() => setEditing(owner)}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={owners} searchPlaceholder="Buscar por nome, documento..." />
         )}
       </CardContent>
 

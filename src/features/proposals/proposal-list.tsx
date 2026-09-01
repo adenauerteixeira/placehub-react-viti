@@ -4,8 +4,10 @@ import { Handshake, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
 import { useSaleByNegotiation } from '@/features/sales/api'
 import { SaleFormDialog } from '@/features/sales/sale-form-dialog'
@@ -29,15 +31,22 @@ export function ProposalList({
   negotiationId: string
   reservationId?: string | null
 }) {
-  const { data: proposals, isLoading, isError } = useProposalsByNegotiation(negotiationId)
+  const { data: proposals, isLoading, isError, refetch } = useProposalsByNegotiation(negotiationId)
   const { data: existingSale } = useSaleByNegotiation(negotiationId)
   const deleteProposal = useDeleteProposal(negotiationId)
   const [createOpen, setCreateOpen] = useState(false)
   const [editing, setEditing] = useState<Proposal | null>(null)
   const [closingSaleFor, setClosingSaleFor] = useState<Proposal | null>(null)
+  const { confirm } = useConfirm()
 
   async function handleDelete(proposal: Proposal) {
-    if (!window.confirm('Excluir esta proposta?')) return
+    const confirmed = await confirm({
+      title: 'Excluir esta proposta?',
+      description: 'Essa ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      variant: 'destructive',
+    })
+    if (!confirmed) return
     try {
       await deleteProposal.mutateAsync(proposal.id)
       toast.success('Proposta excluída.')
@@ -58,10 +67,10 @@ export function ProposalList({
       </CardHeader>
       <CardContent>
         {isLoading && <Skeleton className="h-24 w-full" />}
-        {isError && <p className="text-destructive text-sm">Não foi possível carregar as propostas.</p>}
-        {proposals && proposals.length === 0 && (
-          <p className="text-muted-foreground text-sm">Nenhuma proposta ainda.</p>
+        {isError && (
+          <ErrorState title="Não foi possível carregar as propostas." onRetry={() => refetch()} />
         )}
+        {proposals && proposals.length === 0 && <EmptyState title="Nenhuma proposta ainda." />}
         {proposals && proposals.length > 0 && (
           <Table>
             <TableHeader>

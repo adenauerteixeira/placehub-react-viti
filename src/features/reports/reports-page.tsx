@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { ErrorState } from '@/components/list-state'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -69,7 +70,7 @@ export function ReportsPage() {
     [type, startDate, endDate, brokerId, status],
   )
 
-  const { data: result, isLoading, isError } = useReportData(tenant.id, filters)
+  const { data: result, isLoading, isError, refetch } = useReportData(tenant.id, filters)
 
   function handleTypeChange(value: ReportType) {
     setType(value)
@@ -183,7 +184,7 @@ export function ReportsPage() {
       </div>
 
       {isLoading && <Skeleton className="h-64 w-full" />}
-      {isError && <p className="text-destructive text-sm">Não foi possível carregar o relatório.</p>}
+      {isError && <ErrorState title="Não foi possível carregar o relatório." onRetry={() => refetch()} />}
 
       {result && (
         <>

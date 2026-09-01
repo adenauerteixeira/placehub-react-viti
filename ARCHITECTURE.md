@@ -215,6 +215,22 @@ transparente da imagem (real, do PNG, ou da nossa cor de fundo configurável dos
 óbvia. Implementação: dois `div` empilhados (`relative`/`absolute inset-0`) — o de baixo tem o
 xadrez fixo, o de cima recebe o `previewStyle` (cor sólida ou `transparent`) e a imagem.
 
+## Tabela de listagem (`DataTable`) e TanStack Table v9
+
+`src/components/data-table.tsx` (busca/ordenação/paginação client-side, aplicado nas listagens
+principais — ver CHANGELOG.md, "Refinamento de UX/UI — Fase 2") usa `@tanstack/react-table`, que já
+era a escolha documentada acima ("Tabelas"). A versão instalada é a **v9**, cuja API padrão
+(`useTable`) foi redesenhada em torno de atoms/store (tree-shakeable, `tableFeatures()` explícito)
+— bem diferente da v8 clássica que a maioria dos exemplos/docs do shadcn ainda assume. Em vez de
+arriscar a arquitetura nova numa tarefa de UI de baixo risco, o `DataTable` usa a camada de
+compatibilidade **oficialmente mantida** `@tanstack/react-table/legacy` (`useLegacyTable` +
+`getCoreRowModel`/`getSortedRowModel`/`getFilteredRowModel`/`getPaginationRowModel`, `flexRender`
+do pacote principal) — API idêntica à v8. Continua "usando TanStack Table" (nada mudou na escolha
+de stack), só por um caminho mais previsível de implementar/manter. Se for criar uma tabela nova,
+siga o mesmo padrão (componentes/tipos de `data-table.tsx`) em vez de partir pra `useTable`/v9
+direto, a menos que haja um motivo concreto pra migrar (nesse caso, migrar todas de uma vez, não
+misturar as duas APIs no projeto).
+
 ## O que este documento não cobre
 
 Decisões de UI específicas de cada tela e o detalhamento de cada regra de negócio vivem no

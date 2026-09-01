@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useConfirm } from '@/hooks/use-confirm'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 
@@ -39,6 +40,7 @@ export function ResetDataPage() {
   const [scope, setScope] = useState<Scope>('funnel')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const { confirm } = useConfirm()
 
   const selected = SCOPES.find((s) => s.value === scope)!
 
@@ -48,9 +50,12 @@ export function ResetDataPage() {
       return
     }
 
-    const confirmed = window.confirm(
-      `Tem certeza? Isso vai apagar dados de verdade (${selected.title.toLowerCase()}) e não pode ser desfeito.`,
-    )
+    const confirmed = await confirm({
+      title: 'Confirmar reset de dados',
+      description: `Isso vai apagar dados de verdade (${selected.title.toLowerCase()}) e não pode ser desfeito.`,
+      confirmLabel: 'Resetar dados',
+      variant: 'destructive',
+    })
     if (!confirmed) return
 
     setSubmitting(true)

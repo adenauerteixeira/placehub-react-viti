@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import { ThemeProvider } from '@/lib/theme-provider'
 import { AuthProvider } from '@/features/auth/auth-context'
+import { ConfirmProvider } from '@/hooks/use-confirm'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
@@ -22,10 +23,12 @@ createRoot(document.getElementById('root')!).render(
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider delayDuration={200}>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-          <Toaster />
+          <ConfirmProvider>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+            <Toaster />
+          </ConfirmProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>

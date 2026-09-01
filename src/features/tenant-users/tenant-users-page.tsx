@@ -4,10 +4,11 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { errorMessage } from '@/lib/errors'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useTenantUsers, useToggleTenantUserActive, type TenantUser } from './api'
 import { EditUserDialog } from './edit-user-dialog'
@@ -16,7 +17,7 @@ import { ROLE_LABELS } from './permissions'
 
 export function TenantUsersPage() {
   const { tenant, profile } = useTenantOutletContext()
-  const { data: users, isLoading, isError } = useTenantUsers(tenant.id)
+  const { data: users, isLoading, isError, refetch } = useTenantUsers(tenant.id)
   const toggleActive = useToggleTenantUserActive(tenant.id)
 
   const [inviteOpen, setInviteOpen] = useState(false)
@@ -33,6 +34,65 @@ export function TenantUsersPage() {
     }
   }
 
+  const columns: DataTableColumn<TenantUser>[] = [
+    {
+      id: 'full_name',
+      accessorFn: (row) => row.full_name || '—',
+      header: 'Nome',
+      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    },
+    {
+      accessorKey: 'email',
+      header: 'E-mail',
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.email}</span>,
+    },
+    {
+      id: 'role',
+      accessorFn: (row) => ROLE_LABELS[row.role] ?? row.role,
+      header: 'Papel',
+      cell: (info) => <Badge variant="secondary">{info.getValue()}</Badge>,
+    },
+    {
+      id: 'active',
+      accessorFn: (row) => (row.is_active ? 'Ativo' : 'Inativo'),
+      header: 'Status',
+      cell: ({ row }) => {
+        const user = row.original
+        return (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={user.is_active}
+              disabled={user.id === profile.id}
+              onCheckedChange={(checked) => handleToggleActive(user, checked)}
+              aria-label={user.is_active ? 'Desativar usuário' : 'Ativar usuário'}
+            />
+            <Badge variant={user.is_active ? 'default' : 'secondary'}>
+              {user.is_active ? 'Ativo' : 'Inativo'}
+            </Badge>
+          </div>
+        )
+      },
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Editar"
+            onClick={() => setEditingUser(row.original)}
+          >
+            <Pencil className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
   return (
     <Card>
       <CardHeader>
@@ -46,54 +106,14 @@ export function TenantUsersPage() {
       <CardContent>
         {isLoading && <Skeleton className="h-40 w-full" />}
 
-        {isError && <p className="text-destructive text-sm">Não foi possível carregar os usuários.</p>}
+        {isError && (
+          <ErrorState title="Não foi possível carregar os usuários." onRetry={() => refetch()} />
+        )}
+
+        {users && users.length === 0 && <EmptyState title="Nenhum usuário cadastrado ainda." />}
 
         {users && users.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Papel</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.full_name || '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{ROLE_LABELS[user.role] ?? user.role}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={user.is_active}
-                        disabled={user.id === profile.id}
-                        onCheckedChange={(checked) => handleToggleActive(user, checked)}
-                        aria-label={user.is_active ? 'Desativar usuário' : 'Ativar usuário'}
-                      />
-                      <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                        {user.is_active ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Editar"
-                      onClick={() => setEditingUser(user)}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={users} searchPlaceholder="Buscar por nome, e-mail..." />
         )}
       </CardContent>
 

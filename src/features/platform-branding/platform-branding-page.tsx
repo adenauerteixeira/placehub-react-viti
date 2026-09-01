@@ -1,6 +1,7 @@
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { ErrorState } from '@/components/list-state'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { errorMessage } from '@/lib/errors'
@@ -8,7 +9,7 @@ import { platformBrandingAssetUrl, usePlatformSettings, useUpdatePlatformBackgro
 import { PlatformUploadField } from './platform-upload-field'
 
 export function PlatformBrandingPage() {
-  const { data: settings, isLoading, isError } = usePlatformSettings()
+  const { data: settings, isLoading, isError, refetch } = usePlatformSettings()
   const updateBorder = useUpdatePlatformBackgroundBorder()
 
   async function handleBorderChange(theme: 'light' | 'dark', show: boolean) {
@@ -33,7 +34,7 @@ export function PlatformBrandingPage() {
           {isLoading && <Skeleton className="h-40 w-full" />}
 
           {isError && (
-            <p className="text-destructive text-sm">Não foi possível carregar as configurações.</p>
+            <ErrorState title="Não foi possível carregar as configurações." onRetry={() => refetch()} />
           )}
 
           {settings && (

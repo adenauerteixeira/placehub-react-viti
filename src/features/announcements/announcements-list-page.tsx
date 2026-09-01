@@ -5,13 +5,15 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
 import { ReserveDialog } from '@/features/reservations/reserve-dialog'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useAnnouncements, useDeleteAnnouncement, type AnnouncementStatus } from './api'
+import { useAnnouncements, useDeleteAnnouncement, type Announcement, type AnnouncementStatus } from './api'
 import { ANNOUNCEMENT_STATUS_LABELS, ANNOUNCEMENT_STATUS_VARIANT, PROPERTY_TYPE_LABELS } from './labels'
 
 const ALL = '__all__'
@@ -19,14 +21,21 @@ const ALL = '__all__'
 export function AnnouncementsListPage() {
   const { tenant } = useTenantOutletContext()
   const navigate = useNavigate()
-  const { data: announcements, isLoading, isError } = useAnnouncements(tenant.id)
+  const { data: announcements, isLoading, isError, refetch } = useAnnouncements(tenant.id)
   const deleteAnnouncement = useDeleteAnnouncement(tenant.id)
   const [statusFilter, setStatusFilter] = useState(ALL)
   const [reserving, setReserving] = useState<string | null>(null)
+  const { confirm } = useConfirm()
 
   async function handleDelete(e: React.MouseEvent, id: string, title: string) {
     e.stopPropagation()
-    if (!window.confirm(`Excluir o anúncio "${title}"? Essa ação não pode ser desfeita.`)) return
+    const confirmed = await confirm({
+      title: `Excluir o anúncio "${title}"?`,
+      description: 'Essa ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      variant: 'destructive',
+    })
+    if (!confirmed) return
     try {
       await deleteAnnouncement.mutateAsync(id)
       toast.success('Anúncio excluído.')
@@ -40,6 +49,85 @@ export function AnnouncementsListPage() {
     if (statusFilter === ALL) return announcements
     return announcements.filter((a) => a.status === statusFilter)
   }, [announcements, statusFilter])
+
+  const columns: DataTableColumn<Announcement>[] = [
+    {
+      accessorKey: 'title',
+      header: 'Título',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2 font-medium">
+          {row.original.title}
+          {row.original.featured && <Badge variant="outline">Destaque</Badge>}
+          {row.original.promotion && <Badge variant="secondary">Promoção</Badge>}
+        </div>
+      ),
+    },
+    {
+      id: 'property_type',
+      accessorFn: (row) => PROPERTY_TYPE_LABELS[row.property_type],
+      header: 'Tipo',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      accessorKey: 'price',
+      header: 'Preço',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {row.original.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+        </span>
+      ),
+    },
+    {
+      id: 'status',
+      accessorFn: (row) => ANNOUNCEMENT_STATUS_LABELS[row.status],
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={ANNOUNCEMENT_STATUS_VARIANT[row.original.status]}>
+          {ANNOUNCEMENT_STATUS_LABELS[row.original.status]}
+        </Badge>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => {
+        const announcement = row.original
+        return (
+          <div className="flex items-center justify-end gap-1">
+            {announcement.status === 'published' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Reservar"
+                onClick={() => setReserving(announcement.id)}
+              >
+                <CalendarPlus className="size-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Editar"
+              onClick={() => navigate(`/announcements/${announcement.id}`)}
+            >
+              <Pencil className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Excluir"
+              className="text-destructive hover:text-destructive"
+              onClick={(e) => handleDelete(e, announcement.id, announcement.title)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        )
+      },
+    },
+  ]
 
   return (
     <Card>
@@ -69,79 +157,14 @@ export function AnnouncementsListPage() {
       <CardContent>
         {isLoading && <Skeleton className="h-40 w-full" />}
 
-        {isError && <p className="text-destructive text-sm">Não foi possível carregar os anúncios.</p>}
-
-        {filtered.length === 0 && !isLoading && (
-          <p className="text-muted-foreground text-sm">Nenhum anúncio encontrado.</p>
+        {isError && (
+          <ErrorState title="Não foi possível carregar os anúncios." onRetry={() => refetch()} />
         )}
 
+        {filtered.length === 0 && !isLoading && <EmptyState title="Nenhum anúncio encontrado." />}
+
         {filtered.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Preço</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((announcement) => (
-                <TableRow key={announcement.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {announcement.title}
-                      {announcement.featured && <Badge variant="outline">Destaque</Badge>}
-                      {announcement.promotion && <Badge variant="secondary">Promoção</Badge>}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {PROPERTY_TYPE_LABELS[announcement.property_type]}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {announcement.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={ANNOUNCEMENT_STATUS_VARIANT[announcement.status]}>
-                      {ANNOUNCEMENT_STATUS_LABELS[announcement.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      {announcement.status === 'published' && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label="Reservar"
-                          onClick={() => setReserving(announcement.id)}
-                        >
-                          <CalendarPlus className="size-4" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Editar"
-                        onClick={() => navigate(`/announcements/${announcement.id}`)}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Excluir"
-                        className="text-destructive hover:text-destructive"
-                        onClick={(e) => handleDelete(e, announcement.id, announcement.title)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={filtered} searchPlaceholder="Buscar por título..." />
         )}
       </CardContent>
 

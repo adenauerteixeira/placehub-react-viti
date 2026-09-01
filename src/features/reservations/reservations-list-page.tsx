@@ -3,10 +3,12 @@ import { X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
+import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
 import { useCancelReservation, useReservations, type Reservation } from './api'
 import { RESERVATION_STATUS_LABELS, RESERVATION_STATUS_VARIANT } from './labels'
@@ -17,14 +19,22 @@ function formatDateTime(value: string) {
 
 export function ReservationsListPage() {
   const { tenant } = useTenantOutletContext()
-  const { data: reservations, isLoading, isError } = useReservations(tenant.id)
+  const { data: reservations, isLoading, isError, refetch } = useReservations(tenant.id)
   const { data: announcements } = useAnnouncements(tenant.id)
   const cancelReservation = useCancelReservation(tenant.id)
+  const { confirmWithReason } = useConfirm()
 
   const announcementTitle = (id: string) => announcements?.find((a) => a.id === id)?.title ?? '—'
 
   async function handleCancel(reservation: Reservation) {
-    const reason = window.prompt('Motivo do cancelamento (opcional):') ?? ''
+    const reason = await confirmWithReason({
+      title: 'Cancelar reserva',
+      description: 'Essa ação não pode ser desfeita.',
+      reasonLabel: 'Motivo do cancelamento (opcional)',
+      confirmLabel: 'Cancelar reserva',
+      variant: 'destructive',
+    })
+    if (reason === null) return
     try {
       await cancelReservation.mutateAsync({ id: reservation.id, reason })
       toast.success('Reserva cancelada.')
@@ -33,6 +43,58 @@ export function ReservationsListPage() {
     }
   }
 
+  const columns: DataTableColumn<Reservation>[] = [
+    {
+      id: 'announcement',
+      accessorFn: (row) => announcementTitle(row.announcement_id),
+      header: 'Anúncio',
+      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    },
+    {
+      accessorKey: 'customer_name',
+      header: 'Cliente',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{row.original.customer_name}</span>
+      ),
+    },
+    {
+      id: 'status',
+      accessorFn: (row) => RESERVATION_STATUS_LABELS[row.status],
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={RESERVATION_STATUS_VARIANT[row.original.status]}>
+          {RESERVATION_STATUS_LABELS[row.original.status]}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'expires_at',
+      header: 'Expira em',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{formatDateTime(row.original.expires_at)}</span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) =>
+        row.original.status === 'active' ? (
+          <div className="flex justify-end">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Cancelar reserva"
+              onClick={() => handleCancel(row.original)}
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+        ) : null,
+    },
+  ]
+
   return (
     <Card>
       <CardHeader>
@@ -40,50 +102,17 @@ export function ReservationsListPage() {
       </CardHeader>
       <CardContent>
         {isLoading && <Skeleton className="h-40 w-full" />}
-        {isError && <p className="text-destructive text-sm">Não foi possível carregar as reservas.</p>}
+        {isError && (
+          <ErrorState title="Não foi possível carregar as reservas." onRetry={() => refetch()} />
+        )}
         {reservations && reservations.length === 0 && (
-          <p className="text-muted-foreground text-sm">
-            Nenhuma reserva ainda — reserve um imóvel a partir de Anúncios ou de uma negociação.
-          </p>
+          <EmptyState
+            title="Nenhuma reserva ainda"
+            description="Reserve um imóvel a partir de Anúncios ou de uma negociação."
+          />
         )}
         {reservations && reservations.length > 0 && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Anúncio</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Expira em</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reservations.map((reservation) => (
-                <TableRow key={reservation.id}>
-                  <TableCell className="font-medium">{announcementTitle(reservation.announcement_id)}</TableCell>
-                  <TableCell className="text-muted-foreground">{reservation.customer_name}</TableCell>
-                  <TableCell>
-                    <Badge variant={RESERVATION_STATUS_VARIANT[reservation.status]}>
-                      {RESERVATION_STATUS_LABELS[reservation.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{formatDateTime(reservation.expires_at)}</TableCell>
-                  <TableCell>
-                    {reservation.status === 'active' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Cancelar reserva"
-                        onClick={() => handleCancel(reservation)}
-                      >
-                        <X className="size-4" />
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={reservations} searchPlaceholder="Buscar por cliente, anúncio..." />
         )}
       </CardContent>
     </Card>

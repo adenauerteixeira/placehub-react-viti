@@ -12,6 +12,7 @@ import { useBrokers } from '@/features/brokers/api'
 import { useCommissionBySale } from '@/features/commissions/api'
 import { COMMISSION_STATUS_LABELS, COMMISSION_STATUS_VARIANT } from '@/features/commissions/labels'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
+import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
 import {
   receiptSignedUrl,
@@ -38,6 +39,7 @@ export function SaleDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { tenant, profile } = useTenantOutletContext()
   const [receiving, setReceiving] = useState<SaleEntryInstallment | null>(null)
+  const { confirmWithReason } = useConfirm()
 
   const { data: sale, isLoading, isError } = useSale(id)
   const { data: installments } = useSaleInstallments(id)
@@ -67,7 +69,13 @@ export function SaleDetailPage() {
   }
 
   async function handleCancel() {
-    const reason = window.prompt('Motivo do cancelamento:')
+    const reason = await confirmWithReason({
+      title: 'Cancelar venda',
+      description: 'Essa ação não pode ser desfeita.',
+      reasonLabel: 'Motivo do cancelamento',
+      confirmLabel: 'Cancelar venda',
+      variant: 'destructive',
+    })
     if (reason === null) return
     try {
       await cancelSale.mutateAsync({ id: sale!.id, reason })

@@ -29,6 +29,7 @@ import { useBrokers, type Broker } from '@/features/brokers/api'
 import { BrokerFormDialog } from '@/features/brokers/broker-form-dialog'
 import { BR_STATES } from '@/features/brokers/labels'
 import { useTenantUsers } from '@/features/tenant-users/api'
+import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
 import { slugWithRandomSuffix } from '@/lib/slugify'
 import { lookupCep } from '@/lib/viacep'
@@ -157,6 +158,7 @@ export function AnnouncementFormPage() {
   const [partnerDialogOpen, setPartnerDialogOpen] = useState(false)
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false)
   const [brokerDialogOpen, setBrokerDialogOpen] = useState(false)
+  const { confirm } = useConfirm()
 
   const { data: announcement, isLoading } = useAnnouncement(isEdit ? id : null)
   const { data: amenities } = useAnnouncementAmenities(isEdit ? id : null)
@@ -299,7 +301,13 @@ export function AnnouncementFormPage() {
 
   async function handleDelete() {
     if (!announcement) return
-    if (!window.confirm('Excluir este anúncio? Essa ação não pode ser desfeita.')) return
+    const confirmed = await confirm({
+      title: 'Excluir este anúncio?',
+      description: 'Essa ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      variant: 'destructive',
+    })
+    if (!confirmed) return
     try {
       await deleteAnnouncement.mutateAsync(announcement.id)
       toast.success('Anúncio excluído.')

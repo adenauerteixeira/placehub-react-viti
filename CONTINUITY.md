@@ -7,6 +7,42 @@
 
 ## Estado atual — 2026-09-01
 
+- **Refinamento de UX/UI — Fases 1 e 2 completas, a pedido do usuário (2026-09-01).** Iniciativa
+  nova, separada das fases numeradas do ROADMAP.md: diagnóstico completo do app (varredura de
+  todas as telas/features), lista de problemas priorizada por impacto, direção visual confirmada
+  (manter o tema já decidido, "Dashboard SaaS colorido" — não redesenhar cores, só completar a
+  camada de componentes/estados que faltava em cima dele). Processo combinado com o usuário:
+  **desde 2026-09-01, nada é commitado/enviado pra produção sem autorização explícita** — cada
+  fase é implementada e validada localmente (`npm run dev` + automação de navegador com as
+  credenciais reais de teste) antes de pedir autorização pra commit/deploy. Ver bloco completo no
+  CHANGELOG.md.
+  - **Fase 1 (fundação)**: `useConfirm()` (`src/hooks/use-confirm.tsx`) substitui os 8
+    `window.confirm`/`window.prompt` do app por `AlertDialog` estilizado — no processo, endureceu
+    de propósito 2 confirmações que não travavam de verdade antes (cancelar reserva não abortava
+    nada ao clicar "Cancelar" no popup nativo; marcar negociação como "perdida" prosseguia mesmo
+    cancelando o prompt de motivo). Menu mobile (`src/components/mobile-nav.tsx`, `Sheet`) no
+    header do tenant e da plataforma — antes a navegação simplesmente quebrava em telas estreitas,
+    sem nenhum tratamento. `EmptyState`/`ErrorState` (`src/components/list-state.tsx`) com botão
+    "Tentar novamente" em 15 listagens.
+  - **Fase 2 (listagens)**: `DataTable` (`src/components/data-table.tsx`) — busca/ordenação/
+    paginação client-side, aplicado em 12 listagens (anúncios, leads, tenants, corretores,
+    proprietários, parceiros, empreendimentos, reservas, negociações, vendas, comissões, usuários
+    do tenant). **Nota técnica importante pra quem mexer nisso de novo**: `@tanstack/react-table`
+    instalado é a **v9**, cuja API padrão (`useTable`) é baseada em atoms/store — bem diferente da
+    v8 clássica. O `DataTable` usa a camada de compatibilidade oficial `@tanstack/react-table/legacy`
+    (`useLegacyTable`), que replica a API v8 (`getCoreRowModel`/`getSortedRowModel`/etc.,
+    `flexRender`) — decisão deliberada pra não arriscar a arquitetura nova numa tarefa de UI de
+    baixo risco. Se for adicionar uma tabela nova, siga o mesmo padrão do `DataTable` em vez de
+    tentar a API v9 direto, a menos que haja um motivo específico pra migrar. Deixados de fora do
+    rollout: `proposal-list.tsx` (lista pequena embutida, busca seria ruído) e `reports-page.tsx`
+    (usa `window.print()` — paginar cortaria linhas do relatório impresso).
+  - Todas as duas fases validadas com `tsc -b`/`oxlint` limpos e testes ao vivo via automação de
+    navegador, logado de verdade como tenant_admin (Casah) e como super_admin (plataforma) —
+    screenshots conferidos, zero erro de console em qualquer tela tocada.
+  - **Próximo passo já combinado com o usuário**: Fase 3 (formulários — padronizar exibição de
+    erro de campo/validação; hoje é `<p>` manual repetido em cada formulário, sem usar nenhum
+    wrapper de formulário do shadcn — o item `form` do registry desse shadcn não retornou arquivos
+    quando tentei instalar, precisa investigar de novo nessa fase).
 - **App no ar em produção pela primeira vez (2026-08-28/09-01) — Vercel + domínio próprio.**
   Projeto `place-hub1/placehub` conectado ao GitHub, deploy automático a cada push em `trunk`.
   Domínio raiz da plataforma é **`placehubapp.com.br`** (não `placehub.app` — já registrado por

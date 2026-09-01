@@ -4,10 +4,11 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable, type DataTableColumn } from '@/components/data-table'
+import { EmptyState, ErrorState } from '@/components/list-state'
 import { errorMessage } from '@/lib/errors'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { LinkAdminDialog } from '@/features/tenants/link-admin-dialog'
 import { TenantFormDialog } from '@/features/tenants/tenant-form-dialog'
 import { useTenantAdmins, useTenants, useToggleTenantActive, type Tenant } from '@/features/tenants/api'
@@ -19,7 +20,7 @@ import { useTheme } from '@/lib/theme-provider'
 import { cn } from '@/lib/utils'
 
 export function TenantsListPage() {
-  const { data: tenants, isLoading, isError } = useTenants()
+  const { data: tenants, isLoading, isError, refetch } = useTenants()
   const { data: tenantAdmins } = useTenantAdmins()
   const toggleActive = useToggleTenantActive()
   const { resolvedTheme } = useTheme()
@@ -50,6 +51,80 @@ export function TenantsListPage() {
     }
   }
 
+  const columns: DataTableColumn<Tenant>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Nome',
+      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    },
+    {
+      accessorKey: 'slug',
+      header: 'Subdomínio',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      id: 'admins',
+      accessorFn: (row) => (adminEmailsByTenant.get(row.id) ?? []).join(', ') || '—',
+      header: 'Administrador',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      id: 'active',
+      accessorFn: (row) => (row.active ? 'Ativa' : 'Inativa'),
+      header: 'Status',
+      cell: ({ row }) => {
+        const tenant = row.original
+        return (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={tenant.active}
+              onCheckedChange={(checked) => handleToggleActive(tenant, checked)}
+              aria-label={tenant.active ? 'Desativar imobiliária' : 'Ativar imobiliária'}
+            />
+            <Badge variant={tenant.active ? 'default' : 'secondary'}>
+              {tenant.active ? 'Ativa' : 'Inativa'}
+            </Badge>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: 'created_at',
+      header: 'Criada em',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {new Date(row.original.created_at).toLocaleDateString('pt-BR')}
+        </span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      enableGlobalFilter: false,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Editar"
+            onClick={() => setEditingTenant(row.original)}
+          >
+            <Pencil className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Vincular administrador"
+            onClick={() => setLinkingTenant(row.original)}
+          >
+            <UserPlus className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div className="flex flex-col gap-4">
       {backgroundUrl && (
@@ -73,72 +148,15 @@ export function TenantsListPage() {
           {isLoading && <Skeleton className="h-40 w-full" />}
 
           {isError && (
-            <p className="text-destructive text-sm">Não foi possível carregar as imobiliárias.</p>
+            <ErrorState title="Não foi possível carregar as imobiliárias." onRetry={() => refetch()} />
           )}
 
           {tenants && tenants.length === 0 && (
-            <p className="text-muted-foreground text-sm">Nenhuma imobiliária cadastrada ainda.</p>
+            <EmptyState title="Nenhuma imobiliária cadastrada ainda." />
           )}
 
           {tenants && tenants.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Subdomínio</TableHead>
-                  <TableHead>Administrador</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Criada em</TableHead>
-                  <TableHead className="w-0" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tenants.map((tenant) => (
-                  <TableRow key={tenant.id}>
-                    <TableCell className="font-medium">{tenant.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{tenant.slug}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {(adminEmailsByTenant.get(tenant.id) ?? []).join(', ') || '—'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={tenant.active}
-                          onCheckedChange={(checked) => handleToggleActive(tenant, checked)}
-                          aria-label={tenant.active ? 'Desativar imobiliária' : 'Ativar imobiliária'}
-                        />
-                        <Badge variant={tenant.active ? 'default' : 'secondary'}>
-                          {tenant.active ? 'Ativa' : 'Inativa'}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(tenant.created_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label="Editar"
-                          onClick={() => setEditingTenant(tenant)}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label="Vincular administrador"
-                          onClick={() => setLinkingTenant(tenant)}
-                        >
-                          <UserPlus className="size-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable columns={columns} data={tenants} searchPlaceholder="Buscar por nome, subdomínio..." />
           )}
         </CardContent>
 

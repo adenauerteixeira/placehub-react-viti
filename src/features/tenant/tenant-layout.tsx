@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/lib/theme-provider'
 import { AppFooter, AppShell } from '@/components/app-shell'
+import { MobileNav, type MobileNavEntry } from '@/components/mobile-nav'
 import { NavGroup } from '@/components/nav-group'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { UserMenu } from '@/features/auth/user-menu'
@@ -50,14 +51,27 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
     isAdmin && { to: '/changelog', label: 'Changelog' },
   ].filter((item): item is { to: string; label: string } => !!item)
 
+  const mobileEntries: MobileNavEntry[] = [
+    { type: 'link', to: '/dashboard', label: 'Painel' },
+    hasPermission(profile, 'announcements') && {
+      type: 'link' as const,
+      to: '/announcements',
+      label: 'Anúncios',
+    },
+    commercialItems.length > 0 && { type: 'group' as const, label: 'Comercial', items: commercialItems },
+    adminItems.length > 0 && { type: 'group' as const, label: 'Administração', items: adminItems },
+    tenant.training_enabled && { type: 'link' as const, to: '/treinamento', label: 'Treinamento' },
+  ].filter((entry): entry is MobileNavEntry => !!entry)
+
   return (
     <AppShell
       style={tenantThemeVars(tenant, resolvedTheme)}
       header={
         <>
           <div className="flex items-center gap-6">
+            <MobileNav entries={mobileEntries} title={tenant.name} />
             <TenantBrand tenant={tenant} dark={dark} />
-            <nav className="flex items-center gap-4 text-sm">
+            <nav className="hidden items-center gap-4 text-sm md:flex">
               <TenantNavLink to="/dashboard">Painel</TenantNavLink>
               {hasPermission(profile, 'announcements') && (
                 <TenantNavLink to="/announcements">Anúncios</TenantNavLink>
