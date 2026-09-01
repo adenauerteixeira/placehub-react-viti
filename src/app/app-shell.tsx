@@ -33,6 +33,7 @@ import { AnimatedTenantHomePage } from '@/features/tenant/animated-home/animated
 import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
 import { TrainingPage } from '@/features/tenant/training-page'
+import { ResetDataPage } from '@/features/tenant/reset-data-page'
 import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useTenant, usePublicTenant } from '@/features/tenants/api'
 import { TenantBrandingPage } from '@/features/tenant-branding/tenant-branding-page'
@@ -88,6 +89,14 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequireTenantAdmin>
               <TenantUsersPage />
+            </RequireTenantAdmin>
+          }
+        />
+        <Route
+          path="/resetar-dados"
+          element={
+            <RequireTenantAdmin>
+              <ResetDataPage />
             </RequireTenantAdmin>
           }
         />
