@@ -100,7 +100,7 @@ export function useEligibleBrokerProfiles(tenantId: string | null, currentBroker
             .from('profiles')
             .select('id, full_name, email')
             .eq('tenant_id', tenantId!)
-            .eq('role', 'broker')
+            .in('role', ['broker', 'manager'])
             .eq('is_active', true),
           supabase.from('brokers').select('profile_id').eq('tenant_id', tenantId!).not('profile_id', 'is', null),
         ])

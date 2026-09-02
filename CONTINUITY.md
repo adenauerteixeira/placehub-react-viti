@@ -7,7 +7,7 @@
 
 ## Estado atual — 2026-09-02
 
-- **Refinamento de UX/UI — Fases 1 a 4 completas, a pedido do usuário (2026-09-01/02).** Iniciativa
+- **Refinamento de UX/UI — Fases 1 a 5 completas, a pedido do usuário (2026-09-01/02).** Iniciativa
   nova, separada das fases numeradas do ROADMAP.md: diagnóstico completo do app (varredura de
   todas as telas/features), lista de problemas priorizada por impacto, direção visual confirmada
   (manter o tema já decidido, "Dashboard SaaS colorido" — não redesenhar cores, só completar a
@@ -80,6 +80,28 @@
     listagem de usuários reais — usar sempre uma conta de teste dedicada e identificada pelo
     nome/e-mail, nunca por posição.** Validado com `tsc -b`/`oxlint` limpos e teste ao vivo via
     automação de navegador. Commit/deploy autorizado pelo usuário e enviado.
+  - **Fase 5 (dashboard executivo vs. dashboard do corretor) completa (2026-09-02)**: pedido do
+    usuário — "os cards do administrador não fazem sentido, ele não é corretor". Dois corpos de
+    dashboard pelo mesmo fork `isBroker` que já existia: gestão (`tenant_admin`/`manager`) ganha
+    fileira executiva de 4 `StatTile`s (Receita/Comissão total/Ticket médio/Taxa de conversão),
+    gráfico de barras do funil comercial (Leads→Negociações→Propostas→Vendas — bar horizontal, não
+    `FunnelChart`, que distorce demais com a variação real entre estágios), ranking de corretores
+    mantido, catálogo virou tira compacta em vez de cards grandes competindo com os KPIs; corretor
+    mantido pessoal, só restilizado. `StatTile` (`src/components/stat-tile.tsx`) novo, reaproveitado
+    também nos cards de resumo de `reports-page.tsx`. **A visão do corretor nunca tinha sido testada
+    ponta a ponta com um login de corretor real** (lacuna herdada da Fase 4) — fechada nesta rodada,
+    zero erro de console. Fora de escopo, registrado: comparação com período anterior (tendência) e
+    estender a mesma linguagem visual pro resto do app.
+  - **Dois achados do usuário durante o QA da Fase 5, corrigidos na mesma sessão**: (1) editar
+    qualquer usuário do tenant deixava a tela em branco — `EditUserDialog` era o único formulário do
+    sistema sem `defaultValues` no `useForm()`, e o `PhoneInput` quebrava no primeiro render com
+    `phone` `undefined`, derrubando a árvore React inteira sem erro visível no console (mesma classe
+    de bug já documentada na Fase 3 em `lead-detail-page.tsx`, não replicada aqui); corrigido com uma
+    função `defaultValuesFor(user)` usada no `useForm` e no `reset()`. (2) criar um corretor e
+    vincular a uma conta Gerente não era possível — `useEligibleBrokerProfiles` só listava contas com
+    papel `broker`; ampliado pra `broker`/`manager` a pedido do usuário (gerente que também vende),
+    sem precisar de RLS/migração nova. Ambos testados ao vivo, zero erro de console. Commit/deploy
+    autorizado pelo usuário e enviado.
 - **App no ar em produção pela primeira vez (2026-08-28/09-01) — Vercel + domínio próprio.**
   Projeto `place-hub1/placehub` conectado ao GitHub, deploy automático a cada push em `trunk`.
   Domínio raiz da plataforma é **`placehubapp.com.br`** (não `placehub.app` — já registrado por

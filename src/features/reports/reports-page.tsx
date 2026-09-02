@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ErrorState } from '@/components/list-state'
+import { StatTile } from '@/components/stat-tile'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -190,14 +191,7 @@ export function ReportsPage() {
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {result.summary.map((item) => (
-              <Card key={item.label}>
-                <CardContent className="pt-6">
-                  <p className="text-xl font-semibold">
-                    {item.format === 'money' ? formatPrice(item.value) : item.value}
-                  </p>
-                  <p className="text-muted-foreground text-sm">{item.label}</p>
-                </CardContent>
-              </Card>
+              <StatTile key={item.label} label={item.label} value={item.value} format={item.format} />
             ))}
           </div>
 

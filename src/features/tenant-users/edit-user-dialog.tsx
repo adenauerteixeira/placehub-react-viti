@@ -59,6 +59,20 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 
+function defaultValuesFor(user: TenantUser): FormValues {
+  return {
+    fullName: user.full_name ?? '',
+    email: user.email,
+    phone: user.phone ?? '',
+    creci: user.creci ?? '',
+    creci_state: user.creci_state ?? NONE,
+    role: (user.role as AssignableRole) ?? 'broker',
+    isActive: user.is_active,
+    newPassword: '',
+    confirmNewPassword: '',
+  }
+}
+
 export function EditUserDialog({
   open,
   onOpenChange,
@@ -85,21 +99,12 @@ export function EditUserDialog({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    defaultValues: defaultValuesFor(user),
   })
 
   useEffect(() => {
     if (!open) return
-    reset({
-      fullName: user.full_name ?? '',
-      email: user.email,
-      phone: user.phone ?? '',
-      creci: user.creci ?? '',
-      creci_state: user.creci_state ?? NONE,
-      role: (user.role as AssignableRole) ?? 'broker',
-      isActive: user.is_active,
-      newPassword: '',
-      confirmNewPassword: '',
-    })
+    reset(defaultValuesFor(user))
     setPermissions(user.profile_permissions.map((p) => p.permission_key))
   }, [open, user, reset])
 

@@ -5,6 +5,66 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Vínculo de corretor aceita conta Gerente, pedido do usuário, 2026-09-02)
+
+- **`useEligibleBrokerProfiles`** (`src/features/brokers/api.ts`) passou a listar contas de login
+  com papel `broker` **ou** `manager` no campo "Conta de login vinculada" do formulário de
+  corretor — antes só `broker` aparecia. Achado pelo usuário: criou um usuário Gerente e não
+  conseguiu vinculá-lo a um corretor novo. Decisão registrada: um gerente que também vende (tem
+  CRECI/comissão) deve poder ter um cadastro de corretor vinculado, sem abrir mão das permissões
+  de gestão do papel Gerente — nenhuma RLS/migração foi necessária, é um filtro só do lado do
+  cliente (as políticas do banco já tratam `manager` com escopo total do tenant, não restrito "aos
+  próprios registros" como `broker`, então o vínculo não muda o que a conta pode acessar). Texto de
+  ajuda do campo atualizado ("papel Corretor ou Gerente"). Testado ao vivo: usuário Gerente
+  recém-criado aparece na lista, zero erro de console.
+
+### Corrigido (Editar usuário do tenant deixava a tela em branco, 2026-09-02)
+
+- **`EditUserDialog`** (`src/features/tenant-users/edit-user-dialog.tsx`) era o único formulário do
+  sistema sem `defaultValues` no `useForm()`. No primeiro render do diálogo — antes do `useEffect`
+  preencher os dados via `reset()` — o campo telefone chegava `undefined` no `PhoneInput`, que
+  formata o valor direto (`value.replace(...)`) sem guarda; sem `ErrorBoundary` no app, isso
+  derrubava a árvore React inteira, deixando a tela em branco sem nenhum erro visível no console
+  (mesma classe de bug já documentada e corrigida em `lead-detail-page.tsx` na Fase 3, só não tinha
+  sido replicada aqui). Reportado pelo usuário ao tentar editar um usuário do tenant. Corrigido
+  extraindo os valores padrão pra uma função `defaultValuesFor(user)`, usada tanto no `useForm`
+  quanto no `reset()` do `useEffect` — o formulário agora nasce preenchido, sem essa janela de
+  estado inválido. Testado ao vivo: editar usuário abre com todos os campos populados, zero erro de
+  console.
+
+### Adicionado (Refinamento de UX/UI — Fase 5: dashboard executivo vs. dashboard do corretor, 2026-09-02)
+
+- **Dashboard do tenant** (`tenant-dashboard-page.tsx`) ganhou duas visões pelo mesmo fork de papel
+  que já existia (`isBroker`), a pedido do usuário — "os cards do administrador não fazem sentido,
+  ele não é corretor": antes `tenant_admin`/`manager` e `broker` viam exatamente a mesma grade
+  achatada de contagens (Leads, Negociações ativas, Propostas, Vendas, Comissão) mais uma segunda
+  fileira de cards de catálogo.
+  - **Visão de gestão** (`tenant_admin`/`manager`): fileira executiva com 4 `StatTile`s (Receita do
+    período, Comissão total, Ticket médio, Taxa de conversão), gráfico de barras horizontal novo do
+    funil comercial (Leads → Negociações → Propostas → Vendas — preferido a um `FunnelChart` do
+    Recharts, que distorce demais com a variação real de magnitude entre estágios), ranking de
+    corretores mantido, contagens de catálogo (Anúncios/Empreendimentos/Parceiros/Usuários)
+    reduzidas a uma tira compacta em vez de competir visualmente com os KPIs.
+  - **Visão do corretor**: mantida pessoal em espírito (leads/negociações/propostas/vendas/comissão
+    próprios, próximos contatos, atividades recentes), só restilizada com o componente novo. **Essa
+    visão nunca tinha sido testada ponta a ponta com um login de corretor real** (lacuna herdada da
+    Fase 4 do refinamento) — fechada nesta rodada.
+- **`StatTile`** (`src/components/stat-tile.tsx`) novo — tile de KPI elevado e reutilizável (ícone
+  `lucide-react` num chip colorido reaproveitando os tokens `--chart-1..5` já aprovados, sombra
+  sutil acima do `Card` padrão, que só tinha `ring-1 ring-border` sem elevação nenhuma). Substitui
+  o `MetricCard` local do dashboard e a marcação repetida em `reports-page.tsx` (cards de resumo dos
+  5 tipos de relatório) — mesmo componente nos dois lugares.
+- **`dashboard-api.ts`**: `useDashboardCommercialMetrics` passou a expor `totalNegotiations` (já
+  vinha da query de negociações do período, só não estava exposto) — é o dado que faltava pro
+  estágio "Negociações" do funil, zero query nova.
+- Fora de escopo, registrado pra não perder: comparação com período anterior (setas de tendência
+  ▲/▼ nos KPIs executivos) e estender a mesma linguagem visual do `StatTile` pro resto do app —
+  ambos candidatos naturais pra uma próxima rodada.
+- Validado com `tsc -b`/`oxlint` limpos e teste ao vivo via automação de navegador: `tenant_admin`
+  real (claro/escuro, os 4 filtros de período, funil com e sem dados no período) e — pela primeira
+  vez ponta a ponta — um corretor real; `reports-page.tsx` conferido nos tipos afetados pela troca
+  do `StatTile`. Zero erro de console nas duas sessões.
+
 ### Adicionado (Refinamento de UX/UI — Fase 4: estados de carregamento e feedback de ações, 2026-09-02)
 
 - **`TableSkeleton`** (`src/components/table-skeleton.tsx`) — esqueleto com a forma real de uma

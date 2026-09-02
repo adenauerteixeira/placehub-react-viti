@@ -1,13 +1,34 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import {
+  Banknote,
+  Building2,
+  Coins,
+  Handshake,
+  Percent,
+  ReceiptText,
+  Target,
+  UserCheck,
+  Users,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { StatTile } from '@/components/stat-tile'
 import { useAnnouncements } from '@/features/announcements/api'
-import { hasPermission } from '@/features/auth/use-profile'
+import { hasPermission, type Profile } from '@/features/auth/use-profile'
 import { useDevelopments } from '@/features/developments/api'
 import { useLeads } from '@/features/leads/api'
 import { usePartners } from '@/features/partners/api'
@@ -19,6 +40,7 @@ import {
   useDashboardCommercialMetrics,
   useRecentActivity,
   useUpcomingContacts,
+  type CommercialMetrics,
   type PeriodKey,
 } from './dashboard-api'
 
@@ -37,6 +59,8 @@ const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
   { key: 'custom', label: 'Personalizado' },
 ]
 
+const FUNNEL_STAGE_COLORS = ['var(--color-chart-1)', 'var(--color-chart-2)', 'var(--color-chart-3)', 'var(--color-chart-4)']
+
 export function TenantDashboardPage() {
   const { tenant, profile } = useTenantOutletContext()
   const isBroker = profile.role === 'broker'
@@ -52,23 +76,7 @@ export function TenantDashboardPage() {
   const { data: ranking } = useBrokerRanking(tenant.id, period)
   const { data: leads } = useLeads(tenant.id)
 
-  const { data: announcements } = useAnnouncements(hasPermission(profile, 'announcements') ? tenant.id : null)
-  const { data: developments } = useDevelopments(hasPermission(profile, 'developments') ? tenant.id : null)
-  const { data: partners } = usePartners(hasPermission(profile, 'partners') ? tenant.id : null)
-  const { data: users } = useTenantUsers(hasPermission(profile, 'users') ? tenant.id : null)
-
   const leadName = (id: string) => leads?.find((l) => l.id === id)?.name ?? 'Lead'
-
-  const adminCards = [
-    hasPermission(profile, 'announcements') && { title: 'Anúncios', count: announcements?.length, to: '/announcements' },
-    hasPermission(profile, 'developments') && { title: 'Empreendimentos', count: developments?.length, to: '/developments' },
-    hasPermission(profile, 'partners') && { title: 'Parceiros', count: partners?.length, to: '/partners' },
-    hasPermission(profile, 'users') && {
-      title: 'Usuários ativos',
-      count: users?.filter((u) => u.is_active).length,
-      to: '/users',
-    },
-  ].filter((c): c is { title: string; count: number | undefined; to: string } => !!c)
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
@@ -98,48 +106,22 @@ export function TenantDashboardPage() {
       <p className="text-muted-foreground text-sm">Período: {period.label}</p>
 
       {metricsLoading && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
-              <CardContent className="flex flex-col gap-2 pt-6">
-                <Skeleton className="h-6 w-16" />
-                <Skeleton className="h-4 w-24" />
+              <CardContent className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
-      {metrics && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          <MetricCard title="Leads" value={String(metrics.totalLeads)} hint={`${metrics.leadConversion}% convertidos`} />
-          <MetricCard title="Negociações ativas" value={String(metrics.activeNegotiations)} />
-          <MetricCard
-            title="Propostas"
-            value={String(metrics.totalProposals)}
-            hint={`${metrics.proposalConversion}% aceitas`}
-          />
-          <MetricCard title="Vendas" value={String(metrics.salesCount)} hint={formatPrice(metrics.salesAmount)} />
-          <MetricCard
-            title={isBroker ? 'Sua comissão' : 'Comissão total'}
-            value={formatPrice(isBroker ? metrics.commissionBroker : metrics.commissionGross)}
-          />
-        </div>
-      )}
 
-      {adminCards.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {adminCards.map((card) => (
-            <Link key={card.title} to={card.to}>
-              <Card className="hover:bg-accent/40 transition-colors">
-                <CardContent className="pt-6">
-                  <p className="text-2xl font-semibold">{card.count ?? '—'}</p>
-                  <p className="text-muted-foreground text-sm">{card.title}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+      {metrics && (isBroker ? <BrokerOverview metrics={metrics} /> : <ManagementOverview metrics={metrics} tenantId={tenant.id} profile={profile} />)}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -229,14 +211,103 @@ export function TenantDashboardPage() {
   )
 }
 
-function MetricCard({ title, value, hint }: { title: string; value: string; hint?: string }) {
+function BrokerOverview({ metrics }: { metrics: CommercialMetrics }) {
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-xl font-semibold">{value}</p>
-        <p className="text-muted-foreground text-sm">{title}</p>
-        {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <StatTile label="Leads" value={metrics.totalLeads} icon={Users} accent="chart-1" hint={`${metrics.leadConversion}% convertidos`} />
+      <StatTile label="Negociações ativas" value={metrics.activeNegotiations} icon={Handshake} accent="chart-2" />
+      <StatTile
+        label="Propostas"
+        value={metrics.totalProposals}
+        icon={ReceiptText}
+        accent="chart-3"
+        hint={`${metrics.proposalConversion}% aceitas`}
+      />
+      <StatTile label="Vendas" value={metrics.salesCount} icon={Building2} accent="chart-4" hint={formatPrice(metrics.salesAmount)} />
+      <StatTile label="Sua comissão" value={metrics.commissionBroker} format="money" icon={Coins} accent="chart-5" />
+    </div>
+  )
+}
+
+function ManagementOverview({
+  metrics,
+  tenantId,
+  profile,
+}: {
+  metrics: CommercialMetrics
+  tenantId: string
+  profile: Profile
+}) {
+  const { data: announcements } = useAnnouncements(hasPermission(profile, 'announcements') ? tenantId : null)
+  const { data: developments } = useDevelopments(hasPermission(profile, 'developments') ? tenantId : null)
+  const { data: partners } = usePartners(hasPermission(profile, 'partners') ? tenantId : null)
+  const { data: users } = useTenantUsers(hasPermission(profile, 'users') ? tenantId : null)
+
+  const ticketMedio = metrics.salesCount > 0 ? metrics.salesAmount / metrics.salesCount : 0
+
+  const funnelData = [
+    { stage: 'Leads', count: metrics.totalLeads },
+    { stage: 'Negociações', count: metrics.totalNegotiations },
+    { stage: 'Propostas', count: metrics.totalProposals },
+    { stage: 'Vendas', count: metrics.salesCount },
+  ]
+  const hasFunnelData = funnelData.some((s) => s.count > 0)
+
+  const catalogTiles = [
+    hasPermission(profile, 'announcements') && { title: 'Anúncios', count: announcements?.length, to: '/announcements', icon: Building2 },
+    hasPermission(profile, 'developments') && { title: 'Empreendimentos', count: developments?.length, to: '/developments', icon: Target },
+    hasPermission(profile, 'partners') && { title: 'Parceiros', count: partners?.length, to: '/partners', icon: Handshake },
+    hasPermission(profile, 'users') && {
+      title: 'Usuários ativos',
+      count: users?.filter((u) => u.is_active).length,
+      to: '/users',
+      icon: UserCheck,
+    },
+  ].filter((c): c is { title: string; count: number | undefined; to: string; icon: typeof Building2 } => !!c)
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatTile label="Receita do período" value={metrics.salesAmount} format="money" icon={Banknote} accent="chart-1" />
+        <StatTile label="Comissão total" value={metrics.commissionGross} format="money" icon={Coins} accent="chart-2" />
+        <StatTile label="Ticket médio" value={ticketMedio} format="money" icon={ReceiptText} accent="chart-3" />
+        <StatTile label="Taxa de conversão" value={`${metrics.leadConversion}%`} icon={Percent} accent="chart-4" hint="lead → venda" />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Funil comercial</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!hasFunnelData ? (
+            <p className="text-muted-foreground text-sm">Nenhum movimento no funil no período.</p>
+          ) : (
+            <div className="h-52 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={funnelData} layout="vertical" margin={{ left: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} fontSize={12} />
+                  <YAxis type="category" dataKey="stage" width={90} fontSize={12} />
+                  <Tooltip formatter={(value) => [value, 'Quantidade']} cursor={{ fill: 'var(--muted)' }} />
+                  <Bar dataKey="count" radius={4}>
+                    {funnelData.map((entry, idx) => (
+                      <Cell key={entry.stage} fill={FUNNEL_STAGE_COLORS[idx]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {catalogTiles.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {catalogTiles.map((tile) => (
+            <StatTile key={tile.title} label={tile.title} value={tile.count ?? '—'} icon={tile.icon} accent="chart-5" to={tile.to} size="sm" />
+          ))}
+        </div>
+      )}
+    </>
   )
 }

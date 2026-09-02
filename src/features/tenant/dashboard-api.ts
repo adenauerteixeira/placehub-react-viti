@@ -54,6 +54,7 @@ export type CommercialMetrics = {
   activeLeads: number
   convertedLeads: number
   activeNegotiations: number
+  totalNegotiations: number
   openProposals: number
   totalProposals: number
   acceptedProposals: number
@@ -113,6 +114,7 @@ export function useDashboardCommercialMetrics(tenantId: string | null | undefine
         activeLeads,
         convertedLeads,
         activeNegotiations,
+        totalNegotiations: negotiationsRes.data.length,
         openProposals,
         totalProposals,
         acceptedProposals,

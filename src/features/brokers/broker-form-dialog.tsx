@@ -325,7 +325,7 @@ export function BrokerFormDialog({
             <Field
               label="Conta de login vinculada"
               htmlFor="broker-profile"
-              hint="Vincula este corretor a uma conta de login existente (role Corretor). Opcional."
+              hint="Vincula este corretor a uma conta de login existente (papel Corretor ou Gerente). Opcional."
             >
               <Select value={watch('profile_id')} onValueChange={(v) => setValue('profile_id', v)}>
                 <SelectTrigger id="broker-profile">
