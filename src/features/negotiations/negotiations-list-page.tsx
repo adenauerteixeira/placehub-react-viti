@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
-import { Skeleton } from '@/components/ui/skeleton'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
 import { useLeads } from '@/features/leads/api'
@@ -99,7 +99,7 @@ export function NegotiationsListPage() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
+        {isLoading && <TableSkeleton columns={6} />}
         {isError && (
           <ErrorState title="Não foi possível carregar as negociações." onRetry={() => refetch()} />
         )}

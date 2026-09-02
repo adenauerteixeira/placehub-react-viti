@@ -7,8 +7,8 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/componen
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
 import { errorMessage } from '@/lib/errors'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { LinkAdminDialog } from '@/features/tenants/link-admin-dialog'
 import { TenantFormDialog } from '@/features/tenants/tenant-form-dialog'
 import { useTenantAdmins, useTenants, useToggleTenantActive, type Tenant } from '@/features/tenants/api'
@@ -39,8 +39,12 @@ export function TenantsListPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null)
   const [linkingTenant, setLinkingTenant] = useState<Tenant | null>(null)
+  // Precisa vir de `data`, não de uma closure em `columns` — ver nota em
+  // partners-list-page.tsx.
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
   async function handleToggleActive(tenant: Tenant, active: boolean) {
+    setPendingIds((prev) => new Set(prev).add(tenant.id))
     try {
       await toggleActive.mutateAsync({ id: tenant.id, active })
       toast.success(active ? 'Imobiliária ativada.' : 'Imobiliária desativada.')
@@ -48,10 +52,18 @@ export function TenantsListPage() {
       toast.error('Não foi possível atualizar o status', {
         description: errorMessage(error),
       })
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(tenant.id)
+        return next
+      })
     }
   }
 
-  const columns: DataTableColumn<Tenant>[] = [
+  const tenantsWithPending = tenants?.map((t) => ({ ...t, _pending: pendingIds.has(t.id) }))
+
+  const columns: DataTableColumn<Tenant & { _pending: boolean }>[] = [
     {
       accessorKey: 'name',
       header: 'Nome',
@@ -79,6 +91,7 @@ export function TenantsListPage() {
             <Switch
               checked={tenant.active}
               onCheckedChange={(checked) => handleToggleActive(tenant, checked)}
+              disabled={tenant._pending}
               aria-label={tenant.active ? 'Desativar imobiliária' : 'Ativar imobiliária'}
             />
             <Badge variant={tenant.active ? 'default' : 'secondary'}>
@@ -145,7 +158,7 @@ export function TenantsListPage() {
           </CardAction>
         </CardHeader>
         <CardContent>
-          {isLoading && <Skeleton className="h-40 w-full" />}
+          {isLoading && <TableSkeleton columns={6} />}
 
           {isError && (
             <ErrorState title="Não foi possível carregar as imobiliárias." onRetry={() => refetch()} />
@@ -155,8 +168,12 @@ export function TenantsListPage() {
             <EmptyState title="Nenhuma imobiliária cadastrada ainda." />
           )}
 
-          {tenants && tenants.length > 0 && (
-            <DataTable columns={columns} data={tenants} searchPlaceholder="Buscar por nome, subdomínio..." />
+          {tenantsWithPending && tenantsWithPending.length > 0 && (
+            <DataTable
+              columns={columns}
+              data={tenantsWithPending}
+              searchPlaceholder="Buscar por nome, subdomínio..."
+            />
           )}
         </CardContent>
 

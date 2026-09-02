@@ -4,8 +4,8 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
-import { Calculator, Plus } from 'lucide-react'
+import { Calculator, Loader2, Plus } from 'lucide-react'
+import { DetailSkeleton } from '@/components/detail-skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -352,7 +352,7 @@ export function AnnouncementFormPage() {
   }
 
   if (isEdit && isLoading) {
-    return <p className="text-muted-foreground text-sm">Carregando…</p>
+    return <DetailSkeleton cards={2} />
   }
 
   return (

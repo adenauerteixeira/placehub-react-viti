@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
-import { Skeleton } from '@/components/ui/skeleton'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useDevelopments, type Development } from './api'
 import { DevelopmentFormDialog } from './development-form-dialog'
@@ -73,7 +73,7 @@ export function DevelopmentsListPage() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
+        {isLoading && <TableSkeleton columns={5} />}
 
         {isError && (
           <ErrorState

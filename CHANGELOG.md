@@ -5,6 +5,40 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Refinamento de UX/UI — Fase 4: estados de carregamento e feedback de ações, 2026-09-02)
+
+- **`TableSkeleton`** (`src/components/table-skeleton.tsx`) — esqueleto com a forma real de uma
+  tabela (barra de busca + cabeçalho + linhas), substituindo o bloco cinza genérico
+  (`<Skeleton className="h-40 w-full" />`) usado em ~16 listagens (todas as que usam `DataTable`,
+  mais as tabelas embutidas menores: propostas no hub de negociação, agenda de follow-ups, agenda
+  do lead) — evita o "pulo" de altura quando os dados chegam.
+- **`DetailSkeleton`** (`src/components/detail-skeleton.tsx`) — esqueleto de título + badge + card
+  de campos, substituindo o `FullscreenSpinner` (um spinner central genérico, sem relação com o
+  layout real) nas páginas de detalhe de lead, negociação, venda e comissão, e o texto simples
+  "Carregando…" no formulário de edição de anúncio.
+- **Dashboard**: skeleton dos cards de indicador (`tenant-dashboard-page.tsx`) no lugar de um
+  retângulo genérico.
+- **Switches de ativar/desativar** (Parceiros, Proprietários, Corretores, Usuários do tenant,
+  Imobiliárias no console da plataforma) agora desabilitam durante a chamada ao servidor.
+  **Bug real encontrado no processo**: a primeira tentativa (`disabled={mutation.isPending}` lido
+  direto de uma closure dentro do array `columns`) não funcionava — o `DataTable` (camada de
+  compatibilidade v8 sobre o store de atoms da v9 do `@tanstack/react-table`, já sinalizada como
+  arriscada em nota técnica anterior) não reflete estado externo capturado em closure de célula.
+  Corrigido roteando o estado "pendente" pela própria prop `data` (um `Set` de ids pendentes
+  mesclado no array antes de passar pro `DataTable`), que é o único canal que o `DataTable`
+  realmente atualiza em tela. Confirmado com a requisição de rede artificialmente atrasada (3s):
+  o switch fica desabilitado durante toda a janela, em vez de nunca.
+- **Incidente real durante o QA desta fase**: o teste automatizado do switch clicou na primeira
+  linha habilitada de `/users` pra verificar o estado desabilitado — nessa sessão, essa linha era
+  a conta real do corretor (`adenauerteixeira@gmail.com`), que ficou "Inativo" (bloqueado de
+  logar) ao final dos testes. Percebido pelo usuário ao tentar logar depois, corrigido reativando
+  a conta na hora. **Lição pra próximas sessões de QA**: nunca usar toggle de ativar/desativar
+  contra a primeira linha "qualquer" de uma listagem de usuários reais — usar uma conta de teste
+  dedicada e nomeada, nunca a primeira linha por posição.
+- Validado com `tsc -b`/`oxlint` limpos e teste ao vivo via automação de navegador (login real
+  como tenant_admin Casah, listagens, criação de lead, navegação pra detalhe, toggle de switch com
+  rede atrasada) — zero erro de console.
+
 ### Corrigido (Cores do tenant não chegavam a diálogos/menus/select, achado por acaso, 2026-09-01)
 
 - **Todo componente shadcn que abre em portal** (`Dialog`, `AlertDialog`, `Sheet`, `DropdownMenu`,

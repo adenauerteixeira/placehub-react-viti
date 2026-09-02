@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { formatDocument } from '@/lib/cpf-cnpj'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { usePartners, useTogglePartnerActive, type Partner } from './api'
@@ -21,8 +21,15 @@ export function PartnersListPage() {
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editing, setEditing] = useState<Partner | null>(null)
+  // Precisa ir junto de `data` (não de uma closure em `columns`): as células do
+  // DataTable (camada de compat v8 sobre o store de atoms da v9) só refletem
+  // valores que chegam pela prop `data` — closures fechadas sobre outro estado
+  // (como `toggleActive.isPending`) ficam presas no valor de quando a tabela
+  // foi montada e nunca atualizam depois disso.
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
   async function handleToggleActive(partner: Partner, active: boolean) {
+    setPendingIds((prev) => new Set(prev).add(partner.id))
     try {
       await toggleActive.mutateAsync({ id: partner.id, active })
       toast.success(active ? 'Parceiro ativado.' : 'Parceiro desativado.')
@@ -30,10 +37,18 @@ export function PartnersListPage() {
       toast.error('Não foi possível atualizar o status', {
         description: errorMessage(error),
       })
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(partner.id)
+        return next
+      })
     }
   }
 
-  const columns: DataTableColumn<Partner>[] = [
+  const partnersWithPending = partners?.map((p) => ({ ...p, _pending: pendingIds.has(p.id) }))
+
+  const columns: DataTableColumn<Partner & { _pending: boolean }>[] = [
     {
       accessorKey: 'name',
       header: 'Nome',
@@ -67,6 +82,7 @@ export function PartnersListPage() {
             <Switch
               checked={partner.active}
               onCheckedChange={(checked) => handleToggleActive(partner, checked)}
+              disabled={partner._pending}
               aria-label={partner.active ? 'Desativar parceiro' : 'Ativar parceiro'}
             />
             <Badge variant={partner.active ? 'default' : 'secondary'}>
@@ -102,7 +118,7 @@ export function PartnersListPage() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
+        {isLoading && <TableSkeleton columns={5} />}
 
         {isError && (
           <ErrorState title="Não foi possível carregar os parceiros." onRetry={() => refetch()} />
@@ -110,8 +126,12 @@ export function PartnersListPage() {
 
         {partners && partners.length === 0 && <EmptyState title="Nenhum parceiro cadastrado ainda." />}
 
-        {partners && partners.length > 0 && (
-          <DataTable columns={columns} data={partners} searchPlaceholder="Buscar por nome, documento..." />
+        {partnersWithPending && partnersWithPending.length > 0 && (
+          <DataTable
+            columns={columns}
+            data={partnersWithPending}
+            searchPlaceholder="Buscar por nome, documento..."
+          />
         )}
       </CardContent>
 

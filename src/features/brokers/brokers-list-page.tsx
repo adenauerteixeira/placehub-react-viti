@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { brokerPhotoUrl, useBrokers, useToggleBrokerActive, type Broker } from './api'
 import { BrokerFormDialog } from './broker-form-dialog'
@@ -20,8 +20,12 @@ export function BrokersListPage() {
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editing, setEditing] = useState<Broker | null>(null)
+  // Precisa vir de `data`, não de uma closure em `columns` — ver nota em
+  // partners-list-page.tsx.
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
   async function handleToggleActive(broker: Broker, active: boolean) {
+    setPendingIds((prev) => new Set(prev).add(broker.id))
     try {
       await toggleActive.mutateAsync({ id: broker.id, active })
       toast.success(active ? 'Corretor ativado.' : 'Corretor desativado.')
@@ -29,10 +33,18 @@ export function BrokersListPage() {
       toast.error('Não foi possível atualizar o status', {
         description: errorMessage(error),
       })
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(broker.id)
+        return next
+      })
     }
   }
 
-  const columns: DataTableColumn<Broker>[] = [
+  const brokersWithPending = brokers?.map((b) => ({ ...b, _pending: pendingIds.has(b.id) }))
+
+  const columns: DataTableColumn<Broker & { _pending: boolean }>[] = [
     {
       accessorKey: 'name',
       header: 'Nome',
@@ -79,6 +91,7 @@ export function BrokersListPage() {
             <Switch
               checked={broker.active}
               onCheckedChange={(checked) => handleToggleActive(broker, checked)}
+              disabled={broker._pending}
               aria-label={broker.active ? 'Desativar corretor' : 'Ativar corretor'}
             />
             <Badge variant={broker.active ? 'default' : 'secondary'}>
@@ -114,7 +127,7 @@ export function BrokersListPage() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
+        {isLoading && <TableSkeleton columns={5} />}
 
         {isError && (
           <ErrorState title="Não foi possível carregar os corretores." onRetry={() => refetch()} />
@@ -122,8 +135,8 @@ export function BrokersListPage() {
 
         {brokers && brokers.length === 0 && <EmptyState title="Nenhum corretor cadastrado ainda." />}
 
-        {brokers && brokers.length > 0 && (
-          <DataTable columns={columns} data={brokers} searchPlaceholder="Buscar por nome, CRECI..." />
+        {brokersWithPending && brokersWithPending.length > 0 && (
+          <DataTable columns={columns} data={brokersWithPending} searchPlaceholder="Buscar por nome, CRECI..." />
         )}
       </CardContent>
 

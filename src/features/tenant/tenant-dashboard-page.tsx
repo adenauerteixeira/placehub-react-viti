@@ -97,7 +97,18 @@ export function TenantDashboardPage() {
       </div>
       <p className="text-muted-foreground text-sm">Período: {period.label}</p>
 
-      {metricsLoading && <Skeleton className="h-32 w-full" />}
+      {metricsLoading && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="flex flex-col gap-2 pt-6">
+                <Skeleton className="h-6 w-16" />
+                <Skeleton className="h-4 w-24" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
       {metrics && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <MetricCard title="Leads" value={String(metrics.totalLeads)} hint={`${metrics.leadConversion}% convertidos`} />

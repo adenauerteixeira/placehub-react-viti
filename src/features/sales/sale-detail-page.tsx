@@ -5,7 +5,8 @@ import { Ban, FileText, Wallet } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-state'
+import { DetailSkeleton } from '@/components/detail-skeleton'
+import { FullscreenMessage } from '@/components/fullscreen-state'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
@@ -50,7 +51,7 @@ export function SaleDetailPage() {
   const { data: auditLogs } = useSaleAuditLogs(id)
   const cancelSale = useCancelSale(tenant.id)
 
-  if (isLoading) return <FullscreenSpinner />
+  if (isLoading) return <DetailSkeleton cards={3} />
   if (isError || !sale) {
     return (
       <FullscreenMessage

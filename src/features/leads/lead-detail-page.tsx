@@ -9,11 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/field'
-import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-state'
+import { DetailSkeleton } from '@/components/detail-skeleton'
+import { FullscreenMessage } from '@/components/fullscreen-state'
 import { Input } from '@/components/ui/input'
 import { PhoneInput } from '@/components/phone-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useBrokers } from '@/features/brokers/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
@@ -78,7 +79,7 @@ export function LeadDetailPage() {
     })
   }, [lead, reset])
 
-  if (isLoading) return <FullscreenSpinner />
+  if (isLoading) return <DetailSkeleton />
   if (isError || !lead) {
     return (
       <FullscreenMessage
@@ -264,7 +265,11 @@ export function LeadDetailPage() {
           </CardAction>
         </CardHeader>
         <CardContent>
-          {followUps ? <FollowUpTable followUps={followUps} /> : <Skeleton className="h-24 w-full" />}
+          {followUps ? (
+            <FollowUpTable followUps={followUps} />
+          ) : (
+            <TableSkeleton columns={4} rows={2} search={false} />
+          )}
         </CardContent>
       </Card>
 

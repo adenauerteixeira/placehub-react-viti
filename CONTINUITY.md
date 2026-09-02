@@ -5,9 +5,9 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-09-01
+## Estado atual — 2026-09-02
 
-- **Refinamento de UX/UI — Fases 1 e 2 completas, a pedido do usuário (2026-09-01).** Iniciativa
+- **Refinamento de UX/UI — Fases 1 a 4 completas, a pedido do usuário (2026-09-01/02).** Iniciativa
   nova, separada das fases numeradas do ROADMAP.md: diagnóstico completo do app (varredura de
   todas as telas/features), lista de problemas priorizada por impacto, direção visual confirmada
   (manter o tema já decidido, "Dashboard SaaS colorido" — não redesenhar cores, só completar a
@@ -62,6 +62,24 @@
     de `sm` em 10 telas.
   - Tudo validado com `tsc -b`/`oxlint` limpos e teste ao vivo (mobile 390px + desktop, tenant Casah
     logado de verdade) — zero erro de console. Commit/deploy autorizado pelo usuário e enviado.
+  - **Fase 4 (estados de carregamento e feedback de ações) completa (2026-09-02)**: `TableSkeleton`
+    e `DetailSkeleton` (`src/components/`) substituem o bloco cinza genérico (~16 listagens) e o
+    `FullscreenSpinner`/texto "Carregando…" (4 páginas de detalhe + formulário de anúncio) por
+    esqueletos com a forma real do conteúdo; dashboard ganhou skeleton dos cards de indicador;
+    switches de ativar/desativar (Parceiros, Proprietários, Corretores, Usuários do tenant,
+    Imobiliárias) desabilitam durante a chamada ao servidor. **Bug real encontrado e corrigido**: o
+    `DataTable` (compat v8 sobre a v9 do `@tanstack/react-table`) não reflete estado externo lido
+    de closure dentro de `columns` — `disabled={mutation.isPending}` direto na célula nunca
+    atualizava; corrigido roteando o estado "pendente" pela prop `data` (`Set` de ids pendentes
+    mesclado no array), confirmado com rede artificialmente atrasada. Ver CHANGELOG.md.
+    **Incidente real no processo, corrigido na hora**: o teste automatizado do switch em `/users`
+    clicou na primeira linha habilitada pra validar o estado desabilitado — nessa sessão era a
+    conta real do corretor (`adenauerteixeira@gmail.com`), que ficou "Inativo" (bloqueado de logar)
+    até o usuário reportar e a reativação ser feita na hora. **Lição registrada pra próximas
+    sessões de QA: nunca clicar toggle de ativar/desativar contra "a primeira linha" de uma
+    listagem de usuários reais — usar sempre uma conta de teste dedicada e identificada pelo
+    nome/e-mail, nunca por posição.** Validado com `tsc -b`/`oxlint` limpos e teste ao vivo via
+    automação de navegador. Commit/deploy autorizado pelo usuário e enviado.
 - **App no ar em produção pela primeira vez (2026-08-28/09-01) — Vercel + domínio próprio.**
   Projeto `place-hub1/placehub` conectado ao GitHub, deploy automático a cada push em `trunk`.
   Domínio raiz da plataforma é **`placehubapp.com.br`** (não `placehub.app` — já registrado por
@@ -405,7 +423,9 @@
 - **Dados reais no banco:** um `super_admin` (`root@gmail.com`) e um tenant, **Casah** (slug
   `casah`), com um `tenant_admin` (`tenant.adm@gmail.com`). Alguns registros de teste da Fase 2
   ficaram no banco (empreendimento/parceiro/proprietário/corretor/anúncio "QA Teste") — não são
-  destrutivos deixar, ver "Notas técnicas" pra limpar se quiser.
+  destrutivos deixar, ver "Notas técnicas" pra limpar se quiser. **Dois leads de teste novos da
+  Fase 4 do refinamento de UX/UI** ("Fulano Teste Skeleton", "Qa Fase4 Skeleton Test") também
+  ficaram no banco, mesma decisão de não limpar.
 - **Fase 1 (fundação, auth, tenants, usuários, identidade visual) e Fase 2 (catálogo completo)
   estão fechadas e testadas ponta a ponta contra o Supabase real.** Resumo do que existe hoje:
   - Login único (`/login`) com redirecionamento pós-login por role/tenant; console da plataforma

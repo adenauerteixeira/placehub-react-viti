@@ -5,7 +5,8 @@ import { FileText, ThumbsUp, Wallet } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-state'
+import { DetailSkeleton } from '@/components/detail-skeleton'
+import { FullscreenMessage } from '@/components/fullscreen-state'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
@@ -37,7 +38,7 @@ export function CommissionDetailPage() {
   const { data: brokers } = useBrokers(tenant.id)
   const confirmReceipt = useConfirmBrokerReceipt(id ?? '', tenant.id)
 
-  if (isLoading) return <FullscreenSpinner />
+  if (isLoading) return <DetailSkeleton cards={2} />
   if (isError || !commission) {
     return (
       <FullscreenMessage

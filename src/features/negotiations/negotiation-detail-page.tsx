@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/field'
-import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-state'
+import { DetailSkeleton } from '@/components/detail-skeleton'
+import { FullscreenMessage } from '@/components/fullscreen-state'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
@@ -78,7 +79,7 @@ export function NegotiationDetailPage() {
     })
   }, [negotiation, reset])
 
-  if (isLoading) return <FullscreenSpinner />
+  if (isLoading) return <DetailSkeleton />
   if (isError || !negotiation) {
     return (
       <FullscreenMessage

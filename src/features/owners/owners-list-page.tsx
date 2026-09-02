@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { formatDocument } from '@/lib/cpf-cnpj'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useOwners, useToggleOwnerActive, type Owner } from './api'
@@ -21,8 +21,12 @@ export function OwnersListPage() {
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editing, setEditing] = useState<Owner | null>(null)
+  // Precisa vir de `data`, não de uma closure em `columns` — ver nota em
+  // partners-list-page.tsx.
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
   async function handleToggleActive(owner: Owner, active: boolean) {
+    setPendingIds((prev) => new Set(prev).add(owner.id))
     try {
       await toggleActive.mutateAsync({ id: owner.id, active })
       toast.success(active ? 'Proprietário ativado.' : 'Proprietário desativado.')
@@ -30,10 +34,18 @@ export function OwnersListPage() {
       toast.error('Não foi possível atualizar o status', {
         description: errorMessage(error),
       })
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(owner.id)
+        return next
+      })
     }
   }
 
-  const columns: DataTableColumn<Owner>[] = [
+  const ownersWithPending = owners?.map((o) => ({ ...o, _pending: pendingIds.has(o.id) }))
+
+  const columns: DataTableColumn<Owner & { _pending: boolean }>[] = [
     {
       accessorKey: 'name',
       header: 'Nome',
@@ -67,6 +79,7 @@ export function OwnersListPage() {
             <Switch
               checked={owner.active}
               onCheckedChange={(checked) => handleToggleActive(owner, checked)}
+              disabled={owner._pending}
               aria-label={owner.active ? 'Desativar proprietário' : 'Ativar proprietário'}
             />
             <Badge variant={owner.active ? 'default' : 'secondary'}>
@@ -102,7 +115,7 @@ export function OwnersListPage() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
+        {isLoading && <TableSkeleton columns={5} />}
 
         {isError && (
           <ErrorState title="Não foi possível carregar os proprietários." onRetry={() => refetch()} />
@@ -110,8 +123,12 @@ export function OwnersListPage() {
 
         {owners && owners.length === 0 && <EmptyState title="Nenhum proprietário cadastrado ainda." />}
 
-        {owners && owners.length > 0 && (
-          <DataTable columns={columns} data={owners} searchPlaceholder="Buscar por nome, documento..." />
+        {ownersWithPending && ownersWithPending.length > 0 && (
+          <DataTable
+            columns={columns}
+            data={ownersWithPending}
+            searchPlaceholder="Buscar por nome, documento..."
+          />
         )}
       </CardContent>
 

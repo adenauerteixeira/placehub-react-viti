@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
-import { Skeleton } from '@/components/ui/skeleton'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useConfirm } from '@/hooks/use-confirm'
@@ -101,7 +101,7 @@ export function ReservationsListPage() {
         <CardTitle>Reservas</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
+        {isLoading && <TableSkeleton columns={5} />}
         {isError && (
           <ErrorState title="Não foi possível carregar as reservas." onRetry={() => refetch()} />
         )}

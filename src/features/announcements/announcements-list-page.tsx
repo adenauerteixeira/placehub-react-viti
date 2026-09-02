@@ -8,7 +8,7 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/componen
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
 import { ReserveDialog } from '@/features/reservations/reserve-dialog'
@@ -155,7 +155,7 @@ export function AnnouncementsListPage() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
+        {isLoading && <TableSkeleton columns={5} />}
 
         {isError && (
           <ErrorState title="Não foi possível carregar os anúncios." onRetry={() => refetch()} />

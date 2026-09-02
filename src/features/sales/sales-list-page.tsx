@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
-import { Skeleton } from '@/components/ui/skeleton'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
@@ -93,7 +93,7 @@ export function SalesListPage() {
         <CardTitle>Vendas</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
+        {isLoading && <TableSkeleton columns={6} />}
         {isError && <ErrorState title="Não foi possível carregar as vendas." onRetry={() => refetch()} />}
         {sales && sales.length === 0 && (
           <EmptyState

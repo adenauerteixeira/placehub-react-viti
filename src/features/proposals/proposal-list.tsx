@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState, ErrorState } from '@/components/list-state'
-import { Skeleton } from '@/components/ui/skeleton'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
@@ -66,7 +66,7 @@ export function ProposalList({
         </CardAction>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-24 w-full" />}
+        {isLoading && <TableSkeleton columns={4} rows={2} search={false} />}
         {isError && (
           <ErrorState title="Não foi possível carregar as propostas." onRetry={() => refetch()} />
         )}

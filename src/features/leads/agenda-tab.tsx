@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
@@ -51,7 +51,7 @@ export function AgendaTab() {
         ))}
       </div>
 
-      {isLoading && <Skeleton className="h-40 w-full" />}
+      {isLoading && <TableSkeleton columns={5} rows={4} search={false} />}
       {isError && <p className="text-destructive text-sm">Não foi possível carregar a agenda.</p>}
       {followUps && <FollowUpTable followUps={filtered} showLeadColumn />}
     </div>

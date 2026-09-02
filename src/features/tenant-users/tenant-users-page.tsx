@@ -7,8 +7,8 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/componen
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
 import { errorMessage } from '@/lib/errors'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { TableSkeleton } from '@/components/table-skeleton'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useTenantUsers, useToggleTenantUserActive, type TenantUser } from './api'
 import { EditUserDialog } from './edit-user-dialog'
@@ -22,8 +22,12 @@ export function TenantUsersPage() {
 
   const [inviteOpen, setInviteOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<TenantUser | null>(null)
+  // Precisa vir de `data`, não de uma closure em `columns` — ver nota em
+  // partners-list-page.tsx.
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
   async function handleToggleActive(user: TenantUser, is_active: boolean) {
+    setPendingIds((prev) => new Set(prev).add(user.id))
     try {
       await toggleActive.mutateAsync({ id: user.id, is_active })
       toast.success(is_active ? 'Usuário ativado.' : 'Usuário desativado.')
@@ -31,10 +35,18 @@ export function TenantUsersPage() {
       toast.error('Não foi possível atualizar o status', {
         description: errorMessage(error),
       })
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(user.id)
+        return next
+      })
     }
   }
 
-  const columns: DataTableColumn<TenantUser>[] = [
+  const usersWithPending = users?.map((u) => ({ ...u, _pending: pendingIds.has(u.id) }))
+
+  const columns: DataTableColumn<TenantUser & { _pending: boolean }>[] = [
     {
       id: 'full_name',
       accessorFn: (row) => row.full_name || '—',
@@ -62,7 +74,7 @@ export function TenantUsersPage() {
           <div className="flex items-center gap-2">
             <Switch
               checked={user.is_active}
-              disabled={user.id === profile.id}
+              disabled={user.id === profile.id || user._pending}
               onCheckedChange={(checked) => handleToggleActive(user, checked)}
               aria-label={user.is_active ? 'Desativar usuário' : 'Ativar usuário'}
             />
@@ -104,7 +116,7 @@ export function TenantUsersPage() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {isLoading && <Skeleton className="h-40 w-full" />}
+        {isLoading && <TableSkeleton columns={5} />}
 
         {isError && (
           <ErrorState title="Não foi possível carregar os usuários." onRetry={() => refetch()} />
@@ -112,8 +124,8 @@ export function TenantUsersPage() {
 
         {users && users.length === 0 && <EmptyState title="Nenhum usuário cadastrado ainda." />}
 
-        {users && users.length > 0 && (
-          <DataTable columns={columns} data={users} searchPlaceholder="Buscar por nome, e-mail..." />
+        {usersWithPending && usersWithPending.length > 0 && (
+          <DataTable columns={columns} data={usersWithPending} searchPlaceholder="Buscar por nome, e-mail..." />
         )}
       </CardContent>
 
