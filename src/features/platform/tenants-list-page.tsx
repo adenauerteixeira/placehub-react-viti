@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Pencil, Plus, UserPlus } from 'lucide-react'
+import { Pencil, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CreateButton } from '@/components/create-button'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
 import { errorMessage } from '@/lib/errors'
@@ -152,9 +153,7 @@ export function TenantsListPage() {
         <CardHeader>
           <CardTitle>Imobiliárias</CardTitle>
           <CardAction>
-            <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="size-4" /> <span className="hidden sm:inline">Nova imobiliária</span>
-            </Button>
+            <CreateButton label="Nova imobiliária" onClick={() => setCreateOpen(true)} />
           </CardAction>
         </CardHeader>
         <CardContent>

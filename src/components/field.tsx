@@ -22,7 +22,7 @@ export function Field({
   className?: string
 }) {
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
+    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
       <FieldLabel htmlFor={htmlFor} hint={hint}>
         {label}
       </FieldLabel>

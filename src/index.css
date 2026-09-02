@@ -145,6 +145,19 @@
   background-position: 0 0, 0 5px, 5px -5px, -5px 0;
 }
 
+/* Some com a barra de rolagem nativa — usado no carrossel de banner da
+   Vitrine, onde a rolagem é por arraste/setas/autoplay, não por barra.
+   CSS autoral em vez de propriedade arbitrária do Tailwind: mais confiável
+   entre navegadores (a sintaxe arbitrária não estava escondendo a barra
+   de forma consistente). */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Impressão de relatórios (window.print()): o AppShell usa header/footer
    fixos e um <main> com altura/rolagem travadas pra caber na viewport —
    nada disso faz sentido em papel, então libera o layout normal do fluxo

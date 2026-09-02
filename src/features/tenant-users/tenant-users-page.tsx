@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CreateButton } from '@/components/create-button'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
 import { errorMessage } from '@/lib/errors'
@@ -110,9 +111,7 @@ export function TenantUsersPage() {
       <CardHeader>
         <CardTitle>Usuários</CardTitle>
         <CardAction>
-          <Button onClick={() => setInviteOpen(true)}>
-            <Plus className="size-4" /> <span className="hidden sm:inline">Novo usuário</span>
-          </Button>
+          <CreateButton label="Novo usuário" onClick={() => setInviteOpen(true)} />
         </CardAction>
       </CardHeader>
       <CardContent>

@@ -4,11 +4,12 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Calculator, Loader2, Plus } from 'lucide-react'
+import { Calculator, Loader2 } from 'lucide-react'
 import { DetailSkeleton } from '@/components/detail-skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CreateButton } from '@/components/create-button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { CurrencyInput } from '@/components/currency-input'
 import { Field } from '@/components/field'
@@ -589,16 +590,12 @@ export function AnnouncementFormPage() {
                         </SelectContent>
                       </Select>
                       {hasPermission(profile, 'developments') && (
-                        <Button
+                        <CreateButton
                           type="button"
                           variant="outline"
-                          size="icon"
-                          aria-label="Novo empreendimento"
-                          title="Novo empreendimento"
+                          label="Novo empreendimento"
                           onClick={() => setDevelopmentDialogOpen(true)}
-                        >
-                          <Plus className="size-4" />
-                        </Button>
+                        />
                       )}
                     </div>
                   </Field>
@@ -625,16 +622,12 @@ export function AnnouncementFormPage() {
                         </SelectContent>
                       </Select>
                       {hasPermission(profile, 'partners') && (
-                        <Button
+                        <CreateButton
                           type="button"
                           variant="outline"
-                          size="icon"
-                          aria-label="Novo parceiro"
-                          title="Novo parceiro"
+                          label="Novo parceiro"
                           onClick={() => setPartnerDialogOpen(true)}
-                        >
-                          <Plus className="size-4" />
-                        </Button>
+                        />
                       )}
                     </div>
                   </Field>
@@ -661,16 +654,12 @@ export function AnnouncementFormPage() {
                         </SelectContent>
                       </Select>
                       {hasPermission(profile, 'owners') && (
-                        <Button
+                        <CreateButton
                           type="button"
                           variant="outline"
-                          size="icon"
-                          aria-label="Novo proprietário"
-                          title="Novo proprietário"
+                          label="Novo proprietário"
                           onClick={() => setOwnerDialogOpen(true)}
-                        >
-                          <Plus className="size-4" />
-                        </Button>
+                        />
                       )}
                     </div>
                   </Field>
@@ -694,16 +683,12 @@ export function AnnouncementFormPage() {
                         </SelectContent>
                       </Select>
                       {hasPermission(profile, 'brokers') && (
-                        <Button
+                        <CreateButton
                           type="button"
                           variant="outline"
-                          size="icon"
-                          aria-label="Novo corretor"
-                          title="Novo corretor"
+                          label="Novo corretor"
                           onClick={() => setBrokerDialogOpen(true)}
-                        >
-                          <Plus className="size-4" />
-                        </Button>
+                        />
                       )}
                     </div>
                   </Field>

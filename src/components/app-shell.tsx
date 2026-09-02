@@ -40,7 +40,13 @@ export function AppShell({
         </header>
         <main
           className={cn(
-            'absolute inset-x-0 top-16 bottom-11 overflow-y-auto',
+            // overflow-x explícito de propósito: só declarar overflow-y
+            // deixa o eixo x com o valor efetivo "auto" (regra do CSS pra
+            // quando só um eixo tem overflow != visible) — qualquer
+            // elemento que vaze um pouco na horizontal (ex: o carrossel de
+            // banner em largura total, que usa margem negativa) faria
+            // aparecer uma barra de rolagem horizontal aqui.
+            'absolute inset-x-0 top-16 bottom-11 overflow-x-hidden overflow-y-auto',
             centerMain && 'flex items-center justify-center',
           )}
         >

@@ -7,8 +7,10 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
+import { BannerAdsManager } from '@/features/tenant-banner-ads/banner-ads-manager'
 import type { Tenant } from '@/features/tenants/api'
 import { brandingAssetUrl, useSendTestEmail, useUpdateTenantColors, type TenantColorsInput } from './api'
 import { BrandingPreviewCard } from './branding-preview-card'
@@ -47,6 +49,17 @@ function colorsFromTenant(tenant: Tenant): TenantColorsInput {
     email_logo_background_transparent: tenant.email_logo_background_transparent,
     public_hero_enabled: tenant.public_hero_enabled,
     public_home_variant: tenant.public_home_variant,
+    public_hero_full_width: tenant.public_hero_full_width,
+    public_hero_autoplay_seconds: tenant.public_hero_autoplay_seconds,
+    public_hero_autoplay_reverse: tenant.public_hero_autoplay_reverse,
+    public_hero_show_arrows: tenant.public_hero_show_arrows,
+    public_hero_show_border: tenant.public_hero_show_border,
+    public_hero_sticky: tenant.public_hero_sticky,
+    public_hero_title: tenant.public_hero_title ?? '',
+    public_hero_subtitle: tenant.public_hero_subtitle ?? '',
+    public_hero_subtitle_2: tenant.public_hero_subtitle_2 ?? '',
+    public_hero_link_url: tenant.public_hero_link_url ?? '',
+    public_hero_link_label: tenant.public_hero_link_label ?? '',
     animated_hero_show_image: tenant.animated_hero_show_image,
     animated_hero_show_particles: tenant.animated_hero_show_particles,
     training_enabled: tenant.training_enabled,
@@ -60,9 +73,15 @@ export function TenantBrandingPage() {
   const [colors, setColors] = useState<TenantColorsInput>(() => colorsFromTenant(tenant))
   const [testEmail, setTestEmail] = useState('')
 
+  // Só reinicializa quando o tenant muda de verdade (id diferente) — não a
+  // cada objeto novo que `useTenant` devolve (staleTime 0, refaz a busca
+  // sozinho ao focar a janela de novo, por exemplo). Depender do objeto
+  // `tenant` inteiro apagava edição não salva (ex: "segundos por slide")
+  // toda vez que esse refetch em segundo plano acontecia no meio da edição.
   useEffect(() => {
     setColors(colorsFromTenant(tenant))
-  }, [tenant])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant.id])
 
   function set<K extends keyof TenantColorsInput>(key: K, value: TenantColorsInput[K]) {
     setColors((prev) => ({ ...prev, [key]: value }))
@@ -198,7 +217,8 @@ export function TenantBrandingPage() {
                     stacked
                   />
                   <p className="text-muted-foreground text-xs">
-                    Imagem de fundo usada no portal público da imobiliária.
+                    Imagem de fundo usada no portal público da imobiliária (mesmo campo da aba
+                    "Página pública" &gt; Conteúdo do banner próprio).
                   </p>
                 </div>
 
@@ -250,7 +270,7 @@ export function TenantBrandingPage() {
                 </FieldLabel>
                 <Select
                   value={colors.public_home_variant}
-                  onValueChange={(v) => set('public_home_variant', v as 'classic' | 'animated')}
+                  onValueChange={(v) => set('public_home_variant', v as 'classic' | 'animated' | 'showcase')}
                 >
                   <SelectTrigger className="w-64">
                     <SelectValue />
@@ -258,6 +278,7 @@ export function TenantBrandingPage() {
                   <SelectContent>
                     <SelectItem value="classic">Clássica</SelectItem>
                     <SelectItem value="animated">Animada (com rolagem cinematográfica)</SelectItem>
+                    <SelectItem value="showcase">Vitrine (com carrossel de anúncios)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -271,13 +292,208 @@ export function TenantBrandingPage() {
                   Mostrar banner de destaque na home pública
                 </label>
                 <p className="text-muted-foreground text-xs">
-                  Nome da imobiliária, frase de efeito e botão "Ver corretores" no topo da home.
-                  Só vale pra versão <strong>Clássica</strong> — a Animada tem seu próprio hero
-                  embutido.
+                  Foto, título e frase de efeito no topo da home — configuráveis logo abaixo. Vale
+                  pra <strong>Clássica</strong> e pro slide próprio da <strong>Vitrine</strong> — a
+                  Animada tem seu próprio hero embutido.
                 </p>
               </div>
+
+              {colors.public_home_variant === 'showcase' && (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={colors.public_hero_full_width}
+                        onCheckedChange={(c) => set('public_hero_full_width', c === true)}
+                      />
+                      Banner ocupa a largura total da página
+                    </label>
+                    <p className="text-muted-foreground text-xs">
+                      Desmarcado, o carrossel fica contido na mesma largura dos anúncios (como é
+                      hoje). Marcado, ele se estende de ponta a ponta da tela.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel
+                      htmlFor="hero-autoplay-seconds"
+                      hint="Cada slide (o seu e os das empresas parceiras) fica esse tempo em evidência antes de passar pro próximo, sozinho. As setas continuam disponíveis pra navegação manual."
+                    >
+                      Segundos por slide
+                    </FieldLabel>
+                    <Input
+                      id="hero-autoplay-seconds"
+                      type="number"
+                      min={2}
+                      max={30}
+                      className="w-24"
+                      value={colors.public_hero_autoplay_seconds}
+                      onChange={(e) => set('public_hero_autoplay_seconds', Number(e.target.value))}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Switch
+                        checked={colors.public_hero_autoplay_reverse}
+                        onCheckedChange={(c) => set('public_hero_autoplay_reverse', c)}
+                      />
+                      Inverter sentido da rolagem automática
+                    </label>
+                    <p className="text-muted-foreground text-xs">
+                      Desligado, os slides avançam da direita pra esquerda (padrão). Ligado, o
+                      sentido vira o contrário.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Switch
+                        checked={colors.public_hero_show_arrows}
+                        onCheckedChange={(c) => set('public_hero_show_arrows', c)}
+                      />
+                      Mostrar setas de navegação
+                    </label>
+                    <p className="text-muted-foreground text-xs">
+                      Desligado, o visitante só troca de slide arrastando (ou esperando a rolagem
+                      automática).
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Switch
+                        checked={colors.public_hero_show_border}
+                        onCheckedChange={(c) => set('public_hero_show_border', c)}
+                      />
+                      Mostrar borda ao redor do slide
+                    </label>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Switch
+                        checked={colors.public_hero_sticky}
+                        onCheckedChange={(c) => set('public_hero_sticky', c)}
+                      />
+                      Manter o banner fixo no topo ao rolar a página
+                    </label>
+                    <p className="text-muted-foreground text-xs">
+                      Desligado, o banner rola junto com os anúncios (como é hoje). Ligado, ele
+                      fica parado logo abaixo do cabeçalho enquanto o visitante rola a página.
+                    </p>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
+
+          {colors.public_hero_enabled && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Conteúdo do banner próprio</CardTitle>
+                <CardDescription>
+                  Foto, título e textos do slide da própria imobiliária — o que aparece antes dos
+                  anúncios de parceiros na Vitrine, e como banner único na Clássica.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                <div className="flex flex-col gap-3 rounded-xl border p-4">
+                  <BrandingUploadField
+                    tenantId={tenant.id}
+                    asset="background-image"
+                    label="Foto do banner"
+                    currentPath={tenant.background_image_path}
+                    previewUrl={brandingAssetUrl(tenant.background_image_path, tenant.updated_at)}
+                    stacked
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Mesma imagem do campo "Plano de fundo" (aba Logos e imagens). Sem foto, o
+                    banner cai no gradiente das cores do tenant.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="hero-title" hint="Vazio usa o nome da imobiliária.">
+                    Título
+                  </FieldLabel>
+                  <Input
+                    id="hero-title"
+                    placeholder={tenant.name}
+                    value={colors.public_hero_title}
+                    onChange={(e) => set('public_hero_title', e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="hero-subtitle" hint="Vazio usa a frase padrão.">
+                    Subtítulo
+                  </FieldLabel>
+                  <Input
+                    id="hero-subtitle"
+                    placeholder="Encontre seu próximo imóvel com quem entende do mercado!"
+                    value={colors.public_hero_subtitle}
+                    onChange={(e) => set('public_hero_subtitle', e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="hero-subtitle-2" hint="Opcional — só aparece se preenchido.">
+                    Segundo subtítulo
+                  </FieldLabel>
+                  <Input
+                    id="hero-subtitle-2"
+                    value={colors.public_hero_subtitle_2}
+                    onChange={(e) => set('public_hero_subtitle_2', e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel
+                      htmlFor="hero-link-url"
+                      hint="Opcional. Mostra um botão nesse slide levando pra esse link — pode ser uma página do próprio site (ex: /corretores) ou um endereço externo."
+                    >
+                      Link do botão
+                    </FieldLabel>
+                    <Input
+                      id="hero-link-url"
+                      placeholder="https:// ou /corretores"
+                      value={colors.public_hero_link_url}
+                      onChange={(e) => set('public_hero_link_url', e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel htmlFor="hero-link-label" hint='Vazio usa "Saiba mais".'>
+                      Rótulo do botão
+                    </FieldLabel>
+                    <Input
+                      id="hero-link-label"
+                      placeholder="Saiba mais"
+                      value={colors.public_hero_link_label}
+                      onChange={(e) => set('public_hero_link_label', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {colors.public_home_variant === 'showcase' && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Anúncios do banner (Vitrine)</CardTitle>
+                <CardDescription>
+                  Empresas parceiras que aparecem no carrossel, sempre depois do slide próprio da
+                  imobiliária. Cada anúncio pode ter vigência (início/fim) e sai do ar sozinho
+                  quando vence.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BannerAdsManager tenantId={tenant.id} />
+              </CardContent>
+            </Card>
+          )}
 
           {colors.public_home_variant === 'animated' && (
             <Card className="mt-6">

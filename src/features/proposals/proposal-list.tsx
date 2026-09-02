@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Handshake, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Handshake, Pencil, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CreateButton } from '@/components/create-button'
 import { EmptyState, ErrorState } from '@/components/list-state'
 import { TableSkeleton } from '@/components/table-skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -60,9 +61,7 @@ export function ProposalList({
       <CardHeader>
         <CardTitle className="text-base">Propostas</CardTitle>
         <CardAction>
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> <span className="hidden sm:inline">Nova proposta</span>
-          </Button>
+          <CreateButton label="Nova proposta" size="icon-sm" onClick={() => setCreateOpen(true)} />
         </CardAction>
       </CardHeader>
       <CardContent>

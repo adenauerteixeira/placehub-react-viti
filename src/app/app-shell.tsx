@@ -31,6 +31,7 @@ import { PublicBrokerDetailPage } from '@/features/tenant/public-broker-detail-p
 import { PublicBrokersListPage } from '@/features/tenant/public-brokers-list-page'
 import { AnimatedTenantHomePage } from '@/features/tenant/animated-home/animated-home-page'
 import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
+import { ShowcaseTenantHomePage } from '@/features/tenant/showcase-home/showcase-home-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
 import { TrainingPage } from '@/features/tenant/training-page'
 import { ResetDataPage } from '@/features/tenant/reset-data-page'
@@ -266,11 +267,9 @@ function TenantHomeRoute({ slug }: { slug: string }) {
     )
   }
 
-  return tenant.public_home_variant === 'animated' ? (
-    <AnimatedTenantHomePage tenant={tenant} />
-  ) : (
-    <PublicTenantHomePage slug={slug} />
-  )
+  if (tenant.public_home_variant === 'animated') return <AnimatedTenantHomePage tenant={tenant} />
+  if (tenant.public_home_variant === 'showcase') return <ShowcaseTenantHomePage slug={slug} />
+  return <PublicTenantHomePage slug={slug} />
 }
 
 function RequireTenantAdmin({ children }: { children: React.ReactNode }) {

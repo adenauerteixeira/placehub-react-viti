@@ -60,7 +60,18 @@ export type TenantColorsInput = {
   email_logo_background_color: string
   email_logo_background_transparent: boolean
   public_hero_enabled: boolean
-  public_home_variant: 'classic' | 'animated'
+  public_home_variant: 'classic' | 'animated' | 'showcase'
+  public_hero_full_width: boolean
+  public_hero_autoplay_seconds: number
+  public_hero_autoplay_reverse: boolean
+  public_hero_show_arrows: boolean
+  public_hero_show_border: boolean
+  public_hero_sticky: boolean
+  public_hero_title: string
+  public_hero_subtitle: string
+  public_hero_subtitle_2: string
+  public_hero_link_url: string
+  public_hero_link_label: string
   animated_hero_show_image: boolean
   animated_hero_show_particles: boolean
   training_enabled: boolean
@@ -71,7 +82,17 @@ export function useUpdateTenantColors(tenantId: string) {
 
   return useMutation({
     mutationFn: async (input: TenantColorsInput) => {
-      const { error } = await supabase.from('tenants').update(input).eq('id', tenantId)
+      const { error } = await supabase
+        .from('tenants')
+        .update({
+          ...input,
+          public_hero_title: input.public_hero_title || null,
+          public_hero_subtitle: input.public_hero_subtitle || null,
+          public_hero_subtitle_2: input.public_hero_subtitle_2 || null,
+          public_hero_link_url: input.public_hero_link_url || null,
+          public_hero_link_label: input.public_hero_link_label || null,
+        })
+        .eq('id', tenantId)
       if (error) throw error
     },
     onSuccess: () => {

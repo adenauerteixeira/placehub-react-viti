@@ -4,10 +4,11 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CreateButton } from '@/components/create-button'
 import { Field } from '@/components/field'
 import { DetailSkeleton } from '@/components/detail-skeleton'
 import { FullscreenMessage } from '@/components/fullscreen-state'
@@ -259,9 +260,7 @@ export function LeadDetailPage() {
         <CardHeader>
           <CardTitle className="text-base">Follow-ups</CardTitle>
           <CardAction>
-            <Button size="sm" onClick={() => setScheduleOpen(true)}>
-              <Plus className="size-4" /> Agendar
-            </Button>
+            <CreateButton label="Agendar" size="icon-sm" onClick={() => setScheduleOpen(true)} />
           </CardAction>
         </CardHeader>
         <CardContent>

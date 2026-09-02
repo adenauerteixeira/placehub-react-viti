@@ -1,3 +1,13 @@
+import {
+  Building,
+  Building2,
+  FileSignature,
+  Home,
+  LandPlot,
+  Store,
+  TreePine,
+  type LucideIcon,
+} from 'lucide-react'
 import type { Announcement, AnnouncementStatus, PropertyType, TransactionType } from './api'
 
 export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
@@ -8,6 +18,18 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
   commercial: 'Comercial',
   launch: 'Lançamento',
   assignment: 'Cessão (Ágio)',
+}
+
+/** Só usado pela home Vitrine, pra dar destaque visual a cada categoria —
+ * Clássica e Animada não usam. */
+export const PROPERTY_TYPE_ICONS: Record<PropertyType, LucideIcon> = {
+  lot: LandPlot,
+  house: Home,
+  apartment: Building2,
+  farm: TreePine,
+  commercial: Store,
+  launch: Building,
+  assignment: FileSignature,
 }
 
 export const PROPERTY_TYPE_ORDER = Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[]

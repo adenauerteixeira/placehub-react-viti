@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Eye, Plus } from 'lucide-react'
+import { Eye } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CreateButton } from '@/components/create-button'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
 import { TableSkeleton } from '@/components/table-skeleton'
@@ -83,9 +84,7 @@ export function LeadsListPage() {
       <CardHeader>
         <CardTitle>Leads</CardTitle>
         <CardAction>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> <span className="hidden sm:inline">Novo lead</span>
-          </Button>
+          <CreateButton label="Novo lead" onClick={() => setCreateOpen(true)} />
         </CardAction>
       </CardHeader>
       <CardContent>

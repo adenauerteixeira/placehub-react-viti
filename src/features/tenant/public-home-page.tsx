@@ -6,15 +6,14 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { AppFooter, AppShell } from '@/components/app-shell'
 import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-state'
 import { useTheme } from '@/lib/theme-provider'
-import { whatsappUrl } from '@/lib/whatsapp'
 import { announcementImageUrl, usePublicAnnouncementCovers, usePublicAnnouncements } from '@/features/announcements/api'
 import { groupAnnouncementsByType } from '@/features/announcements/labels'
-import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { TenantBrand } from '@/features/tenant-branding/tenant-brand'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
 import { useTenantTitle } from '@/features/tenant-branding/use-tenant-title'
 import { usePublicTenant } from '@/features/tenants/api'
+import { OwnPromoSlide } from './own-promo-slide'
 import { PublicAnnouncementCard } from './public-announcement-card'
 
 export function PublicTenantHomePage({ slug }: { slug: string }) {
@@ -43,7 +42,6 @@ export function PublicTenantHomePage({ slug }: { slug: string }) {
   }
 
   const dark = resolvedTheme === 'dark'
-  const heroImageUrl = brandingAssetUrl(tenant.background_image_path, tenant.updated_at)
 
   return (
     <AppShell
@@ -65,46 +63,7 @@ export function PublicTenantHomePage({ slug }: { slug: string }) {
       footer={<AppFooter>{tenant.name} · Plataforma PlaceHub</AppFooter>}
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-10">
-        {tenant.public_hero_enabled && (
-          <section
-            className="relative flex min-h-56 flex-col justify-end overflow-hidden rounded-2xl border p-6 text-white sm:min-h-64 sm:p-10"
-            style={!heroImageUrl ? { background: 'linear-gradient(135deg, var(--primary), var(--accent))' } : undefined}
-          >
-            {heroImageUrl && (
-              <>
-                <img src={heroImageUrl} alt="" className="absolute inset-0 size-full object-cover" />
-                <div className="absolute inset-0 bg-black/55" />
-              </>
-            )}
-            <div className="relative flex flex-col gap-3">
-              <h1 className="text-2xl font-semibold sm:text-3xl">{tenant.name}</h1>
-              <p className="max-w-xl text-white/90">
-                Encontre seu próximo imóvel com quem entende do mercado!
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {tenant.phone && (
-                  <Button asChild size="sm">
-                    <a
-                      href={whatsappUrl(tenant.phone, `Olá! Vim pelo site da ${tenant.name}.`)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Fale conosco
-                    </a>
-                  </Button>
-                )}
-                <Button
-                  asChild
-                  size="sm"
-                  variant="outline"
-                  className="border-white/40 bg-white/10 text-white hover:bg-white/20"
-                >
-                  <Link to="/corretores">Ver corretores</Link>
-                </Button>
-              </div>
-            </div>
-          </section>
-        )}
+        {tenant.public_hero_enabled && <OwnPromoSlide tenant={tenant} />}
 
         {sections.length === 0 ? (
           <Card className="mx-auto w-full max-w-md">

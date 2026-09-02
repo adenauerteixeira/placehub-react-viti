@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Pencil, Plus, User } from 'lucide-react'
+import { Pencil, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CreateButton } from '@/components/create-button'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
 import { Switch } from '@/components/ui/switch'
@@ -121,9 +122,7 @@ export function BrokersListPage() {
       <CardHeader>
         <CardTitle>Corretores</CardTitle>
         <CardAction>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> <span className="hidden sm:inline">Novo corretor</span>
-          </Button>
+          <CreateButton label="Novo corretor" onClick={() => setCreateOpen(true)} />
         </CardAction>
       </CardHeader>
       <CardContent>
