@@ -145,6 +145,31 @@
   background-position: 0 0, 0 5px, 5px -5px, -5px 0;
 }
 
+/* Scrollbar fina, no padrão do sistema, em qualquer área com rolagem —
+   usa os tokens de tema (não uma cor fixa), então acompanha claro/escuro
+   sozinha. `.no-scrollbar` abaixo continua funcionando por cima disso: uma
+   classe tem mais especificidade que o seletor universal. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted-foreground);
+}
+
 /* Some com a barra de rolagem nativa — usado no carrossel de banner da
    Vitrine, onde a rolagem é por arraste/setas/autoplay, não por barra.
    CSS autoral em vez de propriedade arbitrária do Tailwind: mais confiável

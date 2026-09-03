@@ -222,6 +222,12 @@ Fase 5 completa — os 4 e-mails transacionais funcionando ponta a ponta contra 
       próprio no CHANGELOG.
 - [ ] Testar de verdade o job de expiração automática (`funnel-expirations`, Fase 3) — nunca foi
       observado expirando uma reserva/proposta de verdade, só revisado no código.
+- [x] Aba "Banner" em Identidade Visual (2026-09-03) — edição completa do carrossel da Vitrine:
+      Banner Próprio fixo na mesma tabela dos patrocinadores, diálogos com preview ao vivo (foto,
+      ajuste/alinhamento de imagem, cor de fundo, duração por slide), opacidade do selo
+      "Publicidade" por tenant, scrollbar fina no sistema. Bug real de produção corrigido: fotos de
+      patrocinador bloqueadas por ad blockers (caminho de storage renomeado). Ver bloco completo no
+      CHANGELOG.md.
 
 ## Backlog (não priorizado, registrado para não perder a ideia)
 

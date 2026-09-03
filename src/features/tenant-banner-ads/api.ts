@@ -4,16 +4,26 @@ import { supabase } from '@/lib/supabase'
 const BUCKET = 'tenant-branding'
 
 export type PaymentStatus = 'pending' | 'paid' | 'overdue'
+export type ImageFit = 'cover' | 'contain'
+export type ImageAlign = 'left' | 'center' | 'right'
 
 export type BannerAd = {
   id: string
   tenant_id: string
+  title: string | null
+  subtitle: string | null
+  subtitle_2: string | null
+  link_label: string | null
   company_name: string
   contact_name: string | null
   contact_email: string | null
   contact_phone: string | null
   link_url: string | null
   image_path: string | null
+  image_fit: ImageFit
+  image_align: ImageAlign
+  background_color: string
+  display_seconds: number | null
   payment_status: PaymentStatus
   starts_at: string | null
   ends_at: string | null
@@ -24,12 +34,19 @@ export type BannerAd = {
 }
 
 const BANNER_AD_COLUMNS =
-  'id, tenant_id, company_name, contact_name, contact_email, contact_phone, link_url, image_path, payment_status, starts_at, ends_at, active, sort_order, created_at, updated_at'
+  'id, tenant_id, title, subtitle, subtitle_2, link_label, company_name, contact_name, contact_email, contact_phone, link_url, image_path, image_fit, image_align, background_color, display_seconds, payment_status, starts_at, ends_at, active, sort_order, created_at, updated_at'
 
 export function bannerAdImageUrl(path: string | null, updatedAt: string): string | null {
   if (!path) return null
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
   return `${data.publicUrl}?v=${new Date(updatedAt).getTime()}`
+}
+
+/** Vigência vencida = campo Ativo fica travado (RLS pública já esconde o
+ * anúncio de qualquer forma, isso é só a trava visual no admin). */
+export function isBannerAdExpired(ad: Pick<BannerAd, 'ends_at'>): boolean {
+  if (!ad.ends_at) return false
+  return ad.ends_at < new Date().toISOString().slice(0, 10)
 }
 
 /** Lista admin — todos os anúncios do tenant, ativos ou não, vencidos ou não. */
@@ -69,26 +86,44 @@ export function usePublicBannerAds(tenantId: string | null | undefined) {
 }
 
 export type BannerAdInput = {
+  title: string
+  subtitle: string
+  subtitle_2: string
+  link_label: string
   company_name: string
   contact_name: string
   contact_email: string
   contact_phone: string
   link_url: string
+  image_fit: ImageFit
+  image_align: ImageAlign
+  background_color: string
+  display_seconds: string
   payment_status: PaymentStatus
   starts_at: string
   ends_at: string
+  active: boolean
 }
 
 function toRow(input: BannerAdInput) {
   return {
+    title: input.title || null,
+    subtitle: input.subtitle || null,
+    subtitle_2: input.subtitle_2 || null,
+    link_label: input.link_label || null,
     company_name: input.company_name,
     contact_name: input.contact_name || null,
     contact_email: input.contact_email || null,
     contact_phone: input.contact_phone || null,
     link_url: input.link_url || null,
+    image_fit: input.image_fit,
+    image_align: input.image_align,
+    background_color: input.background_color,
+    display_seconds: input.display_seconds ? Number(input.display_seconds) : null,
     payment_status: input.payment_status,
     starts_at: input.starts_at || null,
     ends_at: input.ends_at || null,
+    active: input.active,
   }
 }
 
@@ -214,8 +249,12 @@ export function useUploadBannerAdImage(tenantId: string) {
 
   return useMutation({
     mutationFn: async ({ adId, file }: { adId: string; file: File }): Promise<string> => {
+      // "showcase-slides", não "banner-ads": bloqueadores de anúncio
+      // (uBlock, AdBlock, Brave Shields) costumam barrar qualquer URL com
+      // "ads" no caminho, tratando como propaganda de terceiro — a foto
+      // simplesmente não carregava pra quem tinha bloqueador ativo.
       const ext = file.name.split('.').pop() || 'jpg'
-      const path = `${tenantId}/banner-ads/${adId}.${ext}`
+      const path = `${tenantId}/showcase-slides/${adId}.${ext}`
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET)

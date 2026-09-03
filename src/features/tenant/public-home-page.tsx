@@ -63,7 +63,7 @@ export function PublicTenantHomePage({ slug }: { slug: string }) {
       footer={<AppFooter>{tenant.name} · Plataforma PlaceHub</AppFooter>}
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-10">
-        {tenant.public_hero_enabled && <OwnPromoSlide tenant={tenant} />}
+        {tenant.public_hero_enabled && tenant.public_hero_own_active && <OwnPromoSlide tenant={tenant} />}
 
         {sections.length === 0 ? (
           <Card className="mx-auto w-full max-w-md">

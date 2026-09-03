@@ -5,13 +5,17 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CreateButton } from '@/components/create-button'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
-import { EmptyState, ErrorState } from '@/components/list-state'
+import { ErrorState } from '@/components/list-state'
 import { Switch } from '@/components/ui/switch'
 import { TableSkeleton } from '@/components/table-skeleton'
 import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
+import { brandingAssetUrl, useToggleOwnBannerActive } from '@/features/tenant-branding/api'
+import { OwnBannerFormDialog } from '@/features/tenant-branding/own-banner-form-dialog'
+import type { Tenant } from '@/features/tenants/api'
 import {
   bannerAdImageUrl,
+  isBannerAdExpired,
   useBannerAds,
   useDeleteBannerAd,
   useMoveBannerAd,
@@ -26,15 +30,29 @@ function formatDate(value: string | null) {
   return new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR')
 }
 
-export function BannerAdsManager({ tenantId }: { tenantId: string }) {
+type OwnRow = { kind: 'own'; _pending: boolean }
+type SponsorRow = BannerAd & { kind: 'sponsor'; _pending: boolean }
+type Row = OwnRow | SponsorRow
+
+export function BannerAdsManager({
+  tenant,
+  showSponsors,
+}: {
+  tenant: Tenant
+  showSponsors: boolean
+}) {
+  const tenantId = tenant.id
   const { data: ads, isLoading, isError, refetch } = useBannerAds(tenantId)
   const toggleActive = useToggleBannerAdActive(tenantId)
+  const toggleOwnActive = useToggleOwnBannerActive(tenantId)
   const moveAd = useMoveBannerAd(tenantId)
   const deleteAd = useDeleteBannerAd(tenantId)
   const { confirm } = useConfirm()
 
   const [createOpen, setCreateOpen] = useState(false)
-  const [editing, setEditing] = useState<BannerAd | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingOwn, setEditingOwn] = useState(false)
+  const editing = ads?.find((a) => a.id === editingId) ?? null
   // Precisa vir de `data`, não de uma closure em `columns` — mesmo motivo
   // documentado em brokers-list-page.tsx.
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
@@ -68,6 +86,15 @@ export function BannerAdsManager({ tenantId }: { tenantId: string }) {
     }
   }
 
+  async function handleToggleOwnActive(active: boolean) {
+    try {
+      await withPending('own', () => toggleOwnActive.mutateAsync(active))
+      toast.success(active ? 'Banner próprio incluído no carrossel.' : 'Banner próprio removido do carrossel.')
+    } catch (error) {
+      toast.error('Não foi possível atualizar o status', { description: errorMessage(error) })
+    }
+  }
+
   async function handleDelete(ad: BannerAd) {
     const confirmed = await confirm({
       title: `Excluir o anúncio de "${ad.company_name}"?`,
@@ -85,21 +112,31 @@ export function BannerAdsManager({ tenantId }: { tenantId: string }) {
     }
   }
 
-  const adsWithPending = ads?.map((a) => ({ ...a, _pending: pendingIds.has(a.id) }))
+  const ownImageUrl = brandingAssetUrl(tenant.background_image_path, tenant.updated_at)
+  const ownPending = pendingIds.has('own')
 
-  const columns: DataTableColumn<BannerAd & { _pending: boolean }>[] = [
+  const ownRow: OwnRow = { kind: 'own', _pending: ownPending }
+  const sponsorRows: SponsorRow[] =
+    ads?.map((a) => ({ ...a, kind: 'sponsor' as const, _pending: pendingIds.has(a.id) })) ?? []
+  const data: Row[] = [ownRow, ...sponsorRows]
+
+  // Colunas únicas pra Banner Próprio e patrocinadores compartilharem a
+  // mesma tabela — garante que fiquem pixel a pixel alinhados (uma tabela
+  // real, não duas UIs parecidas tentando bater largura por acaso).
+  const columns: DataTableColumn<Row>[] = [
     {
       id: 'thumb',
       header: '',
       enableSorting: false,
       enableGlobalFilter: false,
       cell: ({ row }) => {
-        const ad = row.original
-        const imageUrl = bannerAdImageUrl(ad.image_path, ad.updated_at)
+        const r = row.original
+        const imageUrl = r.kind === 'own' ? ownImageUrl : bannerAdImageUrl(r.image_path, r.updated_at)
+        const alt = r.kind === 'own' ? 'Banner próprio' : r.company_name
         return (
           <div className="bg-muted flex h-10 w-16 shrink-0 items-center justify-center overflow-hidden rounded border">
             {imageUrl ? (
-              <img src={imageUrl} alt={ad.company_name} className="size-full object-cover" />
+              <img src={imageUrl} alt={alt} className="size-full object-cover" />
             ) : (
               <Megaphone className="text-muted-foreground size-4" />
             )}
@@ -108,19 +145,24 @@ export function BannerAdsManager({ tenantId }: { tenantId: string }) {
       },
     },
     {
-      accessorKey: 'company_name',
+      id: 'company_name',
       header: 'Empresa',
       enableSorting: false,
-      cell: ({ row }) => <span className="font-medium">{row.original.company_name}</span>,
+      accessorFn: (r) => (r.kind === 'own' ? 'Banner próprio' : r.company_name),
+      cell: ({ row }) => {
+        const r = row.original
+        return <span className="font-medium">{r.kind === 'own' ? 'Banner próprio' : r.company_name}</span>
+      },
     },
     {
       id: 'period',
       header: 'Vigência',
       enableSorting: false,
       cell: ({ row }) => {
-        const ad = row.original
-        const from = formatDate(ad.starts_at)
-        const to = formatDate(ad.ends_at)
+        const r = row.original
+        if (r.kind === 'own') return <Badge variant="outline">Fixo</Badge>
+        const from = formatDate(r.starts_at)
+        const to = formatDate(r.ends_at)
         if (!from && !to) return <span className="text-muted-foreground">Sempre</span>
         return (
           <span className="text-muted-foreground">
@@ -133,24 +175,57 @@ export function BannerAdsManager({ tenantId }: { tenantId: string }) {
       id: 'payment_status',
       header: 'Pagamento',
       enableSorting: false,
-      cell: ({ row }) => (
-        <Badge variant={PAYMENT_STATUS_VARIANT[row.original.payment_status]}>
-          {PAYMENT_STATUS_LABELS[row.original.payment_status]}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const r = row.original
+        if (r.kind === 'own') return <span className="text-muted-foreground">—</span>
+        return (
+          <Badge variant={PAYMENT_STATUS_VARIANT[r.payment_status]}>
+            {PAYMENT_STATUS_LABELS[r.payment_status]}
+          </Badge>
+        )
+      },
+    },
+    {
+      id: 'display_seconds',
+      header: 'Duração',
+      enableSorting: false,
+      cell: ({ row }) => {
+        const r = row.original
+        const seconds = r.kind === 'own' ? tenant.public_hero_display_seconds : r.display_seconds
+        return <span className="text-muted-foreground">{seconds ? `${seconds}s` : 'Padrão'}</span>
+      },
     },
     {
       id: 'active',
       header: 'Ativo',
       enableSorting: false,
-      cell: ({ row }) => (
-        <Switch
-          checked={row.original.active}
-          onCheckedChange={(checked) => handleToggleActive(row.original, checked)}
-          disabled={row.original._pending}
-          aria-label={row.original.active ? 'Desativar anúncio' : 'Ativar anúncio'}
-        />
-      ),
+      cell: ({ row }) => {
+        const r = row.original
+        if (r.kind === 'own') {
+          return (
+            <Switch
+              checked={tenant.public_hero_own_active}
+              onCheckedChange={handleToggleOwnActive}
+              disabled={r._pending}
+              aria-label={
+                tenant.public_hero_own_active
+                  ? 'Remover banner próprio do carrossel'
+                  : 'Incluir banner próprio no carrossel'
+              }
+            />
+          )
+        }
+        const expired = isBannerAdExpired(r)
+        return (
+          <Switch
+            checked={expired ? false : r.active}
+            onCheckedChange={(checked) => handleToggleActive(r, checked)}
+            disabled={r._pending || expired}
+            aria-label={r.active ? 'Desativar anúncio' : 'Ativar anúncio'}
+            title={expired ? 'Vigência encerrada — reative estendendo a data de fim.' : undefined}
+          />
+        )
+      },
     },
     {
       id: 'actions',
@@ -158,18 +233,40 @@ export function BannerAdsManager({ tenantId }: { tenantId: string }) {
       enableSorting: false,
       enableGlobalFilter: false,
       cell: ({ row, table }) => {
-        const ad = row.original
-        const rows = table.getRowModel().rows
-        const isFirst = rows[0]?.original.id === ad.id
-        const isLast = rows[rows.length - 1]?.original.id === ad.id
+        const r = row.original
+        if (r.kind === 'own') {
+          return (
+            <div className="flex justify-end gap-1">
+              <Button variant="ghost" size="icon" aria-label="Mover pra cima" disabled>
+                <ArrowUp className="size-4" />
+              </Button>
+              <Button variant="ghost" size="icon" aria-label="Mover pra baixo" disabled>
+                <ArrowDown className="size-4" />
+              </Button>
+              <Button variant="ghost" size="icon" aria-label="Editar" onClick={() => setEditingOwn(true)}>
+                <Pencil className="size-4" />
+              </Button>
+              <Button variant="ghost" size="icon" aria-label="Excluir" disabled>
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          )
+        }
+
+        const visibleSponsorRows = table
+          .getRowModel()
+          .rows.map((x) => x.original)
+          .filter((o): o is SponsorRow => o.kind === 'sponsor')
+        const isFirst = visibleSponsorRows[0]?.id === r.id
+        const isLast = visibleSponsorRows[visibleSponsorRows.length - 1]?.id === r.id
         return (
           <div className="flex justify-end gap-1">
             <Button
               variant="ghost"
               size="icon"
               aria-label="Mover pra cima"
-              disabled={isFirst || ad._pending}
-              onClick={() => handleMove(ad, 'up')}
+              disabled={isFirst || r._pending}
+              onClick={() => handleMove(r, 'up')}
             >
               <ArrowUp className="size-4" />
             </Button>
@@ -177,20 +274,20 @@ export function BannerAdsManager({ tenantId }: { tenantId: string }) {
               variant="ghost"
               size="icon"
               aria-label="Mover pra baixo"
-              disabled={isLast || ad._pending}
-              onClick={() => handleMove(ad, 'down')}
+              disabled={isLast || r._pending}
+              onClick={() => handleMove(r, 'down')}
             >
               <ArrowDown className="size-4" />
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Editar" onClick={() => setEditing(ad)}>
+            <Button variant="ghost" size="icon" aria-label="Editar" onClick={() => setEditingId(r.id)}>
               <Pencil className="size-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               aria-label="Excluir"
-              disabled={ad._pending}
-              onClick={() => handleDelete(ad)}
+              disabled={r._pending}
+              onClick={() => handleDelete(r)}
             >
               <Trash2 className="size-4" />
             </Button>
@@ -202,30 +299,69 @@ export function BannerAdsManager({ tenantId }: { tenantId: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex justify-end">
-        <CreateButton label="Novo anúncio" size="icon-sm" onClick={() => setCreateOpen(true)} />
-      </div>
-
-      {isLoading && <TableSkeleton columns={6} />}
-
-      {isError && <ErrorState title="Não foi possível carregar os anúncios." onRetry={() => refetch()} />}
-
-      {ads && ads.length === 0 && (
-        <EmptyState title="Nenhum anúncio de parceiro cadastrado ainda." />
+      {!showSponsors && (
+        <div className="rounded-lg border p-2">
+          <div className="flex items-center gap-3">
+            <div className="bg-muted flex h-10 w-16 shrink-0 items-center justify-center overflow-hidden rounded border">
+              {ownImageUrl ? (
+                <img src={ownImageUrl} alt="Banner próprio" className="size-full object-cover" />
+              ) : (
+                <Megaphone className="text-muted-foreground size-4" />
+              )}
+            </div>
+            <span className="flex-1 font-medium">Banner próprio</span>
+            <Switch
+              checked={tenant.public_hero_own_active}
+              onCheckedChange={handleToggleOwnActive}
+              disabled={ownPending}
+              aria-label={
+                tenant.public_hero_own_active
+                  ? 'Remover banner próprio do carrossel'
+                  : 'Incluir banner próprio no carrossel'
+              }
+            />
+            <Button variant="ghost" size="icon" aria-label="Editar" onClick={() => setEditingOwn(true)}>
+              <Pencil className="size-4" />
+            </Button>
+          </div>
+        </div>
       )}
 
-      {adsWithPending && adsWithPending.length > 0 && (
-        <DataTable columns={columns} data={adsWithPending} searchPlaceholder="Buscar por empresa..." />
+      {showSponsors && (
+        <>
+          {isLoading && <TableSkeleton columns={7} />}
+          {isError && <ErrorState title="Não foi possível carregar os anúncios." onRetry={() => refetch()} />}
+          {!isLoading && !isError && (
+            <DataTable
+              columns={columns}
+              data={data}
+              searchPlaceholder="Buscar por empresa..."
+              toolbarEnd={<CreateButton label="Novo anúncio" size="icon-sm" onClick={() => setCreateOpen(true)} />}
+            />
+          )}
+        </>
       )}
 
-      <BannerAdFormDialog open={createOpen} onOpenChange={setCreateOpen} tenantId={tenantId} />
-      {editing && (
-        <BannerAdFormDialog
-          open={!!editing}
-          onOpenChange={(open) => !open && setEditing(null)}
-          tenantId={tenantId}
-          ad={editing}
-        />
+      <OwnBannerFormDialog open={editingOwn} onOpenChange={setEditingOwn} tenant={tenant} />
+
+      {showSponsors && (
+        <>
+          <BannerAdFormDialog
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            tenantId={tenantId}
+            badgeOpacity={tenant.public_hero_badge_opacity}
+          />
+          {editing && (
+            <BannerAdFormDialog
+              open={!!editing}
+              onOpenChange={(open) => !open && setEditingId(null)}
+              tenantId={tenantId}
+              badgeOpacity={tenant.public_hero_badge_opacity}
+              ad={editing}
+            />
+          )}
+        </>
       )}
     </div>
   )

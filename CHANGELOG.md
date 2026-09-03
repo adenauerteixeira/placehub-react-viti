@@ -5,6 +5,73 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Aba Banner em Identidade Visual — edição completa da Vitrine, 2026-09-03)
+
+- **Nova aba "Banner"** em Identidade Visual (`tenant-branding-page.tsx`), separada da aba "Página
+  pública" a pedido do usuário: reúne o que antes estava espalhado (conteúdo do banner próprio,
+  anúncios de empresas parceiras, opções de exibição do carrossel) num só lugar.
+- **Linha fixa "Banner Próprio"** dentro da mesma tabela dos patrocinadores
+  (`banner-ads-manager.tsx`) — um único `DataTable` real com um tipo de linha união (`kind: 'own' |
+  'sponsor'`), não duas UIs tentando alinhar colunas por coincidência. Sempre a primeira linha, sem
+  excluir/mover (botões desabilitados), colunas idênticas às de patrocinador (thumb, Empresa,
+  Vigência com badge "Fixo", Pagamento "—", Duração, Ativo, Ações). Botão "Novo anúncio" movido pra
+  mesma linha da busca via `toolbarEnd`, prop nova do `DataTable` (`src/components/data-table.tsx`),
+  reutilizável em qualquer listagem do sistema.
+- **Dois diálogos de edição com preview ao vivo** — `OwnBannerFormDialog`
+  (`src/features/tenant-branding/own-banner-form-dialog.tsx`, novo) e `BannerAdFormDialog`
+  (`src/features/tenant-banner-ads/banner-ad-form-dialog.tsx`), ambos renderizando o mesmo
+  `PromoSlide` (`src/features/tenant/promo-slide.tsx`, novo, compartilhado com o carrossel público)
+  como preview: foto, título, subtítulos, botão, ajuste de imagem (cover/contain), alinhamento
+  (esquerda/centro/direita) e cor de fundo do slide — com conta-gotas via `EyeDropper` nativo do
+  Chrome/Edge (`ColorField` ganhou prop `eyedropper` opcional, reutilizável) — tudo refletido no
+  preview a cada tecla/escolha, sem precisar salvar. Upload de foto passou a usar
+  `URL.createObjectURL` pra mostrar a imagem escolhida na hora, trocando sozinho pra URL do
+  servidor assim que o registro recarregado (invalidação da query) reflete a foto nova — corrige de
+  vez a reclamação do usuário de que a foto "não aparecia" depois de escolhida.
+- **Duração de exibição configurável por slide** (1-60s, vazio usa o padrão global "Segundos por
+  slide") — Banner Próprio e cada patrocinador, coluna "Duração" nova na tabela. O carrossel público
+  (`banner-carousel.tsx`) trocou o `setInterval` de cadência fixa por um `setTimeout` que se
+  reagenda a cada slide, lendo a duração do slide atual antes de avançar.
+- **Dois controles de visibilidade independentes**, a pedido explícito do usuário: o switch global
+  "Mostrar banner na home pública" (aba Página pública, `public_hero_enabled`) liga/desliga a seção
+  de banner inteira (Clássica e Vitrine); o "Ativo" da linha Banner Próprio
+  (`public_hero_own_active`, novo) só tira o slide próprio da rotação da Vitrine, deixando os
+  patrocinadores ativos girando sozinhos — permite vender só o espaço deles sem desligar a seção.
+- **Opacidade do selo "Publicidade"** é uma configuração única por tenant
+  (`public_hero_badge_opacity`), não por anúncio — implementada por anúncio numa primeira rodada e
+  corrigida a pedido do usuário ("a configuração de um serve pra todos"); controle único (range
+  0-100%) no card "Exibição do carrossel".
+- **Bug real de produção encontrado e corrigido**: fotos de anúncio de patrocinador não carregavam
+  pra visitantes com bloqueador de anúncio ativo (uBlock Origin, AdBlock, Brave Shields) — o caminho
+  de armazenamento tinha literalmente "banner-ads" no nome (`{tenant}/banner-ads/{id}.png`), padrão
+  clássico de bloqueio por filtro de anúncios (qualquer URL com "ads" no caminho). Renomeado pra
+  `{tenant}/showcase-slides/{id}.png`; as fotos já existentes foram migradas (storage `.move()` +
+  `image_path` atualizado no banco) sem quebrar nada pros anúncios já cadastrados. Achado pelo
+  usuário em teste real ("as fotos dos patrocinadores não aparecem"), diagnosticado por eliminação
+  (fotos existentes carregavam certinho em teste automatizado sem bloqueador) e confirmado pelo
+  usuário ao desativar o bloqueador.
+- Padding lateral (`px-2.5`, 10px) nos slides do carrossel pra descolar das bordas da tela — a
+  pedido do usuário. Fundo do wrapper `sticky` do carrossel trocado de `bg-background` pra
+  `bg-transparent`: achado do usuário logo depois — com o padding novo, a cor de fundo do tema do
+  tenant (`tenantThemeVars`) aparecia como uma mancha sólida atrás da quina arredondada de cada
+  slide quando "Manter o banner fixo no topo ao rolar" está ligado. Corrigido só no wrapper do
+  carrossel, sem tocar no token de tema global (que afetaria cabeçalho/rodapé/todo o resto do site).
+- **4 migrations novas**, todas aplicadas no Supabase real via `supabase db push`:
+  `20260903100000_add_content_fields_to_banner_ads.sql` (título/subtítulos/link/rótulo do botão nos
+  anúncios de patrocinador, espelhando os campos do banner próprio),
+  `20260903120000_add_banner_slide_display_options.sql` (`public_hero_own_active`, `image_fit`,
+  `display_seconds` em `tenants` e `tenant_banner_ads`), `20260903130000_add_slide_presentation_options.sql`
+  (alinhamento de imagem, cor de fundo, opacidade do selo — por anúncio nessa rodada),
+  `20260903140000_badge_opacity_tenant_wide.sql` (move a opacidade do selo de por-anúncio pra
+  por-tenant, dropando a coluna de `tenant_banner_ads`).
+- **Scrollbar fina em todo o sistema**, a pedido do usuário (pediu a lib jQuery "SlimScroll" —
+  substituída por CSS nativo de scrollbar, já que jQuery é incompatível com a stack React/Tailwind
+  daqui): `scrollbar-width: thin` + `::-webkit-scrollbar` usando os tokens de tema
+  (`--border`/`--muted-foreground`, `src/index.css`) — acompanha claro/escuro sozinho, sem lógica
+  extra.
+- Testado ao vivo em cada rodada via automação de navegador, logado como tenant_admin real (tenant
+  Casah) — screenshots/DOM conferidos, zero erro de console nas telas tocadas.
+
 ### Adicionado (Vínculo de corretor aceita conta Gerente, pedido do usuário, 2026-09-02)
 
 - **`useEligibleBrokerProfiles`** (`src/features/brokers/api.ts`) passou a listar contas de login

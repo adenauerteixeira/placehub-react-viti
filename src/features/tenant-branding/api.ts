@@ -59,7 +59,6 @@ export type TenantColorsInput = {
   logo_dark_background_transparent: boolean
   email_logo_background_color: string
   email_logo_background_transparent: boolean
-  public_hero_enabled: boolean
   public_home_variant: 'classic' | 'animated' | 'showcase'
   public_hero_full_width: boolean
   public_hero_autoplay_seconds: number
@@ -67,11 +66,7 @@ export type TenantColorsInput = {
   public_hero_show_arrows: boolean
   public_hero_show_border: boolean
   public_hero_sticky: boolean
-  public_hero_title: string
-  public_hero_subtitle: string
-  public_hero_subtitle_2: string
-  public_hero_link_url: string
-  public_hero_link_label: string
+  public_hero_badge_opacity: number
   animated_hero_show_image: boolean
   animated_hero_show_particles: boolean
   training_enabled: boolean
@@ -82,16 +77,87 @@ export function useUpdateTenantColors(tenantId: string) {
 
   return useMutation({
     mutationFn: async (input: TenantColorsInput) => {
+      const { error } = await supabase.from('tenants').update(input).eq('id', tenantId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenantId] })
+    },
+  })
+}
+
+export type OwnBannerInput = {
+  public_hero_title: string
+  public_hero_subtitle: string
+  public_hero_subtitle_2: string
+  public_hero_link_url: string
+  public_hero_link_label: string
+  public_hero_image_fit: 'cover' | 'contain'
+  public_hero_display_seconds: string
+  public_hero_image_align: 'left' | 'center' | 'right'
+  public_hero_background_color: string
+}
+
+/** Salva só os campos do Banner Próprio — não usa `useUpdateTenantColors`
+ * pra não sobrescrever cores/outras configs com o snapshot desatualizado
+ * que um diálogo isolado teria. */
+export function useUpdateOwnBanner(tenantId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: OwnBannerInput) => {
       const { error } = await supabase
         .from('tenants')
         .update({
-          ...input,
           public_hero_title: input.public_hero_title || null,
           public_hero_subtitle: input.public_hero_subtitle || null,
           public_hero_subtitle_2: input.public_hero_subtitle_2 || null,
           public_hero_link_url: input.public_hero_link_url || null,
           public_hero_link_label: input.public_hero_link_label || null,
+          public_hero_image_fit: input.public_hero_image_fit,
+          public_hero_display_seconds: input.public_hero_display_seconds
+            ? Number(input.public_hero_display_seconds)
+            : null,
+          public_hero_image_align: input.public_hero_image_align,
+          public_hero_background_color: input.public_hero_background_color,
         })
+        .eq('id', tenantId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenantId] })
+    },
+  })
+}
+
+/** Ativo da linha "Banner Próprio" — só decide se o slide próprio entra na
+ * rotação da Vitrine, independente do switch global `public_hero_enabled`
+ * (aba Página pública), que liga/desliga a seção inteira. */
+export function useToggleOwnBannerActive(tenantId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (public_hero_own_active: boolean) => {
+      const { error } = await supabase
+        .from('tenants')
+        .update({ public_hero_own_active })
+        .eq('id', tenantId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant', tenantId] })
+    },
+  })
+}
+
+export function useTogglePublicHeroEnabled(tenantId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (public_hero_enabled: boolean) => {
+      const { error } = await supabase
+        .from('tenants')
+        .update({ public_hero_enabled })
         .eq('id', tenantId)
       if (error) throw error
     },

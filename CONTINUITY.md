@@ -5,8 +5,25 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-09-02
+## Estado atual — 2026-09-03
 
+- **Aba "Banner" em Identidade Visual — edição completa da Vitrine (2026-09-03).** Nova aba
+  separada de "Página pública", reunindo Banner Próprio + anúncios de patrocinadores numa única
+  tabela real (linha "Banner Próprio" sempre fixa em primeiro), com diálogos de edição em preview
+  ao vivo (`PromoSlide`, compartilhado com o carrossel público): foto, título, ajuste/alinhamento
+  de imagem, cor de fundo (com conta-gotas), duração por slide. Dois controles de visibilidade
+  independentes (switch global "Mostrar banner" vs. "Ativo" da linha própria, só tira o slide
+  próprio da rotação). Opacidade do selo "Publicidade" é config única por tenant (corrigida depois
+  de implementada por engano como por-anúncio numa rodada anterior). **Bug real de produção achado
+  e corrigido**: fotos de patrocinador bloqueadas por ad blockers (uBlock etc.) porque o caminho de
+  storage tinha "banner-ads" no nome — renomeado pra `showcase-slides`, fotos existentes migradas.
+  Scrollbar fina em todo o sistema (CSS nativo, tokens de tema — não a lib jQuery SlimScroll
+  pedida, incompatível com a stack). 4 migrations novas aplicadas no Supabase real. Ver bloco
+  completo no CHANGELOG.md. Testado ao vivo em cada rodada via automação de navegador (tenant_admin
+  real, Casah), zero erro de console. **Nota de processo**: sessão rodou várias iterações de
+  planejamento (EnterPlanMode) por causa do volume de pedidos incrementais do usuário durante o
+  próprio teste ao vivo da feature — padrão que deve se repetir em features de configuração visual
+  parecidas (o usuário só percebe o que falta ao ver renderizado, não ao ler a spec).
 - **Refinamento de UX/UI — Fases 1 a 5 completas, a pedido do usuário (2026-09-01/02).** Iniciativa
   nova, separada das fases numeradas do ROADMAP.md: diagnóstico completo do app (varredura de
   todas as telas/features), lista de problemas priorizada por impacto, direção visual confirmada
@@ -190,9 +207,10 @@
   nesses arquivos (rodam em Deno, não Node/Vite; `tsconfig.app.json` só inclui `src`, então o
   `tsc` do projeto nunca via esses arquivos mesmo). Precisa da extensão "Deno" instalada no VS
   Code pra funcionar de fato — não é algo que dá pra verificar/instalar por aqui.
-- **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`, tudo
-  commitado e enviado (push sem pedir confirmação — permissão permanente do usuário). Deploy
-  automático a cada push (Vercel, ver bloco de produção acima).
+- **Repo:** `https://github.com/adenauerteixeira/placehub-react-viti.git`, branch `trunk`. Deploy
+  automático a cada push (Vercel, ver bloco de produção acima). **Permissão de push/deploy
+  revogada desde 2026-09-01** (ver bullet "Refinamento de UX/UI" abaixo) — cada commit/push pra
+  produção precisa de autorização explícita do usuário na própria sessão, não é mais permanente.
 - **Vercel:** projeto `place-hub1/placehub`. `VERCEL_ACCESS_TOKEN`/deploys via CLI (`npx vercel`)
   autenticado nesta sessão via `vercel login` (device code) — token não persiste entre sessões,
   uma sessão nova precisa logar de novo se for mexer em domínio/env vars por CLI (dá pra pedir pro

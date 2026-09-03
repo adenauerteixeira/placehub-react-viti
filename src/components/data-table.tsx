@@ -32,11 +32,14 @@ export function DataTable<TData extends RowData>({
   data,
   searchPlaceholder = 'Buscar...',
   pageSize = 10,
+  toolbarEnd,
 }: {
   columns: DataTableColumn<TData>[]
   data: TData[]
   searchPlaceholder?: string
   pageSize?: number
+  /** Conteúdo extra (ex.: botão "Novo X") alinhado à direita, na mesma linha da busca. */
+  toolbarEnd?: React.ReactNode
 }) {
   const table = useLegacyTable({
     data,
@@ -57,14 +60,17 @@ export function DataTable<TData extends RowData>({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative max-w-sm">
-        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-        <Input
-          value={state.globalFilter ?? ''}
-          onChange={(e) => table.setGlobalFilter(e.target.value)}
-          placeholder={searchPlaceholder}
-          className="pl-8"
-        />
+      <div className="flex items-center justify-between gap-3">
+        <div className="relative max-w-sm flex-1">
+          <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+          <Input
+            value={state.globalFilter ?? ''}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            placeholder={searchPlaceholder}
+            className="pl-8"
+          />
+        </div>
+        {toolbarEnd}
       </div>
 
       <Table>

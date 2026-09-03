@@ -48,6 +48,12 @@ export type Tenant = {
   public_hero_subtitle_2: string | null
   public_hero_link_url: string | null
   public_hero_link_label: string | null
+  public_hero_own_active: boolean
+  public_hero_image_fit: 'cover' | 'contain'
+  public_hero_display_seconds: number | null
+  public_hero_image_align: 'left' | 'center' | 'right'
+  public_hero_background_color: string
+  public_hero_badge_opacity: number
   animated_hero_show_image: boolean
   animated_hero_image_path: string | null
   animated_hero_show_particles: boolean
@@ -64,7 +70,7 @@ export type Tenant = {
 }
 
 const TENANT_COLUMNS =
-  'id, name, slug, email, phone, active, primary_color, secondary_color, accent_color, light_background_color, light_surface_color, light_text_color, light_muted_text_color, light_border_color, dark_primary_color, dark_accent_color, dark_background_color, dark_surface_color, dark_text_color, dark_muted_text_color, dark_border_color, logo_light_background_color, logo_dark_background_color, logo_light_background_transparent, logo_dark_background_transparent, email_logo_path, email_logo_background_color, email_logo_background_transparent, public_hero_enabled, public_home_variant, public_hero_full_width, public_hero_autoplay_seconds, public_hero_autoplay_reverse, public_hero_show_arrows, public_hero_show_border, public_hero_sticky, public_hero_title, public_hero_subtitle, public_hero_subtitle_2, public_hero_link_url, public_hero_link_label, animated_hero_show_image, animated_hero_image_path, animated_hero_show_particles, training_enabled, logo_light_path, logo_dark_path, favicon_path, background_image_path, placeholder_image_path, created_at, updated_at'
+  'id, name, slug, email, phone, active, primary_color, secondary_color, accent_color, light_background_color, light_surface_color, light_text_color, light_muted_text_color, light_border_color, dark_primary_color, dark_accent_color, dark_background_color, dark_surface_color, dark_text_color, dark_muted_text_color, dark_border_color, logo_light_background_color, logo_dark_background_color, logo_light_background_transparent, logo_dark_background_transparent, email_logo_path, email_logo_background_color, email_logo_background_transparent, public_hero_enabled, public_home_variant, public_hero_full_width, public_hero_autoplay_seconds, public_hero_autoplay_reverse, public_hero_show_arrows, public_hero_show_border, public_hero_sticky, public_hero_title, public_hero_subtitle, public_hero_subtitle_2, public_hero_link_url, public_hero_link_label, public_hero_own_active, public_hero_image_fit, public_hero_display_seconds, public_hero_image_align, public_hero_background_color, public_hero_badge_opacity, animated_hero_show_image, animated_hero_image_path, animated_hero_show_particles, training_enabled, logo_light_path, logo_dark_path, favicon_path, background_image_path, placeholder_image_path, created_at, updated_at'
 
 export function useTenant(tenantId: string | null | undefined) {
   return useQuery({

@@ -6,41 +6,29 @@ import { cn } from '@/lib/utils'
 import { bannerAdImageUrl, type BannerAd } from '@/features/tenant-banner-ads/api'
 import type { Tenant } from '@/features/tenants/api'
 import { OwnPromoSlide } from '../own-promo-slide'
+import { PromoSlide } from '../promo-slide'
 
-function AdSlide({ ad, showBorder }: { ad: BannerAd; showBorder: boolean }) {
+function AdSlide({ ad, showBorder, badgeOpacity }: { ad: BannerAd; showBorder: boolean; badgeOpacity: number }) {
   const imageUrl = bannerAdImageUrl(ad.image_path, ad.updated_at)
 
-  const content = (
-    <section
-      className={cn(
-        'relative flex min-h-56 flex-col justify-end overflow-hidden rounded-2xl p-6 text-white sm:min-h-64 sm:p-10',
-        showBorder && 'border',
-      )}
-    >
-      {imageUrl ? (
-        <>
-          <img src={imageUrl} alt={ad.company_name} className="absolute inset-0 size-full object-cover" />
-          <div className="absolute inset-0 bg-black/45" />
-        </>
-      ) : (
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}
-        />
-      )}
-      <Badge variant="secondary" className="absolute top-4 right-4">
-        Publicidade
-      </Badge>
-      <h2 className="relative text-xl font-semibold sm:text-2xl">{ad.company_name}</h2>
-    </section>
-  )
-
-  if (!ad.link_url) return content
-
   return (
-    <a href={ad.link_url} target="_blank" rel="noreferrer sponsored" className="block">
-      {content}
-    </a>
+    <PromoSlide
+      imageUrl={imageUrl}
+      title={ad.title || ad.company_name}
+      subtitle={ad.subtitle}
+      subtitle2={ad.subtitle_2}
+      linkUrl={ad.link_url}
+      linkLabel={ad.link_label}
+      showBorder={showBorder}
+      imageFit={ad.image_fit}
+      imageAlign={ad.image_align}
+      backgroundColor={ad.background_color}
+      badge={
+        <Badge variant="secondary" style={{ opacity: badgeOpacity }}>
+          Publicidade
+        </Badge>
+      }
+    />
   )
 }
 
@@ -73,10 +61,29 @@ export function BannerCarousel({ tenant, ads }: { tenant: Tenant; ads: BannerAd[
   const [manuallyPaused, setManuallyPaused] = useState(false)
 
   const realSlides = [
-    { id: 'own', node: <OwnPromoSlide tenant={tenant} showBorder={tenant.public_hero_show_border} /> },
-    ...ads.map((ad) => ({ id: ad.id, node: <AdSlide ad={ad} showBorder={tenant.public_hero_show_border} /> })),
+    ...(tenant.public_hero_own_active
+      ? [
+          {
+            id: 'own',
+            node: <OwnPromoSlide tenant={tenant} showBorder={tenant.public_hero_show_border} />,
+            seconds: tenant.public_hero_display_seconds ?? tenant.public_hero_autoplay_seconds,
+          },
+        ]
+      : []),
+    ...ads.map((ad) => ({
+      id: ad.id,
+      node: (
+        <AdSlide
+          ad={ad}
+          showBorder={tenant.public_hero_show_border}
+          badgeOpacity={tenant.public_hero_badge_opacity}
+        />
+      ),
+      seconds: ad.display_seconds ?? tenant.public_hero_autoplay_seconds,
+    })),
   ]
   const loop = realSlides.length > 1
+  const durationsKey = realSlides.map((s) => s.seconds).join(',')
 
   const domSlides = loop
     ? [
@@ -141,14 +148,33 @@ export function BannerCarousel({ tenant, ads }: { tenant: Tenant; ads: BannerAd[
     goTo(targetIndexRef.current, 'smooth')
   }
 
+  // Duração por slide: em vez de um `setInterval` de cadência fixa, cada
+  // disparo olha a duração do slide ATUAL (própria ou de patrocinador,
+  // convertendo o índice com clone pro índice real) e se reagenda sozinho
+  // com um `setTimeout` do tamanho certo antes de avançar pro próximo.
   useEffect(() => {
     if (!loop || manuallyPaused) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    const step = tenant.public_hero_autoplay_reverse ? -1 : 1
-    const intervalId = window.setInterval(() => advance(step), tenant.public_hero_autoplay_seconds * 1000)
-    return () => window.clearInterval(intervalId)
-  }, [loop, manuallyPaused, tenant.public_hero_autoplay_seconds, tenant.public_hero_autoplay_reverse])
+    const direction = tenant.public_hero_autoplay_reverse ? -1 : 1
+    let timeoutId: number
+
+    function schedule() {
+      const realIndex =
+        ((targetIndexRef.current - 1) % realSlides.length + realSlides.length) % realSlides.length
+      const seconds = realSlides[realIndex]?.seconds ?? tenant.public_hero_autoplay_seconds
+      timeoutId = window.setTimeout(() => {
+        advance(direction)
+        schedule()
+      }, seconds * 1000)
+    }
+    schedule()
+
+    return () => window.clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loop, manuallyPaused, durationsKey, tenant.public_hero_autoplay_seconds, tenant.public_hero_autoplay_reverse])
+
+  if (realSlides.length === 0) return null
 
   return (
     // Largura total via margem negativa com calc(), não `left` +
@@ -161,7 +187,11 @@ export function BannerCarousel({ tenant, ads }: { tenant: Tenant; ads: BannerAd[
     // como referência de até onde pode grudar.
     <div
       className={cn(
-        tenant.public_hero_sticky ? 'sticky top-0 z-10 bg-background' : 'relative',
+        // bg-transparent (não bg-background) de propósito: com o padding
+        // por slide (abaixo), um fundo opaco aqui aparecia como uma mancha
+        // quadrada atrás da quina arredondada de cada slide — mais visível
+        // ainda com "fixo no topo ao rolar" ligado.
+        tenant.public_hero_sticky ? 'sticky top-0 z-10 bg-transparent' : 'relative',
         tenant.public_hero_full_width && 'ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] w-screen',
       )}
     >
@@ -176,7 +206,11 @@ export function BannerCarousel({ tenant, ads }: { tenant: Tenant; ads: BannerAd[
         )}
       >
         {domSlides.map((slide) => (
-          <div key={slide.key} className="w-full shrink-0 snap-center">
+          // px-2.5 (10px) só aqui, não no scroller acima — descola o slide
+          // das laterais sem mexer na largura do "passo" que o carrossel usa
+          // pra rolar (a div ocupa 100% do espaço do scroller de qualquer
+          // forma; o padding só encolhe a área de conteúdo por dentro).
+          <div key={slide.key} className="w-full shrink-0 snap-center px-2.5">
             {slide.node}
           </div>
         ))}
