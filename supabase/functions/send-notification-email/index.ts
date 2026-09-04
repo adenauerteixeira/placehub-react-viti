@@ -157,7 +157,7 @@ function emailShell(
                   ${tenant.name} — este e-mail foi enviado automaticamente, não é preciso responder.
                 </p>
                 <p style="margin:0;font-size:12px;line-height:1.6;color:#a1a5ad;">
-                  Enviado via <strong style="color:#8b8f99;">PlaceHub</strong> — Conectando imóveis, corretores e oportunidades.
+                  Enviado via <strong style="color:#8b8f99;">Place Hub</strong> — Conectando imóveis, corretores e oportunidades.
                 </p>
               </td>
             </tr>
