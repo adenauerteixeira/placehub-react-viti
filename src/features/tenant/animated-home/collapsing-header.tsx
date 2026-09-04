@@ -32,7 +32,7 @@ export function CollapsingHeader({
       className="bg-background/70 border-border fixed inset-x-0 top-0 z-30 border-b backdrop-blur-xl"
     >
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-6">
-        <TenantBrand tenant={tenant} dark={dark} />
+        <TenantBrand tenant={tenant} dark={dark} showInstitutional />
         <div className="flex items-center gap-4">
           <Link to="/corretores" className="text-muted-foreground hover:text-foreground text-sm">
             Corretores

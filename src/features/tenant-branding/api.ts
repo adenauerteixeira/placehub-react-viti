@@ -70,6 +70,13 @@ export type TenantColorsInput = {
   animated_hero_show_image: boolean
   animated_hero_show_particles: boolean
   training_enabled: boolean
+  address: string
+  creci_juridico: string
+  public_header_display_name: string
+  public_header_show_logo: boolean
+  public_header_show_name: boolean
+  public_header_show_address: boolean
+  public_header_show_creci: boolean
 }
 
 export function useUpdateTenantColors(tenantId: string) {
@@ -77,7 +84,15 @@ export function useUpdateTenantColors(tenantId: string) {
 
   return useMutation({
     mutationFn: async (input: TenantColorsInput) => {
-      const { error } = await supabase.from('tenants').update(input).eq('id', tenantId)
+      const { error } = await supabase
+        .from('tenants')
+        .update({
+          ...input,
+          address: input.address || null,
+          creci_juridico: input.creci_juridico || null,
+          public_header_display_name: input.public_header_display_name || null,
+        })
+        .eq('id', tenantId)
       if (error) throw error
     },
     onSuccess: () => {

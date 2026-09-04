@@ -48,7 +48,7 @@ export function PublicTenantHomePage({ slug }: { slug: string }) {
       style={tenantThemeVars(tenant, resolvedTheme)}
       header={
         <>
-          <TenantBrand tenant={tenant} dark={dark} />
+          <TenantBrand tenant={tenant} dark={dark} showInstitutional />
           <div className="flex items-center gap-4">
             <Link to="/corretores" className="text-muted-foreground hover:text-foreground text-sm">
               Corretores
@@ -60,7 +60,20 @@ export function PublicTenantHomePage({ slug }: { slug: string }) {
           </div>
         </>
       }
-      footer={<AppFooter>{tenant.name} · Plataforma PlaceHub</AppFooter>}
+      footer={
+        <AppFooter>
+          <span className="hidden sm:inline">
+            © {new Date().getFullYear()} {tenant.name} — Conectando imóveis, corretores e
+            oportunidades.
+          </span>
+          <span className="flex flex-col text-[11px] leading-tight sm:hidden">
+            <span>
+              © {new Date().getFullYear()} Place Hub — {tenant.name}
+            </span>
+            <span>Conectando imóveis, corretores e oportunidades.</span>
+          </span>
+        </AppFooter>
+      }
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-10">
         {tenant.public_hero_enabled && tenant.public_hero_own_active && <OwnPromoSlide tenant={tenant} />}

@@ -125,7 +125,16 @@ export function AnimatedTenantHomePage({ tenant }: { tenant: Tenant }) {
         </div>
 
         <footer className="text-muted-foreground border-border bg-background/70 border-t px-6 py-8 text-center text-xs backdrop-blur-xl">
-          © {new Date().getFullYear()} {tenant.name} · Plataforma PlaceHub
+          <span className="hidden sm:inline">
+            © {new Date().getFullYear()} {tenant.name} — Conectando imóveis, corretores e
+            oportunidades.
+          </span>
+          <span className="flex flex-col text-[11px] leading-tight sm:hidden">
+            <span>
+              © {new Date().getFullYear()} Place Hub — {tenant.name}
+            </span>
+            <span>Conectando imóveis, corretores e oportunidades.</span>
+          </span>
         </footer>
       </div>
     </MotionConfig>

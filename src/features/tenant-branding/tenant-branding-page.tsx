@@ -64,6 +64,13 @@ function colorsFromTenant(tenant: Tenant): TenantColorsInput {
     animated_hero_show_image: tenant.animated_hero_show_image,
     animated_hero_show_particles: tenant.animated_hero_show_particles,
     training_enabled: tenant.training_enabled,
+    address: tenant.address ?? '',
+    creci_juridico: tenant.creci_juridico ?? '',
+    public_header_display_name: tenant.public_header_display_name ?? '',
+    public_header_show_logo: tenant.public_header_show_logo,
+    public_header_show_name: tenant.public_header_show_name,
+    public_header_show_address: tenant.public_header_show_address,
+    public_header_show_creci: tenant.public_header_show_creci,
   }
 }
 
@@ -308,6 +315,101 @@ export function TenantBrandingPage() {
                   Liga ou desliga a seção de banner inteira — vale pra Clássica e pra Vitrine (aba
                   Banner, ao lado, tem o conteúdo e os anúncios).
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Dados institucionais</CardTitle>
+              <CardDescription>
+                Nome, endereço e CRECI Jurídico exibidos no cabeçalho da home pública (Clássica,
+                Animada e Vitrine). Cada informação só aparece se o campo estiver preenchido e o
+                switch correspondente estiver ligado.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-6">
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel
+                  htmlFor="tenant-header-display-name"
+                  hint={`Nome de fantasia mostrado no cabeçalho da home pública, no lugar de "${tenant.name}". Deixe em branco pra usar o nome do tenant normalmente — só muda a exibição ali, o resto do sistema continua usando o nome oficial.`}
+                >
+                  Nome exibido no cabeçalho (opcional)
+                </FieldLabel>
+                <Input
+                  id="tenant-header-display-name"
+                  placeholder={tenant.name}
+                  value={colors.public_header_display_name}
+                  onChange={(e) => set('public_header_display_name', e.target.value)}
+                />
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel
+                    htmlFor="tenant-address"
+                    hint="Exibido em destaque reduzido no cabeçalho, ao lado do nome."
+                  >
+                    Endereço completo
+                  </FieldLabel>
+                  <Input
+                    id="tenant-address"
+                    placeholder="Rua Exemplo, 123 - Bairro - Cidade/UF"
+                    value={colors.address}
+                    onChange={(e) => set('address', e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel
+                    htmlFor="tenant-creci-juridico"
+                    hint="CRECI da pessoa jurídica (imobiliária) — aparece com destaque visual no cabeçalho."
+                  >
+                    CRECI Jurídico
+                  </FieldLabel>
+                  <Input
+                    id="tenant-creci-juridico"
+                    placeholder="CRECI-J 12345-J"
+                    value={colors.creci_juridico}
+                    onChange={(e) => set('creci_juridico', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t pt-4">
+                <FieldLabel hint="Decide o que aparece no cabeçalho da home pública — independente dessas informações estarem preenchidas em outras telas do sistema.">
+                  Exibir no cabeçalho da home pública
+                </FieldLabel>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <Switch
+                      checked={colors.public_header_show_logo}
+                      onCheckedChange={(c) => set('public_header_show_logo', c)}
+                    />
+                    Logo
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <Switch
+                      checked={colors.public_header_show_name}
+                      onCheckedChange={(c) => set('public_header_show_name', c)}
+                    />
+                    Nome
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <Switch
+                      checked={colors.public_header_show_address}
+                      onCheckedChange={(c) => set('public_header_show_address', c)}
+                    />
+                    Endereço
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <Switch
+                      checked={colors.public_header_show_creci}
+                      onCheckedChange={(c) => set('public_header_show_creci', c)}
+                    />
+                    CRECI Jurídico
+                  </label>
+                </div>
               </div>
             </CardContent>
           </Card>
