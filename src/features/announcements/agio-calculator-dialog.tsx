@@ -169,6 +169,7 @@ export function AgioCalculatorDialog({
         className="sm:max-w-lg"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>Calculadora de ágio</DialogTitle>
