@@ -45,8 +45,13 @@ export function isPremiumFiltersActive(filters: PremiumFilters): boolean {
   )
 }
 
-function formatCompactPrice(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+function formatFullPrice(value: number) {
+  return value.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
 }
 
 function FilterFields({
@@ -122,9 +127,12 @@ function FilterFields({
         </Select>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 sm:min-w-48">
-        <label className="text-muted-foreground text-xs font-medium">
-          Faixa de preço: {formatCompactPrice(range[0])} – {formatCompactPrice(range[1])}
+      <div className="flex flex-[2] flex-col gap-1.5 sm:min-w-64">
+        <label className="text-muted-foreground flex flex-col text-xs font-medium">
+          <span>Faixa de preço:</span>
+          <span className="text-[11px] font-normal">
+            {formatFullPrice(range[0])} – {formatFullPrice(range[1])}
+          </span>
         </label>
         <Slider
           className="py-1.5"
@@ -220,17 +228,18 @@ export function PremiumSearchBar({
         </div>
       </div>
 
-      <div className="hidden shrink-0 items-center gap-3 sm:flex">
-        <span className="text-muted-foreground text-sm whitespace-nowrap">
-          {resultCount} {resultCount === 1 ? 'imóvel' : 'imóveis'}
-        </span>
-        {favoritesToggle}
-        {isFiltered && (
-          <Button variant="ghost" size="sm" onClick={() => onChange(DEFAULT_PREMIUM_FILTERS)}>
-            Limpar
-          </Button>
-        )}
-      </div>
+      <div className="hidden shrink-0 items-center gap-3 sm:flex">{favoritesToggle}</div>
+
+      {isFiltered && (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => onChange(DEFAULT_PREMIUM_FILTERS)}
+          className="ring-border absolute -top-3 right-4 hidden shadow-md ring-1 sm:inline-flex"
+        >
+          Limpar filtros
+        </Button>
+      )}
     </div>
   )
 }
