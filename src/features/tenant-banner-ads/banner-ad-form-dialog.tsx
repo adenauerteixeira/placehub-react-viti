@@ -3,9 +3,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2, Upload } from 'lucide-react'
+import { Loader2, Pause, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/field'
+import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { errorMessage } from '@/lib/errors'
 import {
@@ -49,6 +50,14 @@ const schema = z
     image_fit: z.enum(['cover', 'contain']),
     image_align: z.enum(['left', 'center', 'right']),
     background_color: z.string(),
+    title_color: z.string(),
+    subtitle_color: z.string(),
+    subtitle_2_color: z.string(),
+    badge_opacity: z.number(),
+    overlay_color: z.string(),
+    overlay_opacity: z.number(),
+    border_color: z.string(),
+    border_width: z.number(),
     display_seconds: z.string(),
     payment_status: z.enum(['pending', 'paid', 'overdue']),
     starts_at: z.string(),
@@ -75,6 +84,14 @@ const emptyValues: FormValues = {
   image_fit: 'cover',
   image_align: 'center',
   background_color: '#000000',
+  title_color: '#ffffff',
+  subtitle_color: '#ffffff',
+  subtitle_2_color: '#ffffff',
+  badge_opacity: 1,
+  overlay_color: '#000000',
+  overlay_opacity: 0.55,
+  border_color: '#e5e7eb',
+  border_width: 1,
   display_seconds: '',
   payment_status: 'pending',
   starts_at: '',
@@ -86,15 +103,11 @@ export function BannerAdFormDialog({
   open,
   onOpenChange,
   tenantId,
-  badgeOpacity,
   ad,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   tenantId: string
-  /** Opacidade do selo "Publicidade" — configuração única por tenant (aba
-   * Banner > Exibição do carrossel), não por anúncio. */
-  badgeOpacity: number
   ad?: BannerAd
 }) {
   const isEdit = !!ad
@@ -163,6 +176,14 @@ export function BannerAdFormDialog({
             image_fit: ad.image_fit,
             image_align: ad.image_align,
             background_color: ad.background_color,
+            title_color: ad.title_color,
+            subtitle_color: ad.subtitle_color,
+            subtitle_2_color: ad.subtitle_2_color,
+            badge_opacity: ad.badge_opacity,
+            overlay_color: ad.overlay_color,
+            overlay_opacity: ad.overlay_opacity,
+            border_color: ad.border_color,
+            border_width: ad.border_width,
             display_seconds: ad.display_seconds?.toString() ?? '',
             payment_status: ad.payment_status,
             starts_at: ad.starts_at ?? '',
@@ -250,32 +271,48 @@ export function BannerAdFormDialog({
                 imageFit={watch('image_fit')}
                 imageAlign={watch('image_align')}
                 backgroundColor={watch('background_color')}
+                titleColor={watch('title_color')}
+                subtitleColor={watch('subtitle_color')}
+                subtitle2Color={watch('subtitle_2_color')}
+                overlayColor={watch('overlay_color')}
+                overlayOpacity={watch('overlay_opacity')}
+                borderColor={watch('border_color')}
+                borderWidth={watch('border_width')}
+                badgePosition="bottom"
                 badge={
                   <span
                     className="rounded bg-black/50 px-2 py-1 text-xs text-white"
-                    style={{ opacity: badgeOpacity }}
+                    style={{ opacity: watch('badge_opacity') }}
                   >
                     Publicidade
                   </span>
                 }
               />
+              {/* Eco visual do botão de pausa do carrossel real (Vitrine
+              Premium) — só pra mostrar onde o selo "Publicidade" vai
+              acabar sobrando espaço ao lado; não é funcional aqui. */}
+              <div
+                aria-hidden="true"
+                className="absolute right-[20px] bottom-[5px] flex size-7 items-center justify-center rounded-full border opacity-40"
+              >
+                <Pause className="size-3.5" />
+              </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="absolute right-3 bottom-3"
-              disabled={!activeAd || uploadImage.isPending}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {uploadImage.isPending ? <Loader2 className="animate-spin" /> : <Upload />}
-              Trocar foto
-            </Button>
-            {!activeAd && (
-              <p className="text-muted-foreground absolute bottom-3 left-3 text-xs">
-                Salve o anúncio pra habilitar o envio.
-              </p>
-            )}
+            <div className="absolute bottom-3 left-3 flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!activeAd || uploadImage.isPending}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploadImage.isPending ? <Loader2 className="animate-spin" /> : <Upload />}
+                Trocar foto
+              </Button>
+              {!activeAd && (
+                <p className="text-muted-foreground text-xs">Salve o anúncio pra habilitar o envio.</p>
+              )}
+            </div>
             <input
               ref={fileInputRef}
               type="file"
@@ -322,25 +359,150 @@ export function BannerAdFormDialog({
             </Field>
           </div>
 
-          <ColorField
-            label="Cor de fundo do slide"
-            value={watch('background_color')}
-            onChange={(v) => setValue('background_color', v)}
-            eyedropper
-            compact
-          />
+          <div className="flex flex-col gap-3 rounded-xl border p-3">
+            <ColorField
+              label="Cor de fundo do slide"
+              value={watch('background_color')}
+              onChange={(v) => setValue('background_color', v)}
+              compact
+            />
 
-          <Field label="Título" htmlFor="ad-title" hint="Vazio usa o nome da empresa anunciante.">
-            <Input id="ad-title" {...register('title')} />
-          </Field>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel
+                htmlFor="ad-badge-opacity"
+                hint="Só desse anúncio — cada patrocinador pode ter uma opacidade de selo diferente."
+              >
+                Opacidade do selo "Publicidade"
+              </FieldLabel>
+              <div className="flex items-center gap-2">
+                <input
+                  id="ad-badge-opacity"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  className="accent-primary w-full"
+                  value={watch('badge_opacity')}
+                  onChange={(e) => setValue('badge_opacity', Number(e.target.value))}
+                />
+                <span className="text-muted-foreground w-10 shrink-0 text-right text-sm">
+                  {Math.round(watch('badge_opacity') * 100)}%
+                </span>
+              </div>
+            </div>
 
-          <Field label="Subtítulo" htmlFor="ad-subtitle" hint="Opcional — só aparece se preenchido.">
-            <Input id="ad-subtitle" {...register('subtitle')} />
-          </Field>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel
+                htmlFor="ad-overlay-opacity"
+                hint="Filtro sobre a foto desse anúncio, pra manter o texto legível — ajuste conforme o brilho/cor da imagem."
+              >
+                Intensidade do filtro
+              </FieldLabel>
+              <div className="flex items-center gap-2">
+                <input
+                  id="ad-overlay-opacity"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  className="accent-primary w-full"
+                  value={watch('overlay_opacity')}
+                  onChange={(e) => setValue('overlay_opacity', Number(e.target.value))}
+                />
+                <span className="text-muted-foreground w-10 shrink-0 text-right text-sm">
+                  {Math.round(watch('overlay_opacity') * 100)}%
+                </span>
+              </div>
+            </div>
 
-          <Field label="Segundo subtítulo" htmlFor="ad-subtitle-2" hint="Opcional — só aparece se preenchido.">
-            <Input id="ad-subtitle-2" {...register('subtitle_2')} />
-          </Field>
+            <ColorField
+              label="Cor do filtro"
+              value={watch('overlay_color')}
+              onChange={(v) => setValue('overlay_color', v)}
+              compact
+            />
+
+            <div className="flex items-end gap-4">
+              <ColorField
+                label="Cor da borda"
+                value={watch('border_color')}
+                onChange={(v) => setValue('border_color', v)}
+                compact
+              />
+              <Field
+                label="Espessura (px)"
+                htmlFor="ad-border-width"
+                hint='Espessura da borda — só aparece com "Mostrar borda ao redor do slide" ligado (Identidade Visual > Banner).'
+                className="w-24"
+              >
+                <Input
+                  id="ad-border-width"
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={watch('border_width')}
+                  onChange={(e) => setValue('border_width', Number(e.target.value))}
+                />
+              </Field>
+            </div>
+          </div>
+
+          <div className="flex items-end gap-2">
+            <Field
+              label="Título"
+              htmlFor="ad-title"
+              hint="Vazio usa o nome da empresa anunciante."
+              className="flex-1"
+            >
+              <Input id="ad-title" {...register('title')} />
+            </Field>
+            <input
+              type="color"
+              aria-label="Cor do título"
+              title="Cor do título"
+              value={watch('title_color')}
+              onChange={(e) => setValue('title_color', e.target.value)}
+              className="border-input size-9 shrink-0 cursor-pointer rounded-md border p-0.5"
+            />
+          </div>
+
+          <div className="flex items-end gap-2">
+            <Field
+              label="Subtítulo"
+              htmlFor="ad-subtitle"
+              hint="Opcional — só aparece se preenchido."
+              className="flex-1"
+            >
+              <Input id="ad-subtitle" {...register('subtitle')} />
+            </Field>
+            <input
+              type="color"
+              aria-label="Cor do subtítulo"
+              title="Cor do subtítulo"
+              value={watch('subtitle_color')}
+              onChange={(e) => setValue('subtitle_color', e.target.value)}
+              className="border-input size-9 shrink-0 cursor-pointer rounded-md border p-0.5"
+            />
+          </div>
+
+          <div className="flex items-end gap-2">
+            <Field
+              label="Segundo subtítulo"
+              htmlFor="ad-subtitle-2"
+              hint="Opcional — só aparece se preenchido."
+              className="flex-1"
+            >
+              <Input id="ad-subtitle-2" {...register('subtitle_2')} />
+            </Field>
+            <input
+              type="color"
+              aria-label="Cor do segundo subtítulo"
+              title="Cor do segundo subtítulo"
+              value={watch('subtitle_2_color')}
+              onChange={(e) => setValue('subtitle_2_color', e.target.value)}
+              className="border-input size-9 shrink-0 cursor-pointer rounded-md border p-0.5"
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Field

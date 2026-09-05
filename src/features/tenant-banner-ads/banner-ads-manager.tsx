@@ -346,18 +346,12 @@ export function BannerAdsManager({
 
       {showSponsors && (
         <>
-          <BannerAdFormDialog
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-            tenantId={tenantId}
-            badgeOpacity={tenant.public_hero_badge_opacity}
-          />
+          <BannerAdFormDialog open={createOpen} onOpenChange={setCreateOpen} tenantId={tenantId} />
           {editing && (
             <BannerAdFormDialog
               open={!!editing}
               onOpenChange={(open) => !open && setEditingId(null)}
               tenantId={tenantId}
-              badgeOpacity={tenant.public_hero_badge_opacity}
               ad={editing}
             />
           )}

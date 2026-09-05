@@ -18,6 +18,13 @@ export function PromoSlide({
   imageFit = 'cover',
   imageAlign = 'center',
   backgroundColor = '#000000',
+  overlayColor = '#000000',
+  overlayOpacity = 0.55,
+  titleColor = '#ffffff',
+  subtitleColor = '#ffffff',
+  subtitle2Color = '#ffffff',
+  borderColor = '#e5e7eb',
+  borderWidth = 1,
   badge,
   badgePosition = 'top',
   extraButton,
@@ -32,6 +39,21 @@ export function PromoSlide({
   imageFit?: 'cover' | 'contain'
   imageAlign?: 'left' | 'center' | 'right'
   backgroundColor?: string
+  /** Filtro sobre a foto, pra manter o texto legível em cima de qualquer
+   * imagem — cor e intensidade configuráveis (Identidade Visual > Banner),
+   * já que os anúncios de parceiros têm fotos de qualquer cor/luminosidade. */
+  overlayColor?: string
+  overlayOpacity?: number
+  /** Cor de cada linha de texto — por anúncio (ou do slide Próprio), já que
+   * a foto de fundo varia de brilho/cor de anúncio pra anúncio. */
+  titleColor?: string
+  subtitleColor?: string
+  subtitle2Color?: string
+  /** Cor/espessura da borda — por anúncio (ou do slide Próprio), já que cada
+   * um pode combinar melhor com uma borda diferente. Só se aplica quando
+   * showBorder (liga/desliga único por tenant). */
+  borderColor?: string
+  borderWidth?: number
   badge?: ReactNode
   /** 'bottom' evita brigar com um cabeçalho fixo que se sobrepõe ao próprio
    * banner (caso da Vitrine Premium) — a Vitrine e a home clássica, com
@@ -42,15 +64,13 @@ export function PromoSlide({
 }) {
   return (
     <section
-      className={cn(
-        'relative flex min-h-56 flex-col justify-end overflow-hidden rounded-2xl p-6 text-white sm:min-h-64 sm:p-10',
-        showBorder && 'border',
-      )}
-      style={
-        !imageUrl
+      className="relative flex min-h-56 flex-col justify-end overflow-hidden rounded-2xl p-6 text-white sm:min-h-64 sm:p-10"
+      style={{
+        ...(!imageUrl
           ? { background: 'linear-gradient(135deg, var(--primary), var(--accent))' }
-          : { background: backgroundColor }
-      }
+          : { background: backgroundColor }),
+        ...(showBorder ? { borderStyle: 'solid', borderWidth, borderColor } : {}),
+      }}
     >
       {imageUrl && (
         <>
@@ -63,16 +83,41 @@ export function PromoSlide({
               imageAlign === 'left' ? 'object-left' : imageAlign === 'right' ? 'object-right' : 'object-center',
             )}
           />
-          <div className="absolute inset-0 bg-black/55" />
+          <div className="absolute inset-0" style={{ backgroundColor: overlayColor, opacity: overlayOpacity }} />
         </>
       )}
       {badge && (
-        <div className={cn('absolute right-4', badgePosition === 'bottom' ? 'bottom-14' : 'top-4')}>{badge}</div>
+        <div
+          className={cn(
+            'absolute',
+            // 'bottom': alinhado por especificação (5px do rodapé do anúncio,
+            // 20px de margem direita) com o botão de pausa do carrossel — que
+            // mora fora daqui (BannerCarousel) e recalcula sua própria
+            // posição a partir do padding configurável do slide (Identidade
+            // Visual > Banner). Aqui dentro é direto, sem esse ajuste, porque
+            // esta <section> é o próprio anúncio. 68px = 20 (margem do botão)
+            // + 28 (largura do botão, size-7) + 20 (gap entre os dois) —
+            // âncora pela direita evita depender da largura variável do selo.
+            badgePosition === 'bottom' ? 'right-[68px] bottom-[5px]' : 'top-4 right-4',
+          )}
+        >
+          {badge}
+        </div>
       )}
       <div className="relative flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
-        {subtitle && <p className="max-w-xl text-white/90">{subtitle}</p>}
-        {subtitle2 && <p className="max-w-xl text-white/80">{subtitle2}</p>}
+        <h1 className="text-2xl font-semibold sm:text-3xl" style={{ color: titleColor }}>
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="max-w-xl" style={{ color: subtitleColor }}>
+            {subtitle}
+          </p>
+        )}
+        {subtitle2 && (
+          <p className="max-w-xl" style={{ color: subtitle2Color }}>
+            {subtitle2}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           {extraButton}
           {linkUrl && (

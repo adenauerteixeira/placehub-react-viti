@@ -23,6 +23,14 @@ export type BannerAd = {
   image_fit: ImageFit
   image_align: ImageAlign
   background_color: string
+  title_color: string
+  subtitle_color: string
+  subtitle_2_color: string
+  badge_opacity: number
+  overlay_color: string
+  overlay_opacity: number
+  border_color: string
+  border_width: number
   display_seconds: number | null
   payment_status: PaymentStatus
   starts_at: string | null
@@ -34,7 +42,7 @@ export type BannerAd = {
 }
 
 const BANNER_AD_COLUMNS =
-  'id, tenant_id, title, subtitle, subtitle_2, link_label, company_name, contact_name, contact_email, contact_phone, link_url, image_path, image_fit, image_align, background_color, display_seconds, payment_status, starts_at, ends_at, active, sort_order, created_at, updated_at'
+  'id, tenant_id, title, subtitle, subtitle_2, link_label, company_name, contact_name, contact_email, contact_phone, link_url, image_path, image_fit, image_align, background_color, title_color, subtitle_color, subtitle_2_color, badge_opacity, overlay_color, overlay_opacity, border_color, border_width, display_seconds, payment_status, starts_at, ends_at, active, sort_order, created_at, updated_at'
 
 export function bannerAdImageUrl(path: string | null, updatedAt: string): string | null {
   if (!path) return null
@@ -98,6 +106,14 @@ export type BannerAdInput = {
   image_fit: ImageFit
   image_align: ImageAlign
   background_color: string
+  title_color: string
+  subtitle_color: string
+  subtitle_2_color: string
+  badge_opacity: number
+  overlay_color: string
+  overlay_opacity: number
+  border_color: string
+  border_width: number
   display_seconds: string
   payment_status: PaymentStatus
   starts_at: string
@@ -119,6 +135,14 @@ function toRow(input: BannerAdInput) {
     image_fit: input.image_fit,
     image_align: input.image_align,
     background_color: input.background_color,
+    title_color: input.title_color,
+    subtitle_color: input.subtitle_color,
+    subtitle_2_color: input.subtitle_2_color,
+    badge_opacity: input.badge_opacity,
+    overlay_color: input.overlay_color,
+    overlay_opacity: input.overlay_opacity,
+    border_color: input.border_color,
+    border_width: input.border_width,
     display_seconds: input.display_seconds ? Number(input.display_seconds) : null,
     payment_status: input.payment_status,
     starts_at: input.starts_at || null,

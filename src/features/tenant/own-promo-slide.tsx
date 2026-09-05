@@ -25,6 +25,13 @@ export function OwnPromoSlide({ tenant, showBorder = true }: { tenant: Tenant; s
       imageFit={tenant.public_hero_image_fit}
       imageAlign={tenant.public_hero_image_align}
       backgroundColor={tenant.public_hero_background_color}
+      titleColor={tenant.public_hero_title_color}
+      subtitleColor={tenant.public_hero_subtitle_color}
+      subtitle2Color={tenant.public_hero_subtitle_2_color}
+      overlayColor={tenant.public_hero_overlay_color}
+      overlayOpacity={tenant.public_hero_overlay_opacity}
+      borderColor={tenant.public_hero_border_color}
+      borderWidth={tenant.public_hero_border_width}
       extraButton={
         tenant.phone ? (
           <Button asChild size="sm">

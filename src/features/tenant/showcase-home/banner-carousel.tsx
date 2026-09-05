@@ -11,12 +11,10 @@ import { PromoSlide } from '../promo-slide'
 function AdSlide({
   ad,
   showBorder,
-  badgeOpacity,
   badgePosition,
 }: {
   ad: BannerAd
   showBorder: boolean
-  badgeOpacity: number
   badgePosition: 'top' | 'bottom'
 }) {
   const imageUrl = bannerAdImageUrl(ad.image_path, ad.updated_at)
@@ -33,9 +31,16 @@ function AdSlide({
       imageFit={ad.image_fit}
       imageAlign={ad.image_align}
       backgroundColor={ad.background_color}
+      titleColor={ad.title_color}
+      subtitleColor={ad.subtitle_color}
+      subtitle2Color={ad.subtitle_2_color}
+      overlayColor={ad.overlay_color}
+      overlayOpacity={ad.overlay_opacity}
+      borderColor={ad.border_color}
+      borderWidth={ad.border_width}
       badgePosition={badgePosition}
       badge={
-        <Badge variant="secondary" style={{ opacity: badgeOpacity }}>
+        <Badge variant="secondary" style={{ opacity: ad.badge_opacity }}>
           Publicidade
         </Badge>
       }
@@ -98,7 +103,6 @@ export function BannerCarousel({
         <AdSlide
           ad={ad}
           showBorder={tenant.public_hero_show_border}
-          badgeOpacity={tenant.public_hero_badge_opacity}
           badgePosition={controlsAtBottom ? 'bottom' : 'top'}
         />
       ),
@@ -229,11 +233,21 @@ export function BannerCarousel({
         )}
       >
         {domSlides.map((slide) => (
-          // px-2.5 (10px) só aqui, não no scroller acima — descola o slide
-          // das laterais sem mexer na largura do "passo" que o carrossel usa
-          // pra rolar (a div ocupa 100% do espaço do scroller de qualquer
-          // forma; o padding só encolhe a área de conteúdo por dentro).
-          <div key={slide.key} className="w-full shrink-0 snap-center px-2.5">
+          // Padding só aqui, não no scroller acima — descola o slide das
+          // laterais sem mexer na largura do "passo" que o carrossel usa pra
+          // rolar (a div ocupa 100% do espaço do scroller de qualquer forma;
+          // o padding só encolhe a área de conteúdo por dentro). Configurável
+          // (Identidade Visual > Banner), único pra todos os slides.
+          <div
+            key={slide.key}
+            className="w-full shrink-0 snap-center"
+            style={{
+              paddingTop: tenant.public_hero_slide_padding_top,
+              paddingRight: tenant.public_hero_slide_padding_right,
+              paddingBottom: tenant.public_hero_slide_padding_bottom,
+              paddingLeft: tenant.public_hero_slide_padding_left,
+            }}
+          >
             {slide.node}
           </div>
         ))}
@@ -270,9 +284,22 @@ export function BannerCarousel({
           variant="outline"
           size="icon-sm"
           className={cn(
-            'absolute right-2 z-10 rounded-full opacity-40 transition-opacity hover:opacity-90',
-            controlsAtBottom ? 'bottom-14' : 'top-2',
+            'absolute z-10 rounded-full opacity-40 transition-opacity hover:opacity-90',
+            !controlsAtBottom && 'top-2 right-2',
           )}
+          style={
+            // 'bottom': 5px do rodapé/20px da direita do ANÚNCIO (a <section>
+            // do slide) — só que esse botão mora aqui fora, no wrapper do
+            // carrossel, deslocado do slide pelo padding configurável (acima)
+            // + os 4px de pb-1 da rolagem por baixo. Ver o comentário do selo
+            // em promo-slide.tsx.
+            controlsAtBottom
+              ? {
+                  right: 20 + tenant.public_hero_slide_padding_right,
+                  bottom: 5 + tenant.public_hero_slide_padding_bottom + 4,
+                }
+              : undefined
+          }
           onClick={() => setManuallyPaused((prev) => !prev)}
           aria-label={manuallyPaused ? 'Retomar rotação automática' : 'Pausar rotação automática'}
         >

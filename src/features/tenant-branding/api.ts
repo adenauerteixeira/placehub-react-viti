@@ -66,7 +66,10 @@ export type TenantColorsInput = {
   public_hero_show_arrows: boolean
   public_hero_show_border: boolean
   public_hero_sticky: boolean
-  public_hero_badge_opacity: number
+  public_hero_slide_padding_top: number
+  public_hero_slide_padding_right: number
+  public_hero_slide_padding_bottom: number
+  public_hero_slide_padding_left: number
   animated_hero_show_image: boolean
   animated_hero_show_particles: boolean
   training_enabled: boolean
@@ -111,6 +114,13 @@ export type OwnBannerInput = {
   public_hero_display_seconds: string
   public_hero_image_align: 'left' | 'center' | 'right'
   public_hero_background_color: string
+  public_hero_title_color: string
+  public_hero_subtitle_color: string
+  public_hero_subtitle_2_color: string
+  public_hero_overlay_color: string
+  public_hero_overlay_opacity: number
+  public_hero_border_color: string
+  public_hero_border_width: number
 }
 
 /** Salva só os campos do Banner Próprio — não usa `useUpdateTenantColors`
@@ -135,6 +145,13 @@ export function useUpdateOwnBanner(tenantId: string) {
             : null,
           public_hero_image_align: input.public_hero_image_align,
           public_hero_background_color: input.public_hero_background_color,
+          public_hero_title_color: input.public_hero_title_color,
+          public_hero_subtitle_color: input.public_hero_subtitle_color,
+          public_hero_subtitle_2_color: input.public_hero_subtitle_2_color,
+          public_hero_overlay_color: input.public_hero_overlay_color,
+          public_hero_overlay_opacity: input.public_hero_overlay_opacity,
+          public_hero_border_color: input.public_hero_border_color,
+          public_hero_border_width: input.public_hero_border_width,
         })
         .eq('id', tenantId)
       if (error) throw error

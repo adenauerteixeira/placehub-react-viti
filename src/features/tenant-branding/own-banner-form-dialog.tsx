@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Loader2, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/field'
+import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { errorMessage } from '@/lib/errors'
@@ -33,6 +34,13 @@ const schema = z.object({
   public_hero_image_fit: z.enum(['cover', 'contain']),
   public_hero_image_align: z.enum(['left', 'center', 'right']),
   public_hero_background_color: z.string(),
+  public_hero_title_color: z.string(),
+  public_hero_subtitle_color: z.string(),
+  public_hero_subtitle_2_color: z.string(),
+  public_hero_overlay_color: z.string(),
+  public_hero_overlay_opacity: z.number(),
+  public_hero_border_color: z.string(),
+  public_hero_border_width: z.number(),
   public_hero_display_seconds: z.string(),
 })
 
@@ -48,6 +56,13 @@ function valuesFromTenant(tenant: Tenant): FormValues {
     public_hero_image_fit: tenant.public_hero_image_fit,
     public_hero_image_align: tenant.public_hero_image_align,
     public_hero_background_color: tenant.public_hero_background_color,
+    public_hero_title_color: tenant.public_hero_title_color,
+    public_hero_subtitle_color: tenant.public_hero_subtitle_color,
+    public_hero_subtitle_2_color: tenant.public_hero_subtitle_2_color,
+    public_hero_overlay_color: tenant.public_hero_overlay_color,
+    public_hero_overlay_opacity: tenant.public_hero_overlay_opacity,
+    public_hero_border_color: tenant.public_hero_border_color,
+    public_hero_border_width: tenant.public_hero_border_width,
     public_hero_display_seconds: tenant.public_hero_display_seconds?.toString() ?? '',
   }
 }
@@ -165,6 +180,13 @@ export function OwnBannerFormDialog({
                 imageFit={watch('public_hero_image_fit')}
                 imageAlign={watch('public_hero_image_align')}
                 backgroundColor={watch('public_hero_background_color')}
+                titleColor={watch('public_hero_title_color')}
+                subtitleColor={watch('public_hero_subtitle_color')}
+                subtitle2Color={watch('public_hero_subtitle_2_color')}
+                overlayColor={watch('public_hero_overlay_color')}
+                overlayOpacity={watch('public_hero_overlay_opacity')}
+                borderColor={watch('public_hero_border_color')}
+                borderWidth={watch('public_hero_border_width')}
               />
             </div>
             <Button
@@ -227,29 +249,130 @@ export function OwnBannerFormDialog({
             </Field>
           </div>
 
-          <ColorField
-            label="Cor de fundo do slide"
-            value={watch('public_hero_background_color')}
-            onChange={(v) => setValue('public_hero_background_color', v)}
-            eyedropper
-            compact
-          />
-
-          <Field label="Título" htmlFor="own-hero-title" hint="Vazio usa o nome da imobiliária.">
-            <Input id="own-hero-title" placeholder={tenant.name} {...register('public_hero_title')} />
-          </Field>
-
-          <Field label="Subtítulo" htmlFor="own-hero-subtitle" hint="Vazio usa a frase padrão.">
-            <Input
-              id="own-hero-subtitle"
-              placeholder="Encontre seu próximo imóvel com quem entende do mercado!"
-              {...register('public_hero_subtitle')}
+          <div className="flex flex-col gap-3 rounded-xl border p-3">
+            <ColorField
+              label="Cor de fundo do slide"
+              value={watch('public_hero_background_color')}
+              onChange={(v) => setValue('public_hero_background_color', v)}
+              compact
             />
-          </Field>
 
-          <Field label="Segundo subtítulo" htmlFor="own-hero-subtitle-2" hint="Opcional — só aparece se preenchido.">
-            <Input id="own-hero-subtitle-2" {...register('public_hero_subtitle_2')} />
-          </Field>
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel
+                htmlFor="own-hero-overlay-opacity"
+                hint="Filtro sobre a foto deste slide, pra manter o texto legível — ajuste conforme o brilho/cor da imagem."
+              >
+                Intensidade do filtro
+              </FieldLabel>
+              <div className="flex items-center gap-2">
+                <input
+                  id="own-hero-overlay-opacity"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  className="accent-primary w-full"
+                  value={watch('public_hero_overlay_opacity')}
+                  onChange={(e) => setValue('public_hero_overlay_opacity', Number(e.target.value))}
+                />
+                <span className="text-muted-foreground w-10 shrink-0 text-right text-sm">
+                  {Math.round(watch('public_hero_overlay_opacity') * 100)}%
+                </span>
+              </div>
+            </div>
+
+            <ColorField
+              label="Cor do filtro"
+              value={watch('public_hero_overlay_color')}
+              onChange={(v) => setValue('public_hero_overlay_color', v)}
+              compact
+            />
+
+            <div className="flex items-end gap-4">
+              <ColorField
+                label="Cor da borda"
+                value={watch('public_hero_border_color')}
+                onChange={(v) => setValue('public_hero_border_color', v)}
+                compact
+              />
+              <Field
+                label="Espessura (px)"
+                htmlFor="own-hero-border-width"
+                hint='Espessura da borda — só aparece com "Mostrar borda ao redor do slide" ligado (Identidade Visual > Banner).'
+                className="w-24"
+              >
+                <Input
+                  id="own-hero-border-width"
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={watch('public_hero_border_width')}
+                  onChange={(e) => setValue('public_hero_border_width', Number(e.target.value))}
+                />
+              </Field>
+            </div>
+          </div>
+
+          <div className="flex items-end gap-2">
+            <Field
+              label="Título"
+              htmlFor="own-hero-title"
+              hint="Vazio usa o nome da imobiliária."
+              className="flex-1"
+            >
+              <Input id="own-hero-title" placeholder={tenant.name} {...register('public_hero_title')} />
+            </Field>
+            <input
+              type="color"
+              aria-label="Cor do título"
+              title="Cor do título"
+              value={watch('public_hero_title_color')}
+              onChange={(e) => setValue('public_hero_title_color', e.target.value)}
+              className="border-input size-9 shrink-0 cursor-pointer rounded-md border p-0.5"
+            />
+          </div>
+
+          <div className="flex items-end gap-2">
+            <Field
+              label="Subtítulo"
+              htmlFor="own-hero-subtitle"
+              hint="Vazio usa a frase padrão."
+              className="flex-1"
+            >
+              <Input
+                id="own-hero-subtitle"
+                placeholder="Encontre seu próximo imóvel com quem entende do mercado!"
+                {...register('public_hero_subtitle')}
+              />
+            </Field>
+            <input
+              type="color"
+              aria-label="Cor do subtítulo"
+              title="Cor do subtítulo"
+              value={watch('public_hero_subtitle_color')}
+              onChange={(e) => setValue('public_hero_subtitle_color', e.target.value)}
+              className="border-input size-9 shrink-0 cursor-pointer rounded-md border p-0.5"
+            />
+          </div>
+
+          <div className="flex items-end gap-2">
+            <Field
+              label="Segundo subtítulo"
+              htmlFor="own-hero-subtitle-2"
+              hint="Opcional — só aparece se preenchido."
+              className="flex-1"
+            >
+              <Input id="own-hero-subtitle-2" {...register('public_hero_subtitle_2')} />
+            </Field>
+            <input
+              type="color"
+              aria-label="Cor do segundo subtítulo"
+              title="Cor do segundo subtítulo"
+              value={watch('public_hero_subtitle_2_color')}
+              onChange={(e) => setValue('public_hero_subtitle_2_color', e.target.value)}
+              className="border-input size-9 shrink-0 cursor-pointer rounded-md border p-0.5"
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Field

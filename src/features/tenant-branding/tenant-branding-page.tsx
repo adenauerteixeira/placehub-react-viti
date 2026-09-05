@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Field } from '@/components/field'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -60,7 +61,10 @@ function colorsFromTenant(tenant: Tenant): TenantColorsInput {
     public_hero_show_arrows: tenant.public_hero_show_arrows,
     public_hero_show_border: tenant.public_hero_show_border,
     public_hero_sticky: tenant.public_hero_sticky,
-    public_hero_badge_opacity: tenant.public_hero_badge_opacity,
+    public_hero_slide_padding_top: tenant.public_hero_slide_padding_top,
+    public_hero_slide_padding_right: tenant.public_hero_slide_padding_right,
+    public_hero_slide_padding_bottom: tenant.public_hero_slide_padding_bottom,
+    public_hero_slide_padding_left: tenant.public_hero_slide_padding_left,
     animated_hero_show_image: tenant.animated_hero_show_image,
     animated_hero_show_particles: tenant.animated_hero_show_particles,
     training_enabled: tenant.training_enabled,
@@ -606,26 +610,50 @@ export function TenantBrandingPage() {
                 )}
 
                 <div className="flex flex-col gap-1.5">
-                  <FieldLabel
-                    htmlFor="hero-badge-opacity"
-                    hint="Vale pra todos os anúncios de uma vez — não dá pra configurar um selo diferente por patrocinador."
-                  >
-                    Opacidade do selo "Publicidade"
+                  <FieldLabel hint="Espaço entre a borda do carrossel e cada slide — vale pra todos de uma vez (próprio e parceiros), em pixels.">
+                    Espaçamento do slide
                   </FieldLabel>
-                  <div className="flex items-center gap-2">
-                    <input
-                      id="hero-badge-opacity"
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      className="accent-primary w-full max-w-xs"
-                      value={colors.public_hero_badge_opacity}
-                      onChange={(e) => set('public_hero_badge_opacity', Number(e.target.value))}
-                    />
-                    <span className="text-muted-foreground w-10 shrink-0 text-right text-sm">
-                      {Math.round(colors.public_hero_badge_opacity * 100)}%
-                    </span>
+                  <div className="grid grid-cols-4 gap-2">
+                    <Field label="Superior" htmlFor="hero-padding-top" className="gap-1">
+                      <Input
+                        id="hero-padding-top"
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={colors.public_hero_slide_padding_top}
+                        onChange={(e) => set('public_hero_slide_padding_top', Number(e.target.value))}
+                      />
+                    </Field>
+                    <Field label="Direito" htmlFor="hero-padding-right" className="gap-1">
+                      <Input
+                        id="hero-padding-right"
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={colors.public_hero_slide_padding_right}
+                        onChange={(e) => set('public_hero_slide_padding_right', Number(e.target.value))}
+                      />
+                    </Field>
+                    <Field label="Inferior" htmlFor="hero-padding-bottom" className="gap-1">
+                      <Input
+                        id="hero-padding-bottom"
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={colors.public_hero_slide_padding_bottom}
+                        onChange={(e) => set('public_hero_slide_padding_bottom', Number(e.target.value))}
+                      />
+                    </Field>
+                    <Field label="Esquerdo" htmlFor="hero-padding-left" className="gap-1">
+                      <Input
+                        id="hero-padding-left"
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={colors.public_hero_slide_padding_left}
+                        onChange={(e) => set('public_hero_slide_padding_left', Number(e.target.value))}
+                      />
+                    </Field>
                   </div>
                 </div>
               </CardContent>
