@@ -8,6 +8,7 @@ import { ThemeScopeProvider } from '@/lib/theme-scope'
 import { whatsappUrl } from '@/lib/whatsapp'
 import { announcementImageUrl, usePublicAnnouncementCovers, usePublicAnnouncements } from '@/features/announcements/api'
 import { brokerPhotoUrl, usePublicBroker } from '@/features/brokers/api'
+import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
 import { useTenantTitle } from '@/features/tenant-branding/use-tenant-title'
@@ -51,6 +52,7 @@ export function PremiumBrokerDetailPage({ tenantSlug }: { tenantSlug: string }) 
 
   const dark = resolvedTheme === 'dark'
   const photoUrl = brokerPhotoUrl(broker.photo_path, broker.updated_at)
+  const placeholderUrl = brandingAssetUrl(tenant.placeholder_image_path, tenant.updated_at)
 
   return (
     <ThemeScopeProvider value={scopeEl}>
@@ -104,6 +106,7 @@ export function PremiumBrokerDetailPage({ tenantSlug }: { tenantSlug: string }) 
                       key={announcement.id}
                       announcement={announcement}
                       coverUrl={coverPath ? announcementImageUrl(coverPath) : null}
+                      placeholderUrl={placeholderUrl}
                       isFavorite={isFavorite(announcement.id)}
                       onToggleFavorite={() => toggleFavorite(announcement.id)}
                     />

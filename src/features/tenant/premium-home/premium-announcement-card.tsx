@@ -18,12 +18,16 @@ function formatPrice(value: number) {
 export function PremiumAnnouncementCard({
   announcement,
   coverUrl,
+  placeholderUrl,
   isFavorite = false,
   onToggleFavorite,
   revealDelay = 0,
 }: {
   announcement: Announcement
   coverUrl: string | null
+  /** "Anúncio sem foto" (Identidade Visual) — mostrada no lugar da capa
+   * quando o anúncio não tem nenhuma foto própria. */
+  placeholderUrl?: string | null
   isFavorite?: boolean
   onToggleFavorite?: () => void
   /** Atraso (em segundos) antes da entrada — usado pra criar uma cascata
@@ -54,6 +58,8 @@ export function PremiumAnnouncementCard({
                 alt={announcement.title}
                 className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
+            ) : placeholderUrl ? (
+              <img src={placeholderUrl} alt="" className="size-full object-cover" />
             ) : (
               <div className="text-muted-foreground flex size-full items-center justify-center text-xs">
                 Sem foto

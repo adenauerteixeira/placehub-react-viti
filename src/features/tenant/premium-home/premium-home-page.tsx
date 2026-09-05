@@ -7,6 +7,7 @@ import { useTheme } from '@/lib/theme-provider'
 import { ThemeScopeProvider } from '@/lib/theme-scope'
 import { usePublicAnnouncementCovers, usePublicAnnouncements } from '@/features/announcements/api'
 import { groupAnnouncementsByType } from '@/features/announcements/labels'
+import { brandingAssetUrl } from '@/features/tenant-branding/api'
 import { tenantThemeVars } from '@/features/tenant-branding/apply-tenant-theme'
 import { useTenantFavicon } from '@/features/tenant-branding/use-tenant-favicon'
 import { useTenantTitle } from '@/features/tenant-branding/use-tenant-title'
@@ -14,9 +15,11 @@ import { usePublicBannerAds } from '@/features/tenant-banner-ads/api'
 import { usePublicTenant } from '@/features/tenants/api'
 import { PremiumHeader } from './premium-header'
 import { PremiumHero } from './premium-hero'
+import { PremiumCategoryIntro } from './premium-category-intro'
 import { PremiumCategoryNav } from './premium-category-nav'
 import { PremiumCategorySection } from './premium-category-section'
 import { PremiumFooter } from './premium-footer'
+import { PremiumScrollCue } from './premium-scroll-cue'
 import { PremiumWhatsappFab } from './premium-whatsapp-fab'
 import { DEFAULT_PREMIUM_FILTERS, type PremiumFilters } from './premium-search-bar'
 import { usePremiumFavorites } from './use-premium-favorites'
@@ -85,6 +88,8 @@ export function PremiumTenantHomePage({ slug }: { slug: string }) {
 
   const dark = resolvedTheme === 'dark'
   const hasAnnouncements = (announcements?.length ?? 0) > 0
+  const showCategoryIntro = hasAnnouncements && sections.length > 1
+  const placeholderUrl = brandingAssetUrl(tenant.placeholder_image_path, tenant.updated_at)
 
   return (
     <MotionConfig reducedMotion="user">
@@ -97,17 +102,28 @@ export function PremiumTenantHomePage({ slug }: { slug: string }) {
           <PremiumHeader tenant={tenant} dark={dark} transparentOverHero={tenant.public_hero_enabled} />
 
           <main className={cn('flex flex-col gap-12 pb-16', !tenant.public_hero_enabled && 'pt-16')}>
-            <PremiumHero
-              tenant={tenant}
-              ads={ads ?? []}
-              heroEnabled={tenant.public_hero_enabled}
-              filters={filters}
-              onFiltersChange={setFilters}
-              cities={cities}
-              priceBounds={priceBounds}
-              resultCount={filteredAnnouncements.length}
-              favoritesCount={favorites.length}
-            />
+            {/* Hero + grade de categorias + selo de rolar, todos dentro do
+                mesmo contêiner min-h-screen: a grade (PremiumCategoryIntro)
+                usa flex-1 e absorve sozinha o espaço que sobra entre o hero
+                e o selo, então o selo (último item) sempre gruda no fim
+                dessa tela cheia — não importa quanto espaço o hero/busca
+                ocupem ali em cima (varia por tenant e por largura), nem
+                quantas categorias existam. */}
+            <div className={cn('flex flex-col', showCategoryIntro && 'min-h-screen')}>
+              <PremiumHero
+                tenant={tenant}
+                ads={ads ?? []}
+                heroEnabled={tenant.public_hero_enabled}
+                filters={filters}
+                onFiltersChange={setFilters}
+                cities={cities}
+                priceBounds={priceBounds}
+                resultCount={filteredAnnouncements.length}
+                favoritesCount={favorites.length}
+              />
+              {showCategoryIntro && <PremiumCategoryIntro sections={sections} />}
+              {showCategoryIntro && <PremiumScrollCue />}
+            </div>
 
             {!hasAnnouncements ? (
               <div className="mx-auto w-full max-w-md px-6">
@@ -139,6 +155,7 @@ export function PremiumTenantHomePage({ slug }: { slug: string }) {
                         key={section.type}
                         section={section}
                         covers={covers}
+                        placeholderUrl={placeholderUrl}
                         isFavorite={isFavorite}
                         onToggleFavorite={toggleFavorite}
                         isFirst={index === 0}

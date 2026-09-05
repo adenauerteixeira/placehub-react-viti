@@ -109,12 +109,14 @@ function CategoryHeroTitle({
         className="flex items-center gap-3 rounded-2xl p-4"
         style={{ background: 'linear-gradient(to right, var(--primary), transparent 50%)' }}
       >
-        <span className="text-primary flex size-11 shrink-0 items-center justify-center sm:size-12">
+        <span className="text-primary-foreground flex size-11 shrink-0 items-center justify-center sm:size-12">
           <Icon className="size-6 sm:size-7" />
         </span>
         <div>
-          <h2 className="text-xl font-semibold tracking-tight whitespace-nowrap">{section.label}</h2>
-          <p className="text-muted-foreground text-sm">{countLabel}</p>
+          <h2 className="text-primary-foreground text-xl font-semibold tracking-tight whitespace-nowrap">
+            {section.label}
+          </h2>
+          <p className="text-primary-foreground/80 text-sm">{countLabel}</p>
         </div>
       </div>
     )
@@ -126,6 +128,14 @@ function CategoryHeroTitle({
   const revealOpacity = clampProgress(top, anchorPx + REVEAL_DISTANCE, anchorPx)
   const x = centerOffset * (1 - moveProgress)
   const fontSize = 3 - 1.75 * moveProgress
+  // O fundo em gradiente que aparece junto (abaixo) é bem forte na região
+  // onde o ícone/nome/contagem ficam — por isso a cor deles não pode ficar
+  // fixa em `text-foreground`/`text-muted-foreground` (sumiria de contraste
+  // ali) nem fixa na cor de contraste do fundo (ficaria errada antes do
+  // fundo aparecer). `color-mix` faz a transição acompanhar `revealOpacity`
+  // — a mesma proporção com que o fundo vai ficando opaco.
+  const nameColor = `color-mix(in oklch, var(--foreground), var(--primary-foreground) ${revealOpacity * 100}%)`
+  const countColor = `color-mix(in oklch, var(--muted-foreground), var(--primary-foreground) ${revealOpacity * 100}%)`
 
   return (
     <>
@@ -150,19 +160,19 @@ function CategoryHeroTitle({
 
           <div style={{ transform: `translateX(${x}px)` }} className="flex items-center gap-3 p-4">
             <span
-              style={{ opacity: revealOpacity }}
-              className="text-primary flex size-11 shrink-0 items-center justify-center sm:size-12"
+              style={{ opacity: revealOpacity, color: 'var(--primary-foreground)' }}
+              className="flex size-11 shrink-0 items-center justify-center sm:size-12"
             >
               <Icon className="size-6 sm:size-7" />
             </span>
             <div>
               <h2
-                style={{ opacity: nameOpacity, fontSize: `${fontSize}rem` }}
+                style={{ opacity: nameOpacity, fontSize: `${fontSize}rem`, color: nameColor }}
                 className="font-semibold tracking-tight whitespace-nowrap"
               >
                 {section.label}
               </h2>
-              <p style={{ opacity: revealOpacity }} className="text-muted-foreground text-sm">
+              <p style={{ opacity: revealOpacity, color: countColor }} className="text-sm">
                 {countLabel}
               </p>
             </div>
@@ -176,6 +186,7 @@ function CategoryHeroTitle({
 export function PremiumCategorySection({
   section,
   covers,
+  placeholderUrl,
   isFavorite,
   onToggleFavorite,
   isFirst = false,
@@ -183,6 +194,7 @@ export function PremiumCategorySection({
 }: {
   section: AnnouncementSection
   covers: Record<string, string> | undefined
+  placeholderUrl?: string | null
   isFavorite: (announcementId: string) => boolean
   onToggleFavorite: (announcementId: string) => void
   isFirst?: boolean
@@ -200,6 +212,7 @@ export function PremiumCategorySection({
               key={announcement.id}
               announcement={announcement}
               coverUrl={coverPath ? announcementImageUrl(coverPath) : null}
+              placeholderUrl={placeholderUrl}
               isFavorite={isFavorite(announcement.id)}
               onToggleFavorite={() => onToggleFavorite(announcement.id)}
               revealDelay={isFirst ? Math.min(index, MAX_STAGGERED_CARDS) * STAGGER_STEP : 0}
