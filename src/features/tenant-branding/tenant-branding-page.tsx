@@ -289,7 +289,9 @@ export function TenantBrandingPage() {
                 </FieldLabel>
                 <Select
                   value={colors.public_home_variant}
-                  onValueChange={(v) => set('public_home_variant', v as 'classic' | 'animated' | 'showcase')}
+                  onValueChange={(v) =>
+                    set('public_home_variant', v as 'classic' | 'animated' | 'showcase' | 'premium')
+                  }
                 >
                   <SelectTrigger className="w-64">
                     <SelectValue />
@@ -298,6 +300,7 @@ export function TenantBrandingPage() {
                     <SelectItem value="classic">Clássica</SelectItem>
                     <SelectItem value="animated">Animada (com rolagem cinematográfica)</SelectItem>
                     <SelectItem value="showcase">Vitrine (com carrossel de anúncios)</SelectItem>
+                    <SelectItem value="premium">Premium (busca em destaque + visual imersivo)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -511,12 +514,12 @@ export function TenantBrandingPage() {
             <CardContent>
               <BannerAdsManager
                 tenant={tenant}
-                showSponsors={colors.public_home_variant === 'showcase'}
+                showSponsors={colors.public_home_variant === 'showcase' || colors.public_home_variant === 'premium'}
               />
             </CardContent>
           </Card>
 
-          {colors.public_home_variant === 'showcase' && (
+          {(colors.public_home_variant === 'showcase' || colors.public_home_variant === 'premium') && (
             <Card>
               <CardHeader>
                 <CardTitle>Exibição do carrossel</CardTitle>
@@ -525,19 +528,28 @@ export function TenantBrandingPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-6">
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={colors.public_hero_full_width}
-                      onCheckedChange={(c) => set('public_hero_full_width', c === true)}
-                    />
-                    Banner ocupa a largura total da página
-                  </label>
+                {colors.public_home_variant === 'showcase' && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={colors.public_hero_full_width}
+                        onCheckedChange={(c) => set('public_hero_full_width', c === true)}
+                      />
+                      Banner ocupa a largura total da página
+                    </label>
+                    <p className="text-muted-foreground text-xs">
+                      Desmarcado, o carrossel fica contido na mesma largura dos anúncios (como é
+                      hoje). Marcado, ele se estende de ponta a ponta da tela.
+                    </p>
+                  </div>
+                )}
+
+                {colors.public_home_variant === 'premium' && (
                   <p className="text-muted-foreground text-xs">
-                    Desmarcado, o carrossel fica contido na mesma largura dos anúncios (como é
-                    hoje). Marcado, ele se estende de ponta a ponta da tela.
+                    Na Premium o banner sempre ocupa a largura total da tela — não fica preso ao
+                    topo ao rolar, já que o cabeçalho dessa variante se sobrepõe a ele.
                   </p>
-                </div>
+                )}
 
                 <div className="flex flex-col gap-1.5">
                   <label className="flex items-center gap-2 text-sm">
@@ -577,19 +589,21 @@ export function TenantBrandingPage() {
                   </label>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex items-center gap-2 text-sm">
-                    <Switch
-                      checked={colors.public_hero_sticky}
-                      onCheckedChange={(c) => set('public_hero_sticky', c)}
-                    />
-                    Manter o banner fixo no topo ao rolar a página
-                  </label>
-                  <p className="text-muted-foreground text-xs">
-                    Desligado, o banner rola junto com os anúncios (como é hoje). Ligado, ele
-                    fica parado logo abaixo do cabeçalho enquanto o visitante rola a página.
-                  </p>
-                </div>
+                {colors.public_home_variant === 'showcase' && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Switch
+                        checked={colors.public_hero_sticky}
+                        onCheckedChange={(c) => set('public_hero_sticky', c)}
+                      />
+                      Manter o banner fixo no topo ao rolar a página
+                    </label>
+                    <p className="text-muted-foreground text-xs">
+                      Desligado, o banner rola junto com os anúncios (como é hoje). Ligado, ele
+                      fica parado logo abaixo do cabeçalho enquanto o visitante rola a página.
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex flex-col gap-1.5">
                   <FieldLabel

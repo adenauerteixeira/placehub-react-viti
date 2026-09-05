@@ -8,7 +8,17 @@ import type { Tenant } from '@/features/tenants/api'
 import { OwnPromoSlide } from '../own-promo-slide'
 import { PromoSlide } from '../promo-slide'
 
-function AdSlide({ ad, showBorder, badgeOpacity }: { ad: BannerAd; showBorder: boolean; badgeOpacity: number }) {
+function AdSlide({
+  ad,
+  showBorder,
+  badgeOpacity,
+  badgePosition,
+}: {
+  ad: BannerAd
+  showBorder: boolean
+  badgeOpacity: number
+  badgePosition: 'top' | 'bottom'
+}) {
   const imageUrl = bannerAdImageUrl(ad.image_path, ad.updated_at)
 
   return (
@@ -23,6 +33,7 @@ function AdSlide({ ad, showBorder, badgeOpacity }: { ad: BannerAd; showBorder: b
       imageFit={ad.image_fit}
       imageAlign={ad.image_align}
       backgroundColor={ad.background_color}
+      badgePosition={badgePosition}
       badge={
         <Badge variant="secondary" style={{ opacity: badgeOpacity }}>
           Publicidade
@@ -55,7 +66,18 @@ function measureStep(scroller: HTMLDivElement): number {
  * porque o próprio botão mora dentro da área do carrossel e o mouse
  * "hoverando" ele ao clicar em retomar faria parecer que não voltou a
  * girar. Desligado também se o visitante prefere menos animação. */
-export function BannerCarousel({ tenant, ads }: { tenant: Tenant; ads: BannerAd[] }) {
+export function BannerCarousel({
+  tenant,
+  ads,
+  controlsAtBottom = false,
+}: {
+  tenant: Tenant
+  ads: BannerAd[]
+  /** A Vitrine Premium sobrepõe um cabeçalho fixo ao próprio banner (hero
+   * full-bleed) — sem isso, o botão de pausa e o selo "Publicidade" (que
+   * assumem canto superior livre) brigam com "Entrar"/tema no cabeçalho. */
+  controlsAtBottom?: boolean
+}) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const targetIndexRef = useRef(0)
   const [manuallyPaused, setManuallyPaused] = useState(false)
@@ -77,6 +99,7 @@ export function BannerCarousel({ tenant, ads }: { tenant: Tenant; ads: BannerAd[
           ad={ad}
           showBorder={tenant.public_hero_show_border}
           badgeOpacity={tenant.public_hero_badge_opacity}
+          badgePosition={controlsAtBottom ? 'bottom' : 'top'}
         />
       ),
       seconds: ad.display_seconds ?? tenant.public_hero_autoplay_seconds,
@@ -246,7 +269,10 @@ export function BannerCarousel({ tenant, ads }: { tenant: Tenant; ads: BannerAd[
           type="button"
           variant="outline"
           size="icon-sm"
-          className="absolute top-2 right-2 z-10 rounded-full opacity-40 transition-opacity hover:opacity-90"
+          className={cn(
+            'absolute right-2 z-10 rounded-full opacity-40 transition-opacity hover:opacity-90',
+            controlsAtBottom ? 'bottom-14' : 'top-2',
+          )}
           onClick={() => setManuallyPaused((prev) => !prev)}
           aria-label={manuallyPaused ? 'Retomar rotação automática' : 'Pausar rotação automática'}
         >

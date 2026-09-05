@@ -1,4 +1,5 @@
 import { LogoBadge } from '@/components/app-shell'
+import { cn } from '@/lib/utils'
 import type { Tenant } from '@/features/tenants/api'
 import { brandingAssetUrl } from './api'
 
@@ -28,10 +29,16 @@ export function TenantBrand({
   tenant,
   dark,
   showInstitutional = false,
+  dimBackdrop = false,
 }: {
   tenant: Tenant
   dark: boolean
   showInstitutional?: boolean
+  /** Escurece o fundo atrás de endereço/CRECI com um véu translúcido —
+   * necessário quando esse texto flutua sobre uma foto de hero arbitrária
+   * (Vitrine Premium com cabeçalho transparente), onde a cor de marca do
+   * tenant sozinha pode não ter contraste nenhum contra a foto. */
+  dimBackdrop?: boolean
 }) {
   const { logoUrl, logoBackground } = useTenantLogo(tenant, dark)
   const showLogo = !showInstitutional || tenant.public_header_show_logo
@@ -49,7 +56,12 @@ export function TenantBrand({
       {(showAddress || showCreci) && (
         <>
           <span className="bg-border hidden h-8 w-px shrink-0 sm:block" />
-          <div className="hidden min-w-0 flex-col gap-0.5 sm:flex">
+          <div
+            className={cn(
+              'hidden min-w-0 flex-col gap-0.5 sm:flex',
+              dimBackdrop && 'rounded-lg bg-black/30 px-2 py-1 backdrop-blur-sm',
+            )}
+          >
             {showAddress && (
               <span className="text-muted-foreground line-clamp-2 max-w-52 text-[10px] leading-tight">
                 {tenant.address}

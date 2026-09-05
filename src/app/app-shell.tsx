@@ -32,6 +32,10 @@ import { PublicBrokersListPage } from '@/features/tenant/public-brokers-list-pag
 import { AnimatedTenantHomePage } from '@/features/tenant/animated-home/animated-home-page'
 import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
 import { ShowcaseTenantHomePage } from '@/features/tenant/showcase-home/showcase-home-page'
+import { PremiumTenantHomePage } from '@/features/tenant/premium-home/premium-home-page'
+import { PremiumAnnouncementDetailPage } from '@/features/tenant/premium-home/premium-announcement-detail-page'
+import { PremiumBrokersListPage } from '@/features/tenant/premium-home/premium-brokers-list-page'
+import { PremiumBrokerDetailPage } from '@/features/tenant/premium-home/premium-broker-detail-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
 import { TrainingPage } from '@/features/tenant/training-page'
 import { ResetDataPage } from '@/features/tenant/reset-data-page'
@@ -68,9 +72,9 @@ function TenantApp({ slug }: { slug: string }) {
   return (
     <Routes>
       <Route path="/" element={<TenantHomeRoute slug={slug} />} />
-      <Route path="/anuncios/:slug" element={<PublicAnnouncementDetailPage tenantSlug={slug} />} />
-      <Route path="/corretores" element={<PublicBrokersListPage tenantSlug={slug} />} />
-      <Route path="/corretores/:slug" element={<PublicBrokerDetailPage tenantSlug={slug} />} />
+      <Route path="/anuncios/:slug" element={<TenantAnnouncementDetailRoute slug={slug} />} />
+      <Route path="/corretores" element={<TenantBrokersListRoute slug={slug} />} />
+      <Route path="/corretores/:slug" element={<TenantBrokerDetailRoute slug={slug} />} />
       <Route
         path="/login"
         element={session ? <Navigate to="/dashboard" replace /> : <LoginPage tenantSlug={slug} />}
@@ -269,7 +273,63 @@ function TenantHomeRoute({ slug }: { slug: string }) {
 
   if (tenant.public_home_variant === 'animated') return <AnimatedTenantHomePage tenant={tenant} />
   if (tenant.public_home_variant === 'showcase') return <ShowcaseTenantHomePage slug={slug} />
+  if (tenant.public_home_variant === 'premium') return <PremiumTenantHomePage slug={slug} />
   return <PublicTenantHomePage slug={slug} />
+}
+
+// Mesma ideia de TenantHomeRoute, pras 3 rotas públicas compartilhadas por
+// todas as variantes — só a Premium tem uma implementação própria (cabeçalho
+// e cards diferentes); Clássica/Animada/Vitrine continuam na mesma página de
+// sempre.
+function TenantAnnouncementDetailRoute({ slug }: { slug: string }) {
+  const { data: tenant, isLoading, isError } = usePublicTenant(slug)
+
+  if (isLoading) return <FullscreenSpinner />
+  if (isError || !tenant) {
+    return (
+      <FullscreenMessage
+        title="Imobiliária não encontrada"
+        description="Confira o endereço ou fale com quem te enviou o link."
+      />
+    )
+  }
+
+  if (tenant.public_home_variant === 'premium') return <PremiumAnnouncementDetailPage tenantSlug={slug} />
+  return <PublicAnnouncementDetailPage tenantSlug={slug} />
+}
+
+function TenantBrokersListRoute({ slug }: { slug: string }) {
+  const { data: tenant, isLoading, isError } = usePublicTenant(slug)
+
+  if (isLoading) return <FullscreenSpinner />
+  if (isError || !tenant) {
+    return (
+      <FullscreenMessage
+        title="Imobiliária não encontrada"
+        description="Confira o endereço ou fale com quem te enviou o link."
+      />
+    )
+  }
+
+  if (tenant.public_home_variant === 'premium') return <PremiumBrokersListPage tenantSlug={slug} />
+  return <PublicBrokersListPage tenantSlug={slug} />
+}
+
+function TenantBrokerDetailRoute({ slug }: { slug: string }) {
+  const { data: tenant, isLoading, isError } = usePublicTenant(slug)
+
+  if (isLoading) return <FullscreenSpinner />
+  if (isError || !tenant) {
+    return (
+      <FullscreenMessage
+        title="Imobiliária não encontrada"
+        description="Confira o endereço ou fale com quem te enviou o link."
+      />
+    )
+  }
+
+  if (tenant.public_home_variant === 'premium') return <PremiumBrokerDetailPage tenantSlug={slug} />
+  return <PublicBrokerDetailPage tenantSlug={slug} />
 }
 
 function RequireTenantAdmin({ children }: { children: React.ReactNode }) {

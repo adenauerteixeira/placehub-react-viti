@@ -44,7 +44,7 @@ export type Tenant = {
   email_logo_background_transparent: boolean
   // Página pública
   public_hero_enabled: boolean
-  public_home_variant: 'classic' | 'animated' | 'showcase'
+  public_home_variant: 'classic' | 'animated' | 'showcase' | 'premium'
   public_hero_full_width: boolean
   public_hero_autoplay_seconds: number
   public_hero_autoplay_reverse: boolean

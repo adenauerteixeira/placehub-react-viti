@@ -19,6 +19,7 @@ export function PromoSlide({
   imageAlign = 'center',
   backgroundColor = '#000000',
   badge,
+  badgePosition = 'top',
   extraButton,
 }: {
   imageUrl: string | null
@@ -32,6 +33,11 @@ export function PromoSlide({
   imageAlign?: 'left' | 'center' | 'right'
   backgroundColor?: string
   badge?: ReactNode
+  /** 'bottom' evita brigar com um cabeçalho fixo que se sobrepõe ao próprio
+   * banner (caso da Vitrine Premium) — a Vitrine e a home clássica, com
+   * cabeçalho reservando espaço próprio acima do banner, continuam usando
+   * o padrão 'top'. */
+  badgePosition?: 'top' | 'bottom'
   extraButton?: ReactNode
 }) {
   return (
@@ -60,7 +66,9 @@ export function PromoSlide({
           <div className="absolute inset-0 bg-black/55" />
         </>
       )}
-      {badge && <div className="absolute top-4 right-4">{badge}</div>}
+      {badge && (
+        <div className={cn('absolute right-4', badgePosition === 'bottom' ? 'bottom-14' : 'top-4')}>{badge}</div>
+      )}
       <div className="relative flex flex-col gap-3">
         <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
         {subtitle && <p className="max-w-xl text-white/90">{subtitle}</p>}
