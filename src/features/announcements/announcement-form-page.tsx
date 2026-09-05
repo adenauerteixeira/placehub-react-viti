@@ -452,11 +452,16 @@ export function AnnouncementFormPage() {
                       </Select>
                     </Field>
                     <Field
-                      label="É cessão (ágio)?"
+                      label={
+                        <>
+                          <span className="hidden sm:inline">É cessão (ágio)?</span>
+                          <span className="sm:hidden">Ágio?</span>
+                        </>
+                      }
                       htmlFor="ann-is-assignment"
                       hint="Cessão (ágio) sobre um lote, casa, apartamento etc. — força a transação para Venda e libera a calculadora."
                     >
-                      <div className="flex h-8 items-center gap-1.5">
+                      <div className="flex min-h-8 flex-wrap items-center gap-1.5">
                         <label htmlFor="ann-is-assignment" className="flex items-center gap-1.5 text-sm">
                           <Checkbox
                             id="ann-is-assignment"
