@@ -71,6 +71,7 @@ const schema = z
     description: z.string(),
     property_type: z.enum(PROPERTY_TYPES as [PropertyType, ...PropertyType[]]),
     transaction_type: z.enum(TRANSACTION_TYPES as [TransactionType, ...TransactionType[]]),
+    is_assignment: z.boolean(),
     price: z
       .number()
       .nullable()
@@ -115,6 +116,7 @@ const emptyValues: FormValues = {
   description: '',
   property_type: 'house',
   transaction_type: 'sale',
+  is_assignment: false,
   price: null,
   promotional_price: null,
   featured: false,
@@ -194,6 +196,7 @@ export function AnnouncementFormPage() {
       description: announcement.description ?? '',
       property_type: announcement.property_type,
       transaction_type: announcement.transaction_type,
+      is_assignment: announcement.is_assignment,
       price: announcement.price,
       promotional_price: announcement.promotional_price,
       featured: announcement.featured,
@@ -224,9 +227,9 @@ export function AnnouncementFormPage() {
     setAgioData(announcement.agio_calculation)
   }, [announcement, reset])
 
-  function handlePropertyTypeChange(value: PropertyType) {
-    setValue('property_type', value)
-    if (value === 'assignment') setValue('transaction_type', 'sale')
+  function handleAssignmentChange(checked: boolean) {
+    setValue('is_assignment', checked)
+    if (checked) setValue('transaction_type', 'sale')
   }
 
   function toInput(values: FormValues) {
@@ -237,6 +240,7 @@ export function AnnouncementFormPage() {
       description: values.description,
       property_type: values.property_type,
       transaction_type: values.transaction_type,
+      is_assignment: values.is_assignment,
       price: values.price ?? 0,
       promotional_price: values.promotional_price,
       featured: values.featured,
@@ -424,18 +428,18 @@ export function AnnouncementFormPage() {
                   <Input id="ann-subtitle" {...register('subtitle')} />
                 </Field>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <Field
-                    label="Tipo de imóvel"
-                    htmlFor="ann-property-type"
-                    hint="Categoria usada pra agrupar os anúncios no portal público."
-                  >
-                    <div className="flex gap-1.5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-[2fr_1fr] gap-4">
+                    <Field
+                      label="Tipo de imóvel"
+                      htmlFor="ann-property-type"
+                      hint="Categoria usada pra agrupar os anúncios no portal público."
+                    >
                       <Select
                         value={watch('property_type')}
-                        onValueChange={(v) => handlePropertyTypeChange(v as PropertyType)}
+                        onValueChange={(v) => setValue('property_type', v as PropertyType)}
                       >
-                        <SelectTrigger id="ann-property-type" className="flex-1">
+                        <SelectTrigger id="ann-property-type" className="w-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -446,50 +450,68 @@ export function AnnouncementFormPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      {watch('property_type') === 'assignment' && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          aria-label="Calculadora de ágio"
-                          title="Calculadora de ágio"
-                          onClick={() => setAgioDialogOpen(true)}
-                        >
-                          <Calculator className="size-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </Field>
-                  <Field label="Transação" htmlFor="ann-transaction-type" hint="Se o imóvel é pra vender ou alugar.">
-                    {watch('property_type') === 'assignment' ? (
-                      <div className="border-input bg-input/30 text-muted-foreground flex h-8 items-center rounded-lg border px-2.5 text-sm">
-                        Cessão é sempre Venda
+                    </Field>
+                    <Field
+                      label="É cessão (ágio)?"
+                      htmlFor="ann-is-assignment"
+                      hint="Cessão (ágio) sobre um lote, casa, apartamento etc. — força a transação para Venda e libera a calculadora."
+                    >
+                      <div className="flex h-8 items-center gap-1.5">
+                        <label htmlFor="ann-is-assignment" className="flex items-center gap-1.5 text-sm">
+                          <Checkbox
+                            id="ann-is-assignment"
+                            checked={watch('is_assignment')}
+                            onCheckedChange={(c) => handleAssignmentChange(c === true)}
+                          />
+                          Sim
+                        </label>
+                        {watch('is_assignment') && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            aria-label="Calculadora de ágio"
+                            title="Calculadora de ágio"
+                            onClick={() => setAgioDialogOpen(true)}
+                          >
+                            <Calculator className="size-4" />
+                          </Button>
+                        )}
                       </div>
-                    ) : (
-                      <Select
-                        value={watch('transaction_type')}
-                        onValueChange={(v) => setValue('transaction_type', v as TransactionType)}
-                      >
-                        <SelectTrigger id="ann-transaction-type">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {TRANSACTION_TYPES.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {TRANSACTION_TYPE_LABELS[type]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </Field>
-                  <Field
-                    label="Referência"
-                    htmlFor="ann-reference"
-                    hint="Código interno livre pra localizar o imóvel nos seus controles — não aparece pro visitante."
-                  >
-                    <Input id="ann-reference" {...register('reference_code')} />
-                  </Field>
+                    </Field>
+                  </div>
+                  <div className="grid grid-cols-[3fr_2fr] gap-4">
+                    <Field label="Transação" htmlFor="ann-transaction-type" hint="Se o imóvel é pra vender ou alugar.">
+                      {watch('is_assignment') ? (
+                        <div className="border-input bg-input/30 text-muted-foreground flex h-8 items-center rounded-lg border px-2.5 text-sm">
+                          Sempre Venda
+                        </div>
+                      ) : (
+                        <Select
+                          value={watch('transaction_type')}
+                          onValueChange={(v) => setValue('transaction_type', v as TransactionType)}
+                        >
+                          <SelectTrigger id="ann-transaction-type" className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TRANSACTION_TYPES.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {TRANSACTION_TYPE_LABELS[type]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </Field>
+                    <Field
+                      label="Referência"
+                      htmlFor="ann-reference"
+                      hint="Código interno livre pra localizar o imóvel nos seus controles — não aparece pro visitante."
+                    >
+                      <Input id="ann-reference" {...register('reference_code')} />
+                    </Field>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

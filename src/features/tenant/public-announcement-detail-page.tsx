@@ -162,6 +162,7 @@ export function PublicAnnouncementDetailPage({ tenantSlug }: { tenantSlug: strin
           <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{PROPERTY_TYPE_LABELS[announcement.property_type]}</Badge>
+              {announcement.is_assignment && <Badge variant="outline">Cessão</Badge>}
               <Badge variant="outline">{TRANSACTION_TYPE_LABELS[announcement.transaction_type]}</Badge>
               {announcement.featured && <Badge>Destaque</Badge>}
               {hasPromo && <Badge variant="secondary">Promoção</Badge>}

@@ -49,7 +49,10 @@ export function ShowcaseAnnouncementCard({
             </div>
           </div>
           <CardContent className="flex flex-col gap-1">
-            <p className="text-muted-foreground text-xs">{PROPERTY_TYPE_LABELS[announcement.property_type]}</p>
+            <p className="text-muted-foreground text-xs">
+              {PROPERTY_TYPE_LABELS[announcement.property_type]}
+              {announcement.is_assignment && ' · Cessão'}
+            </p>
             <h3 className="line-clamp-2 leading-snug font-medium">{announcement.title}</h3>
             <p className="text-muted-foreground text-sm">
               {[announcement.neighborhood, announcement.city].filter(Boolean).join(' · ') || '—'}

@@ -60,6 +60,7 @@ export function AnnouncementsListPage() {
           {row.original.title}
           {row.original.featured && <Badge variant="outline">Destaque</Badge>}
           {row.original.promotion && <Badge variant="secondary">Promoção</Badge>}
+          {row.original.is_assignment && <Badge variant="outline">Cessão</Badge>}
         </div>
       ),
     },

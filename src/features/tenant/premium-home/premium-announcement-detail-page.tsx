@@ -195,6 +195,7 @@ export function PremiumAnnouncementDetailPage({ tenantSlug }: { tenantSlug: stri
                 <div className="flex flex-col gap-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline">{PROPERTY_TYPE_LABELS[announcement.property_type]}</Badge>
+                    {announcement.is_assignment && <Badge variant="outline">Cessão</Badge>}
                     <Badge variant="outline">{TRANSACTION_TYPE_LABELS[announcement.transaction_type]}</Badge>
                     {announcement.featured && (
                       <Badge className="border-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white">

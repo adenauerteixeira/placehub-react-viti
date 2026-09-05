@@ -3,7 +3,15 @@ import { supabase } from '@/lib/supabase'
 
 const BUCKET = 'catalog-media'
 
-export type PropertyType = 'lot' | 'house' | 'apartment' | 'farm' | 'commercial' | 'launch' | 'assignment'
+export type PropertyType =
+  | 'lot'
+  | 'sitio'
+  | 'house'
+  | 'apartment'
+  | 'chacara'
+  | 'farm'
+  | 'commercial'
+  | 'launch'
 export type TransactionType = 'sale' | 'rent'
 export type AnnouncementStatus = 'draft' | 'published' | 'reserved' | 'sold' | 'inactive'
 
@@ -34,6 +42,7 @@ export type Announcement = {
   description: string | null
   property_type: PropertyType
   transaction_type: TransactionType
+  is_assignment: boolean
   status: AnnouncementStatus
   price: number
   promotional_price: number | null
@@ -77,7 +86,7 @@ export type AnnouncementImage = {
 }
 
 const ANNOUNCEMENT_COLUMNS =
-  'id, tenant_id, title, subtitle, slug, reference_code, description, property_type, transaction_type, status, price, promotional_price, featured, promotion, video_url, zip_code, street, address_number, complement, neighborhood, city, state, bedrooms, suites, bathrooms, parking_spaces, land_area, built_area, private_area, condominium_fee, iptu, development_id, partner_id, owner_id, broker_id, responsible_profile_id, agio_calculation, published_at, created_at, updated_at'
+  'id, tenant_id, title, subtitle, slug, reference_code, description, property_type, transaction_type, is_assignment, status, price, promotional_price, featured, promotion, video_url, zip_code, street, address_number, complement, neighborhood, city, state, bedrooms, suites, bathrooms, parking_spaces, land_area, built_area, private_area, condominium_fee, iptu, development_id, partner_id, owner_id, broker_id, responsible_profile_id, agio_calculation, published_at, created_at, updated_at'
 
 export function announcementImageUrl(path: string): string {
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
@@ -255,6 +264,7 @@ export type AnnouncementInput = {
   description: string
   property_type: PropertyType
   transaction_type: TransactionType
+  is_assignment: boolean
   price: number
   promotional_price: number | null
   featured: boolean
@@ -292,6 +302,7 @@ function toRow(input: AnnouncementInput) {
     description: input.description || null,
     property_type: input.property_type,
     transaction_type: input.transaction_type,
+    is_assignment: input.is_assignment,
     price: input.price,
     promotional_price: input.promotional_price,
     featured: input.featured,
