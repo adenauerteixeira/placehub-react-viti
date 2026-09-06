@@ -39,6 +39,15 @@ export function PremiumHeader({
           : 'bg-background/85 border-b backdrop-blur-xl',
       )}
     >
+      {isTransparent && (
+        // Garante contraste do texto branco acima mesmo sem foto de banner
+        // ativa (hero cai num fundo claro) — mesma lógica do `dimBackdrop`
+        // do endereço/CRECI, só que cobrindo a faixa inteira do cabeçalho.
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-black/45 to-transparent"
+        />
+      )}
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between gap-4 px-6">
         <TenantBrand tenant={tenant} dark={dark} showInstitutional dimBackdrop={isTransparent} />
         <div className="flex items-center gap-2 sm:gap-4">

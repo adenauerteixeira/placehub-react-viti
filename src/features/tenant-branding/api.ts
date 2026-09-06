@@ -74,12 +74,20 @@ export type TenantColorsInput = {
   animated_hero_show_particles: boolean
   training_enabled: boolean
   address: string
+  neighborhood: string
+  city: string
+  state: string
+  zip_code: string
+  phone: string
   creci_juridico: string
   public_header_display_name: string
   public_header_show_logo: boolean
   public_header_show_name: boolean
   public_header_show_address: boolean
   public_header_show_creci: boolean
+  public_header_name_light_color: string
+  public_header_name_dark_color: string
+  public_header_address_background_color: string
 }
 
 export function useUpdateTenantColors(tenantId: string) {
@@ -92,6 +100,11 @@ export function useUpdateTenantColors(tenantId: string) {
         .update({
           ...input,
           address: input.address || null,
+          neighborhood: input.neighborhood || null,
+          city: input.city || null,
+          state: input.state || null,
+          zip_code: input.zip_code || null,
+          phone: input.phone || null,
           creci_juridico: input.creci_juridico || null,
           public_header_display_name: input.public_header_display_name || null,
         })

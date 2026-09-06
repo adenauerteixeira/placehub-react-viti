@@ -2,7 +2,9 @@
 // pra usar como *-foreground de uma cor de marca configurável (não dá pra
 // supor de antemão se o hex escolhido pelo tenant é claro ou escuro).
 function parseHex(hex: string): { r: number; g: number; b: number } | null {
-  const match = /^#([0-9a-fA-F]{6})$/.exec(hex)
+  // Aceita hex de 6 ou 8 dígitos (o de 8 tem alfa no final, ignorado aqui —
+  // luminância olha só o canal de cor, não a transparência).
+  const match = /^#([0-9a-fA-F]{6})[0-9a-fA-F]{0,2}$/.exec(hex)
   if (!match) return null
   const int = parseInt(match[1], 16)
   return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 }

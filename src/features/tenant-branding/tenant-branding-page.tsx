@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Field } from '@/components/field'
 import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
+import { PhoneInput } from '@/components/phone-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -69,12 +70,20 @@ function colorsFromTenant(tenant: Tenant): TenantColorsInput {
     animated_hero_show_particles: tenant.animated_hero_show_particles,
     training_enabled: tenant.training_enabled,
     address: tenant.address ?? '',
+    neighborhood: tenant.neighborhood ?? '',
+    city: tenant.city ?? '',
+    state: tenant.state ?? '',
+    zip_code: tenant.zip_code ?? '',
+    phone: tenant.phone ?? '',
     creci_juridico: tenant.creci_juridico ?? '',
     public_header_display_name: tenant.public_header_display_name ?? '',
     public_header_show_logo: tenant.public_header_show_logo,
     public_header_show_name: tenant.public_header_show_name,
     public_header_show_address: tenant.public_header_show_address,
     public_header_show_creci: tenant.public_header_show_creci,
+    public_header_name_light_color: tenant.public_header_name_light_color,
+    public_header_name_dark_color: tenant.public_header_name_dark_color,
+    public_header_address_background_color: tenant.public_header_address_background_color,
   }
 }
 
@@ -352,36 +361,117 @@ export function TenantBrandingPage() {
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2">
+                <ColorField
+                  label="Cor do nome no cabeçalho (tema claro)"
+                  value={colors.public_header_name_light_color}
+                  onChange={(v) => set('public_header_name_light_color', v)}
+                  eyedropper
+                />
+                <ColorField
+                  label="Cor do nome no cabeçalho (tema escuro)"
+                  value={colors.public_header_name_dark_color}
+                  onChange={(v) => set('public_header_name_dark_color', v)}
+                  eyedropper
+                />
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <FieldLabel
                     htmlFor="tenant-address"
-                    hint="Exibido em destaque reduzido no cabeçalho, ao lado do nome."
+                    hint="Exibido em destaque reduzido no cabeçalho, junto com bairro/cidade/CEP/telefone."
                   >
-                    Endereço completo
+                    Rua
                   </FieldLabel>
                   <Input
                     id="tenant-address"
-                    placeholder="Rua Exemplo, 123 - Bairro - Cidade/UF"
+                    placeholder="Rua Exemplo, 123"
                     value={colors.address}
                     onChange={(e) => set('address', e.target.value)}
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="tenant-neighborhood">Bairro</FieldLabel>
+                  <Input
+                    id="tenant-neighborhood"
+                    placeholder="Centro"
+                    value={colors.neighborhood}
+                    onChange={(e) => set('neighborhood', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-3">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="tenant-city">Cidade</FieldLabel>
+                  <Input
+                    id="tenant-city"
+                    placeholder="Goiânia"
+                    value={colors.city}
+                    onChange={(e) => set('city', e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="tenant-state">Estado (UF)</FieldLabel>
+                  <Input
+                    id="tenant-state"
+                    placeholder="GO"
+                    maxLength={2}
+                    value={colors.state}
+                    onChange={(e) => set('state', e.target.value.toUpperCase())}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel htmlFor="tenant-zip-code">CEP</FieldLabel>
+                  <Input
+                    id="tenant-zip-code"
+                    placeholder="74000-000"
+                    value={colors.zip_code}
+                    onChange={(e) => set('zip_code', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel
+                    htmlFor="tenant-header-phone"
+                    hint="Mesmo telefone usado no botão de WhatsApp/rodapé do portal — editar aqui muda em todo lugar."
+                  >
+                    Telefone
+                  </FieldLabel>
+                  <PhoneInput
+                    id="tenant-header-phone"
+                    value={colors.phone}
+                    onChange={(v) => set('phone', v)}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
                   <FieldLabel
                     htmlFor="tenant-creci-juridico"
-                    hint="CRECI da pessoa jurídica (imobiliária) — aparece com destaque visual no cabeçalho."
+                    hint="CRECI da pessoa jurídica (imobiliária) — aparece por último, depois do endereço, com o número em negrito."
                   >
                     CRECI Jurídico
                   </FieldLabel>
                   <Input
                     id="tenant-creci-juridico"
-                    placeholder="CRECI-J 12345-J"
+                    placeholder="12345-J"
                     value={colors.creci_juridico}
                     onChange={(e) => set('creci_juridico', e.target.value)}
                   />
                 </div>
               </div>
+
+              <ColorField
+                label="Cor de fundo do endereço"
+                value={colors.public_header_address_background_color}
+                onChange={(v) => set('public_header_address_background_color', v)}
+                eyedropper
+              />
 
               <div className="flex flex-col gap-3 border-t pt-4">
                 <FieldLabel hint="Decide o que aparece no cabeçalho da home pública — independente dessas informações estarem preenchidas em outras telas do sistema.">

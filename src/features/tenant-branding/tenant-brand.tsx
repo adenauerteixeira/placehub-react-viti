@@ -1,7 +1,15 @@
 import { LogoBadge } from '@/components/app-shell'
+import { formatPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import type { Tenant } from '@/features/tenants/api'
 import { brandingAssetUrl } from './api'
+
+/** Alfa (0-255) de um hex de 6 ou 8 dígitos — 6 dígitos é sempre opaco. Usa
+ * pra saber se o tenant configurou uma cor de fundo de verdade (alfa > 0)
+ * ou deixou no padrão totalmente transparente. */
+function hexAlphaByte(hex: string): number {
+  return hex.length === 9 ? parseInt(hex.slice(7, 9), 16) : 255
+}
 
 /** Logo (se houver) + nome do tenant, lado a lado — usado em todo header
  * público/interno pra deixar claro qual imobiliária é essa (o logo
@@ -43,36 +51,67 @@ export function TenantBrand({
   const { logoUrl, logoBackground } = useTenantLogo(tenant, dark)
   const showLogo = !showInstitutional || tenant.public_header_show_logo
   const showName = !showInstitutional || tenant.public_header_show_name
-  const showAddress = showInstitutional && tenant.public_header_show_address && tenant.address
+  const addressParts = [
+    tenant.address,
+    tenant.neighborhood,
+    [tenant.city, tenant.state].filter(Boolean).join(' - '),
+    tenant.zip_code && `CEP ${tenant.zip_code}`,
+    tenant.phone && formatPhone(tenant.phone),
+  ].filter(Boolean)
+  const showAddress = showInstitutional && tenant.public_header_show_address && addressParts.length > 0
   const showCreci = showInstitutional && tenant.public_header_show_creci && tenant.creci_juridico
   const displayName =
     (showInstitutional && tenant.public_header_display_name) || tenant.name
 
+  // Sobre foto de hero (dimBackdrop), o cabeçalho já sobrescreve
+  // --foreground pra branco automaticamente (ver premium-header.tsx) — uma
+  // cor fixa escolhida pensando em fundo sólido poderia ficar ilegível
+  // numa foto qualquer, então nesse caso o nome herda a cor automática em
+  // vez de usar a configurada.
+  const nameColor = dimBackdrop
+    ? undefined
+    : dark
+      ? tenant.public_header_name_dark_color
+      : tenant.public_header_name_light_color
+
+  const addressBackgroundColor = tenant.public_header_address_background_color
+  const hasCustomAddressBackground = hexAlphaByte(addressBackgroundColor) > 0
+
   return (
     <div className="flex min-w-0 items-center gap-3">
       {showLogo && logoUrl && <LogoBadge src={logoUrl} alt={tenant.name} background={logoBackground} />}
-      {showName && <span className="text-lg font-semibold whitespace-nowrap">{displayName}</span>}
+      {showName && (
+        <span className="text-lg font-semibold whitespace-nowrap" style={nameColor ? { color: nameColor } : undefined}>
+          {displayName}
+        </span>
+      )}
 
       {(showAddress || showCreci) && (
         <>
-          <span className="bg-border hidden h-8 w-px shrink-0 sm:block" />
-          <div
+          <span
+            className={cn('hidden h-8 w-px shrink-0 sm:block', !hasCustomAddressBackground && 'bg-border')}
+            style={hasCustomAddressBackground ? { backgroundColor: addressBackgroundColor } : undefined}
+          />
+          <span
             className={cn(
-              'hidden min-w-0 flex-col gap-0.5 sm:flex',
-              dimBackdrop && 'rounded-lg bg-black/30 px-2 py-1 backdrop-blur-sm',
+              'hidden max-w-80 rounded-lg px-2 py-1 sm:inline-block',
+              dimBackdrop && (hasCustomAddressBackground ? 'backdrop-blur-sm' : 'bg-black/30 backdrop-blur-sm'),
             )}
+            style={hasCustomAddressBackground ? { backgroundColor: addressBackgroundColor } : undefined}
           >
-            {showAddress && (
-              <span className="text-muted-foreground line-clamp-2 max-w-52 text-[10px] leading-tight">
-                {tenant.address}
-              </span>
-            )}
-            {showCreci && (
-              <span className="bg-primary/10 text-primary w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold whitespace-nowrap">
-                CRECI-J {tenant.creci_juridico}
-              </span>
-            )}
-          </div>
+            {/* `backdrop-blur` no mesmo elemento do `line-clamp` vaza um
+             * fiapo da 3ª linha em alguns navegadores — span aninhado
+             * separa as duas responsabilidades. */}
+            <span className="text-muted-foreground line-clamp-2 text-[10px] leading-tight">
+              {showAddress && addressParts.join(', ')}
+              {showAddress && showCreci && ' · '}
+              {showCreci && (
+                <>
+                  CRECI-J <span className="font-bold">{tenant.creci_juridico}</span>
+                </>
+              )}
+            </span>
+          </span>
         </>
       )}
     </div>

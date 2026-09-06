@@ -5,6 +5,56 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Endereço institucional em campos discretos, 2026-09-05)
+
+- **`address` (tenants) agora representa só a rua** — bairro (`neighborhood`), cidade (`city`),
+  estado (`state`, 2 letras) e CEP (`zip_code`) viraram colunas próprias, editáveis em Identidade
+  Visual → Página pública → "Dados institucionais", na ordem em que aparecem no cabeçalho. O
+  telefone reaproveita o `phone` que o tenant já tinha (mesmo número do botão de WhatsApp/rodapé)
+  em vez de um campo novo duplicado — editar num lugar reflete no outro.
+- **Bloco de endereço do cabeçalho virou um texto único** (`tenant-brand.tsx`) — rua, bairro,
+  cidade/estado, CEP e telefone juntos numa sequência só, cortada em até 2 linhas
+  (`line-clamp-2`), com CRECI Jurídico ao final (separador próprio + número em negrito, mesma cor
+  do resto do texto — antes era um badge colorido separado). A `<div>` que empilhava
+  endereço/CRECI em duas linhas fixas saiu; agora é só o texto fluindo. Achado no processo: um
+  `backdrop-blur` no mesmo elemento do `line-clamp` vazava um fiapo da 3ª linha por baixo da caixa
+  em alguns navegadores — resolvido separando as duas responsabilidades em spans aninhados.
+
+### Adicionado (Seletor de cor padrão com transparência + cor do nome por tema, 2026-09-05)
+
+- **`ColorField` (`src/features/tenant-branding/color-field.tsx`) virou o seletor de cor padrão do
+  projeto** — trocou o `<input type="color">` nativo (sem suporte a transparência em nenhum
+  navegador) por um popover com `react-colorful` (slider de matiz + saturação + alfa), no estilo do
+  color picker do VS Code. A pedido explícito do usuário, a barra de transparência aparece em
+  **todo** campo de cor do sistema, sem exceção — inclusive Primária/Secundária/textos, que
+  normalmente ficam 100% opacos. Mesma API de antes (`label`/`value`/`onChange`/`compact`/
+  `eyedropper`), então todos os usos existentes (Cores, Banner Próprio, anúncios de patrocinador)
+  ganharam a UI nova de graça, sem mudar código de quem chama. Valores continuam hex de 6 dígitos
+  até o usuário mexer no alfa, quando passam a 8 (`#rrggbbaa`) — `contrastForeground`
+  (`src/lib/color-contrast.ts`) foi ajustado pra aceitar os dois formatos.
+- **Cor do nome no cabeçalho da home pública virou duas cores** (`public_header_name_light_color`/
+  `public_header_name_dark_color`, antes uma só) — o usuário reportou que o nome ficava invisível em
+  fundo branco (herdava a cor de texto padrão do tema); uma cor única resolveria um tema e quebraria
+  o outro, já que fundo claro/escuro trocam junto. Não usa `primary_color` de propósito, a pedido do
+  usuário, pra não atrelar essa cor a outras configurações que já dependem dela.
+- **`public_header_address_background_color`** (novo) — fundo configurável atrás do endereço no
+  cabeçalho, com transparência via hex de 8 dígitos (`#rrggbbaa`), primeiro caso real do modo
+  `alpha` do `ColorField` novo. Editável em Identidade Visual → Página pública → "Dados
+  institucionais", logo após os campos de Endereço/CRECI Jurídico. O fundo envolve a área
+  **inteira** (endereço + CRECI Jurídico juntos, `tenant-brand.tsx`), não só o texto do endereço —
+  e o separador vertical entre nome e essa área passa a usar a mesma cor automaticamente, quando
+  configurada (senão cai no `bg-border` de sempre).
+- **Correção de contraste no cabeçalho da Vitrine Premium** — o nome do tenant com cor customizada
+  (`public_header_name_light_color`/`dark_color`) só se aplica quando o cabeçalho está sólido;
+  flutuando transparente sobre o hero (`dimBackdrop`), continua herdando a cor automática (branca)
+  que o cabeçalho já define, já que uma cor fixa escolhida pra fundo sólido pode não ter contraste
+  nenhum contra uma foto qualquer. O botão de alternar tema (`theme-toggle.tsx`) tinha um bug
+  parecido — só definia a cor de contraste no hover, nunca em repouso, ficando ilegível parado
+  sobre o cabeçalho transparente; ganhou `text-foreground` explícito. E o cabeçalho da Vitrine
+  Premium (`premium-header.tsx`) ganhou um gradiente escuro fixo atrás da faixa transparente,
+  garantindo contraste de "Anúncios"/"Corretores"/tema mesmo sem foto de banner ativa (antes o
+  texto branco ficava quase invisível quando o hero caía num fundo claro).
+
 ### Adicionado (Aba Banner em Identidade Visual — edição completa da Vitrine, 2026-09-03)
 
 - **Nova aba "Banner"** em Identidade Visual (`tenant-branding-page.tsx`), separada da aba "Página
