@@ -9,6 +9,7 @@ export type BrandingAsset =
   | 'animated-hero-image'
   | 'favicon'
   | 'placeholder-image'
+  | 'home-intro-svg'
 
 const BUCKET = 'tenant-branding'
 
@@ -21,6 +22,7 @@ const PATH_COLUMN: Record<
   | 'animated_hero_image_path'
   | 'favicon_path'
   | 'placeholder_image_path'
+  | 'home_intro_svg_path'
 > = {
   'logo-light': 'logo_light_path',
   'logo-dark': 'logo_dark_path',
@@ -29,6 +31,7 @@ const PATH_COLUMN: Record<
   'animated-hero-image': 'animated_hero_image_path',
   favicon: 'favicon_path',
   'placeholder-image': 'placeholder_image_path',
+  'home-intro-svg': 'home_intro_svg_path',
 }
 
 export function brandingAssetUrl(path: string | null, updatedAt: string): string | null {
@@ -72,6 +75,10 @@ export type TenantColorsInput = {
   public_hero_slide_padding_left: number
   animated_hero_show_image: boolean
   animated_hero_show_particles: boolean
+  home_intro_enabled: boolean
+  home_intro_replay: 'once_per_session' | 'always'
+  home_intro_duration_seconds: number
+  home_intro_backdrop_color: string
   training_enabled: boolean
   address: string
   neighborhood: string

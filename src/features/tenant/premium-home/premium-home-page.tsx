@@ -19,6 +19,7 @@ import { PremiumCategoryIntro } from './premium-category-intro'
 import { PremiumCategoryNav } from './premium-category-nav'
 import { PremiumCategorySection } from './premium-category-section'
 import { PremiumFooter } from './premium-footer'
+import { PremiumHomeIntroOverlay, usePremiumHomeIntroPhase } from './premium-home-intro'
 import { PremiumScrollCue } from './premium-scroll-cue'
 import { PremiumWhatsappFab } from './premium-whatsapp-fab'
 import { DEFAULT_PREMIUM_FILTERS, type PremiumFilters } from './premium-search-bar'
@@ -75,6 +76,15 @@ export function PremiumTenantHomePage({ slug }: { slug: string }) {
   }, [announcements, filters, isFavorite])
 
   const sections = useMemo(() => groupAnnouncementsByType(filteredAnnouncements), [filteredAnnouncements])
+  const hasAnnouncements = (announcements?.length ?? 0) > 0
+  const showCategoryIntro = hasAnnouncements && sections.length > 1
+  const introEnabled = showCategoryIntro && !!tenant?.home_intro_enabled && !!tenant?.home_intro_svg_path
+  const introPhase = usePremiumHomeIntroPhase(
+    introEnabled,
+    tenant?.id ?? '',
+    tenant?.home_intro_replay ?? 'once_per_session',
+    tenant?.home_intro_duration_seconds ?? 6.3,
+  )
 
   if (isLoading) return <FullscreenSpinner />
   if (isError || !tenant) {
@@ -87,8 +97,12 @@ export function PremiumTenantHomePage({ slug }: { slug: string }) {
   }
 
   const dark = resolvedTheme === 'dark'
-  const hasAnnouncements = (announcements?.length ?? 0) > 0
-  const showCategoryIntro = hasAnnouncements && sections.length > 1
+  // 'intro': SVG desenhando, conteúdo real escondido. 'fading': SVG e
+  // conteúdo real esmaecem juntos (crossfade), no mesmo intervalo — daí os
+  // dois lerem 'fading' aqui. 'done': só o conteúdo real, intro desmontada.
+  const introOverlayMounted = introEnabled && introPhase !== 'done'
+  const introContentHidden = introEnabled && introPhase === 'intro'
+  const introSvgUrl = introEnabled ? brandingAssetUrl(tenant.home_intro_svg_path, tenant.updated_at) : null
   const placeholderUrl = brandingAssetUrl(tenant.placeholder_image_path, tenant.updated_at)
 
   return (
@@ -121,8 +135,27 @@ export function PremiumTenantHomePage({ slug }: { slug: string }) {
                 resultCount={filteredAnnouncements.length}
                 favoritesCount={favorites.length}
               />
-              {showCategoryIntro && <PremiumCategoryIntro sections={sections} />}
-              {showCategoryIntro && <PremiumScrollCue />}
+              {showCategoryIntro && (
+                <div className="relative flex min-h-0 flex-1 flex-col">
+                  {introOverlayMounted && introSvgUrl && (
+                    <PremiumHomeIntroOverlay
+                      svgUrl={introSvgUrl}
+                      dark={dark}
+                      backdropColor={tenant.home_intro_backdrop_color}
+                      phase={introPhase}
+                    />
+                  )}
+                  <div
+                    className={cn(
+                      'flex min-h-0 flex-1 flex-col ease-out',
+                      introContentHidden ? 'opacity-0 duration-0' : 'opacity-100 transition-opacity duration-700',
+                    )}
+                  >
+                    <PremiumCategoryIntro sections={sections} />
+                    <PremiumScrollCue />
+                  </div>
+                </div>
+              )}
             </div>
 
             {!hasAnnouncements ? (
@@ -169,7 +202,7 @@ export function PremiumTenantHomePage({ slug }: { slug: string }) {
           </main>
 
           <PremiumFooter tenant={tenant} />
-          <PremiumWhatsappFab tenant={tenant} />
+          <PremiumWhatsappFab tenant={tenant} visible={!introContentHidden} />
         </div>
       </ThemeScopeProvider>
     </MotionConfig>

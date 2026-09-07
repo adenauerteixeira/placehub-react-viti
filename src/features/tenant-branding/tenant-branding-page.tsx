@@ -68,6 +68,10 @@ function colorsFromTenant(tenant: Tenant): TenantColorsInput {
     public_hero_slide_padding_left: tenant.public_hero_slide_padding_left,
     animated_hero_show_image: tenant.animated_hero_show_image,
     animated_hero_show_particles: tenant.animated_hero_show_particles,
+    home_intro_enabled: tenant.home_intro_enabled,
+    home_intro_replay: tenant.home_intro_replay,
+    home_intro_duration_seconds: tenant.home_intro_duration_seconds,
+    home_intro_backdrop_color: tenant.home_intro_backdrop_color,
     training_enabled: tenant.training_enabled,
     address: tenant.address ?? '',
     neighborhood: tenant.neighborhood ?? '',
@@ -546,6 +550,97 @@ export function TenantBrandingPage() {
                     de toda a rolagem dos anúncios, não só na tela inicial.
                   </p>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {colors.public_home_variant === 'premium' && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Animação de abertura</CardTitle>
+                <CardDescription>
+                  Antes da grade de categorias/selo de rolar/botão do WhatsApp aparecerem, um SVG
+                  seu pode se desenhar sozinho nesse mesmo espaço (a animação, se houver, vem do
+                  próprio arquivo — exportado assim de uma ferramenta de design). Depois de um
+                  tempo parado na tela, esmaece e dá lugar ao conteúdo real.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-2 text-sm">
+                    <Switch
+                      checked={colors.home_intro_enabled}
+                      onCheckedChange={(c) => set('home_intro_enabled', c)}
+                    />
+                    Habilitar animação de abertura
+                  </label>
+                  <p className="text-muted-foreground text-xs">
+                    Sem um arquivo enviado abaixo, fica sem efeito mesmo ligado.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3 rounded-xl border p-4">
+                  <BrandingUploadField
+                    tenantId={tenant.id}
+                    asset="home-intro-svg"
+                    label="Arquivo SVG"
+                    currentPath={tenant.home_intro_svg_path}
+                    previewUrl={brandingAssetUrl(tenant.home_intro_svg_path, tenant.updated_at)}
+                    accept="image/svg+xml,.svg"
+                    stacked
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel hint="'Uma vez por sessão' guarda no navegador do visitante que ele já viu, e não repete enquanto a aba continuar aberta. 'Toda vez' sempre mostra de novo ao abrir a home — útil pra testar o ajuste antes de decidir.">
+                    Repetição
+                  </FieldLabel>
+                  <Select
+                    value={colors.home_intro_replay}
+                    onValueChange={(v) => set('home_intro_replay', v as 'once_per_session' | 'always')}
+                  >
+                    <SelectTrigger className="w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="once_per_session">Uma vez por sessão</SelectItem>
+                      <SelectItem value="always">Toda vez que a home abrir</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel
+                      htmlFor="home-intro-duration"
+                      hint="Tempo entre o SVG aparecer e começar a esmaecer — não dá pra saber quanto o desenho embutido no arquivo leva de verdade, então esse número é quem manda. Curto demais corta a animação antes de terminar; longo demais deixa o visitante esperando."
+                    >
+                      Duração até esmaecer (segundos)
+                    </FieldLabel>
+                    <Input
+                      id="home-intro-duration"
+                      type="number"
+                      min={1}
+                      max={30}
+                      step={0.1}
+                      value={colors.home_intro_duration_seconds}
+                      onChange={(e) => set('home_intro_duration_seconds', Number(e.target.value))}
+                      className="max-w-32"
+                    />
+                  </div>
+
+                  <ColorField
+                    label="Fundo atrás da animação (tema escuro)"
+                    value={colors.home_intro_backdrop_color}
+                    onChange={(v) => set('home_intro_backdrop_color', v)}
+                  />
+                </div>
+                <p className="text-muted-foreground -mt-3 text-xs">
+                  No tema claro a animação não usa fundo (o SVG já contrasta com a página). No
+                  escuro, essa cor (com transparência ajustável no seletor) fica atrás do SVG pra
+                  manter a legibilidade — branco 100% opaco é o padrão, mas talvez não sirva pra
+                  todo desenho.
+                </p>
               </CardContent>
             </Card>
           )}

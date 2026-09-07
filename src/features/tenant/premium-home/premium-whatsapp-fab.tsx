@@ -1,4 +1,5 @@
 import { whatsappUrl } from '@/lib/whatsapp'
+import { cn } from '@/lib/utils'
 import type { Tenant } from '@/features/tenants/api'
 
 /** Glifo oficial do WhatsApp (lucide-react só tem ícones genéricos, sem
@@ -16,8 +17,11 @@ function WhatsAppIcon({ className }: { className?: string }) {
 /** Botão flutuante sempre visível (não depende de nenhum toggle de hero) —
  * some sozinho se o tenant não tem telefone cadastrado. O anel pulsante usa
  * `motion-safe:`, variante nativa do Tailwind que já desliga sozinha com
- * `prefers-reduced-motion: reduce`. */
-export function PremiumWhatsappFab({ tenant }: { tenant: Tenant }) {
+ * `prefers-reduced-motion: reduce`. `visible=false` (usado durante a intro
+ * animada da home, ver `premium-home-intro.tsx`) apenas esmaece o botão em
+ * vez de desmontá-lo — mantém a posição fixa estável e permite o fade-in
+ * sincronizado com o resto do conteúdo. */
+export function PremiumWhatsappFab({ tenant, visible = true }: { tenant: Tenant; visible?: boolean }) {
   if (!tenant.phone) return null
 
   return (
@@ -26,7 +30,12 @@ export function PremiumWhatsappFab({ tenant }: { tenant: Tenant }) {
       target="_blank"
       rel="noreferrer"
       aria-label="Falar no WhatsApp"
-      className="fixed right-5 bottom-5 z-40 flex size-14 items-center justify-center"
+      aria-hidden={!visible}
+      tabIndex={visible ? undefined : -1}
+      className={cn(
+        'fixed right-5 bottom-5 z-40 flex size-14 items-center justify-center transition-opacity duration-700 ease-out',
+        visible ? 'opacity-100' : 'pointer-events-none opacity-0',
+      )}
     >
       <span className="motion-safe:animate-ping absolute inset-0 rounded-full bg-[#25D366] opacity-60" />
       <span className="relative flex size-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-105">

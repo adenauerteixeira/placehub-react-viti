@@ -5,6 +5,29 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Intro animada na home Premium, 2026-09-07)
+
+- **Animação de abertura por tenant** (`tenants.home_intro_enabled`/`home_intro_svg_path`/
+  `home_intro_replay`/`home_intro_duration_seconds`/`home_intro_backdrop_color`) — opt-in por
+  tenant na variante Premium da home pública: antes da grade de categorias, do selo "Role para
+  explorar" e do botão flutuante de WhatsApp aparecerem, um SVG enviado pelo próprio tenant
+  (Identidade Visual → Página pública → "Animação de abertura", mesmo mecanismo de upload dos
+  outros ativos de marca) pode se desenhar sozinho nesse mesmo espaço — a animação, se houver, vem
+  do próprio arquivo (`<img>` com CSS embutido, ex.: exportado como line-drawing de uma ferramenta
+  de design); sem uma, ele só aparece estático. Depois de `home_intro_duration_seconds` (editável,
+  padrão 6,3s — não dá pra medir de fato quando a animação do arquivo termina, então esse número é
+  quem decide), esmaece em 0,7s num crossfade simultâneo com o conteúdo real reaparecendo (grade +
+  selo + WhatsApp, que ficam com opacidade 0 até esse momento). `home_intro_replay` decide se toca
+  uma vez por aba (`sessionStorage` por tenant, padrão) ou em toda abertura da home — útil pra
+  testar o ajuste sem esperar uma sessão nova. Pulada de cara com `prefers-reduced-motion: reduce`.
+  No tema escuro, uma placa (`home_intro_backdrop_color`, hex com alfa opcional via `ColorField`,
+  padrão branco opaco) fica atrás do SVG pra manter contraste — no claro a animação não usa fundo.
+  Achado no processo: a fase inicial ('intro' vs. 'done') precisa ser decidida durante o próprio
+  render (não num `useEffect`/`useLayoutEffect` depois) — como os dados do tenant só chegam depois
+  de um carregamento assíncrono, corrigir a fase num efeito faz o React commitar o DOM com a fase
+  errada por um instante antes de corrigir, e essa dupla troca de opacidade em sequência dispara
+  sem querer a transição CSS do conteúdo real (ele pisca esmaecendo visível por cima da intro).
+
 ### Adicionado (Endereço institucional em campos discretos, 2026-09-05)
 
 - **`address` (tenants) agora representa só a rua** — bairro (`neighborhood`), cidade (`city`),
