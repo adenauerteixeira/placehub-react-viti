@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useCreateBackupSchedule } from './api'
+import { useCreateBackupSchedule, useUpdateBackupSchedule, type BackupSchedule } from './api'
 import { DAY_OF_WEEK_LABELS } from './labels'
 
 const schema = z.object({
@@ -29,16 +29,20 @@ type FormValues = z.infer<typeof schema>
 
 const emptyValues: FormValues = { day_of_week: 1, time_of_day: '03:00' }
 
-export function AddScheduleDialog({
+export function ScheduleDialog({
   open,
   onOpenChange,
   tenantId,
+  schedule,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   tenantId: string
+  schedule?: BackupSchedule | null
 }) {
+  const isEditing = !!schedule
   const createSchedule = useCreateBackupSchedule(tenantId)
+  const updateSchedule = useUpdateBackupSchedule(tenantId)
 
   const {
     register,
@@ -50,24 +54,39 @@ export function AddScheduleDialog({
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: emptyValues })
 
   useEffect(() => {
-    if (open) reset(emptyValues)
-  }, [open, reset])
+    if (!open) return
+    reset(
+      schedule
+        ? { day_of_week: schedule.day_of_week, time_of_day: schedule.time_of_day.slice(0, 5) }
+        : emptyValues,
+    )
+  }, [open, schedule, reset])
 
   async function onSubmit(values: FormValues) {
     try {
-      await createSchedule.mutateAsync(values)
-      toast.success('Agendamento criado.')
+      if (schedule) {
+        await updateSchedule.mutateAsync({ id: schedule.id, ...values })
+        toast.success('Agendamento atualizado.')
+      } else {
+        await createSchedule.mutateAsync(values)
+        toast.success('Agendamento criado.')
+      }
       onOpenChange(false)
     } catch (error) {
-      toast.error('Não foi possível criar o agendamento', { description: errorMessage(error) })
+      toast.error(
+        isEditing ? 'Não foi possível atualizar o agendamento' : 'Não foi possível criar o agendamento',
+        { description: errorMessage(error) },
+      )
     }
   }
+
+  const pending = createSchedule.isPending || updateSchedule.isPending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Novo agendamento</DialogTitle>
+          <DialogTitle>{isEditing ? 'Editar agendamento' : 'Novo agendamento'}</DialogTitle>
           <DialogDescription>
             Toda semana, nesse dia e horário, o sistema gera um backup automaticamente e o guarda
             (os 10 mais recentes ficam disponíveis pra download logo abaixo).
@@ -97,9 +116,9 @@ export function AddScheduleDialog({
           </Field>
 
           <DialogFooter>
-            <Button type="submit" disabled={createSchedule.isPending}>
-              {createSchedule.isPending && <Loader2 className="animate-spin" />}
-              Criar agendamento
+            <Button type="submit" disabled={pending}>
+              {pending && <Loader2 className="animate-spin" />}
+              {isEditing ? 'Salvar alterações' : 'Criar agendamento'}
             </Button>
           </DialogFooter>
         </form>

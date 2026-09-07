@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { flexRender } from '@tanstack/react-table'
 import {
@@ -57,19 +58,36 @@ export function DataTable<TData extends RowData>({
   const totalRows = table.getFilteredRowModel().rows.length
   const from = totalRows === 0 ? 0 : state.pagination.pageIndex * state.pagination.pageSize + 1
   const to = Math.min(totalRows, (state.pagination.pageIndex + 1) * state.pagination.pageSize)
+  const searchId = useId()
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="relative max-w-sm flex-1">
+        {/* Chrome/Edge ignoram autocomplete="off" sozinho quando acham (por
+         * heurística) que um campo é de login — SPA sem reload de verdade
+         * entre a tela de login e a autenticada agrava isso. form próprio +
+         * autoComplete="off" nos dois níveis + name/id estáveis (não
+         * "search" genérico) + data-1p-ignore/data-lpignore (gerenciadores
+         * de senha de extensão) é a combinação que de fato segura. */}
+        <form
+          autoComplete="off"
+          onSubmit={(e) => e.preventDefault()}
+          className="relative max-w-sm flex-1"
+        >
           <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
           <Input
+            type="search"
+            id={searchId}
+            name={`table-filter-${searchId}`}
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             value={state.globalFilter ?? ''}
             onChange={(e) => table.setGlobalFilter(e.target.value)}
             placeholder={searchPlaceholder}
             className="pl-8"
           />
-        </div>
+        </form>
         {toolbarEnd}
       </div>
 

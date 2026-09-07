@@ -56,6 +56,20 @@ export function useCreateBackupSchedule(tenantId: string) {
   })
 }
 
+export function useUpdateBackupSchedule(tenantId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, ...input }: { id: string } & BackupScheduleInput): Promise<void> => {
+      const { error } = await supabase.from('tenant_backup_schedules').update(input).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['backup-schedules', tenantId] })
+    },
+  })
+}
+
 export function useToggleBackupScheduleActive(tenantId: string) {
   const queryClient = useQueryClient()
 

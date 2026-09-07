@@ -5,9 +5,22 @@
 // identidade visual (bucket tenant-branding) — ver restore-tenant-data pra
 // como isso volta. Só tenant_admin, e só os dados do próprio tenant
 // (tenant_id nunca vem do client, é sempre o do perfil de quem chamou).
+//
+// O zip é montado em streaming (jsr:@zip-js/zip-js) direto pro corpo da
+// Response, sem nunca materializar o arquivo inteiro (nem os downloads dos
+// buckets) em memória — a versão anterior (JSZip + generateAsync) estourava
+// o limite de memória da Edge Function pra tenants com bastante mídia, o que
+// matava o processo antes do finally rodar e deixava
+// tenant_maintenance_state travado pra sempre (só recuperável pela válvula
+// de escape do tenant_admin, ver a policy tenant_maintenance_state_admin_update).
+// Os arquivos dos buckets são baixados via fetch cru no endpoint de Storage
+// (não storage-js .download(), que já materializa um Blob inteiro) pra
+// manter a entrada também em stream.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import JSZip from 'npm:jszip@3.10.1'
+import { configure, TextReader, ZipWriter } from 'jsr:@zip-js/zip-js@2.11.4'
+
+configure({ useWebWorkers: false })
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -72,6 +85,91 @@ async function listAllFiles(
   return paths
 }
 
+// bucket.download() do storage-js materializa um Blob inteiro em memória
+// antes de devolver — baixa direto do endpoint de Storage pra manter o
+// corpo como stream também na entrada do zip.
+async function fetchObjectStream(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  bucketId: string,
+  path: string,
+): Promise<ReadableStream<Uint8Array> | null> {
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/')
+  const res = await fetch(`${supabaseUrl}/storage/v1/object/${bucketId}/${encodedPath}`, {
+    headers: { Authorization: `Bearer ${serviceRoleKey}`, apikey: serviceRoleKey },
+  })
+  if (!res.ok || !res.body) return null
+  return res.body
+}
+
+async function writeBackupEntries(
+  zipWriter: InstanceType<typeof ZipWriter>,
+  adminClient: ReturnType<typeof createClient>,
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  tenantId: string,
+  tenantSlug: string,
+  tenantName: string,
+): Promise<void> {
+  const counts: Record<string, number> = {}
+  let announcementIds: string[] = []
+
+  for (const table of TENANT_TABLES) {
+    const { data, error } = await adminClient.from(table).select('*').eq('tenant_id', tenantId)
+    if (error) throw new Error(`falha ao exportar ${table}: ${error.message}`)
+    const rows = data ?? []
+    if (table === 'announcements') {
+      announcementIds = rows.map((row: { id: string }) => row.id)
+    }
+    counts[table] = rows.length
+    // level: 0 (sem compressão) — os arquivos maiores (fotos) já vêm
+    // comprimidos, e comprimir de novo só custa CPU pra pouco ganho.
+    await zipWriter.add(`data/${table}.json`, new TextReader(JSON.stringify(rows)), { level: 0 })
+  }
+
+  // announcement_amenities não tem tenant_id — deriva dos anúncios já
+  // exportados acima.
+  let amenityRows: unknown[] = []
+  if (announcementIds.length > 0) {
+    const { data, error } = await adminClient
+      .from('announcement_amenities')
+      .select('*')
+      .in('announcement_id', announcementIds)
+    if (error) throw new Error(`falha ao exportar announcement_amenities: ${error.message}`)
+    amenityRows = data ?? []
+  }
+  counts['announcement_amenities'] = amenityRows.length
+  await zipWriter.add(
+    'data/announcement_amenities.json',
+    new TextReader(JSON.stringify(amenityRows)),
+    { level: 0 },
+  )
+
+  for (const bucketId of STORAGE_BUCKETS) {
+    const bucket = adminClient.storage.from(bucketId)
+    const paths = await listAllFiles(bucket, tenantId)
+    for (const path of paths) {
+      const stream = await fetchObjectStream(supabaseUrl, serviceRoleKey, bucketId, path)
+      if (!stream) continue
+      const relativePath = path.slice(tenantId.length + 1)
+      await zipWriter.add(`files/${bucketId}/${relativePath}`, stream, { level: 0 })
+    }
+  }
+
+  const manifest = {
+    version: 1,
+    tenant_id: tenantId,
+    tenant_slug: tenantSlug,
+    tenant_name: tenantName,
+    generated_at: new Date().toISOString(),
+    tables: [...TENANT_TABLES, 'announcement_amenities'],
+    counts,
+  }
+  await zipWriter.add('manifest.json', new TextReader(JSON.stringify(manifest, null, 2)), {
+    level: 0,
+  })
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -115,10 +213,21 @@ Deno.serve(async (req: Request) => {
 
   const tenantId: string = callerProfile.tenant_id
 
+  const { data: tenant, error: tenantError } = await adminClient
+    .from('tenants')
+    .select('slug, name')
+    .eq('id', tenantId)
+    .single()
+
+  if (tenantError || !tenant) {
+    return json({ error: 'imobiliária não encontrada' }, 400)
+  }
+
   // Trava a tela de todo mundo do tenant enquanto o backup roda — mesmo
   // sendo só leitura, decisão do produto foi travar nos dois casos (backup
-  // e restore) pra não ter tratamento especial. O finally garante que isso
-  // cai mesmo se algo der errado no meio.
+  // e restore) pra não ter tratamento especial. Só trava daqui pra frente,
+  // depois que já sabemos que o tenant existe e o trabalho de verdade vai
+  // começar.
   await adminClient.from('tenant_maintenance_state').upsert({
     tenant_id: tenantId,
     active: true,
@@ -127,84 +236,42 @@ Deno.serve(async (req: Request) => {
     started_at: new Date().toISOString(),
   })
 
-  try {
-    const { data: tenant, error: tenantError } = await adminClient
-      .from('tenants')
-      .select('slug, name')
-      .eq('id', tenantId)
-      .single()
+  const zipFileStream = new TransformStream<Uint8Array, Uint8Array>()
+  const zipWriter = new ZipWriter(zipFileStream.writable)
 
-    if (tenantError || !tenant) {
-      return json({ error: 'imobiliária não encontrada' }, 400)
-    }
-
-    const zip = new JSZip()
-    const counts: Record<string, number> = {}
-    let announcementIds: string[] = []
-
-    for (const table of TENANT_TABLES) {
-      const { data, error } = await adminClient.from(table).select('*').eq('tenant_id', tenantId)
-      if (error) {
-        return json({ error: `falha ao exportar ${table}: ${error.message}` }, 400)
-      }
-      const rows = data ?? []
-      if (table === 'announcements') {
-        announcementIds = rows.map((row: { id: string }) => row.id)
-      }
-      counts[table] = rows.length
-      zip.file(`data/${table}.json`, JSON.stringify(rows))
-    }
-
-    // announcement_amenities não tem tenant_id — deriva dos anúncios já
-    // exportados acima.
-    let amenityRows: unknown[] = []
-    if (announcementIds.length > 0) {
-      const { data, error } = await adminClient
-        .from('announcement_amenities')
-        .select('*')
-        .in('announcement_id', announcementIds)
-      if (error) {
-        return json({ error: `falha ao exportar announcement_amenities: ${error.message}` }, 400)
-      }
-      amenityRows = data ?? []
-    }
-    counts['announcement_amenities'] = amenityRows.length
-    zip.file('data/announcement_amenities.json', JSON.stringify(amenityRows))
-
-    for (const bucketId of STORAGE_BUCKETS) {
-      const bucket = adminClient.storage.from(bucketId)
-      const paths = await listAllFiles(bucket, tenantId)
-      for (const path of paths) {
-        const { data: fileData, error: downloadError } = await bucket.download(path)
-        if (downloadError || !fileData) continue
-        const relativePath = path.slice(tenantId.length + 1)
-        zip.file(`files/${bucketId}/${relativePath}`, await fileData.arrayBuffer())
-      }
-    }
-
-    const manifest = {
-      version: 1,
-      tenant_id: tenantId,
-      tenant_slug: tenant.slug,
-      tenant_name: tenant.name,
-      generated_at: new Date().toISOString(),
-      tables: [...TENANT_TABLES, 'announcement_amenities'],
-      counts,
-    }
-    zip.file('manifest.json', JSON.stringify(manifest, null, 2))
-
-    const bytes = await zip.generateAsync({ type: 'uint8array' })
-
-    return new Response(bytes, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="backup-${tenant.slug}.zip"`,
-      },
+  // Sem await aqui antes do "return": o TransformStream só drena (e a
+  // escrita avança) quando alguém lê o lado readable, e é a própria Response
+  // abaixo que faz essa leitura ao mandar pro cliente. Esperar o close()
+  // antes de devolver a Response trava as duas pontas esperando uma a outra
+  // pra sempre — bug documentado desse padrão de uso da lib.
+  const writeTask = writeBackupEntries(
+    zipWriter,
+    adminClient,
+    supabaseUrl,
+    serviceRoleKey,
+    tenantId,
+    tenant.slug,
+    tenant.name,
+  )
+    .then(() => zipWriter.close())
+    .catch(async (error) => {
+      console.error(`backup manual falhou pro tenant ${tenantId}:`, error)
+      await zipFileStream.writable.abort(error).catch(() => {})
+      throw error
     })
-  } finally {
-    await adminClient
-      .from('tenant_maintenance_state')
-      .upsert({ tenant_id: tenantId, active: false })
+
+  const cleanup = writeTask.catch(() => {}).finally(() =>
+    adminClient.from('tenant_maintenance_state').upsert({ tenant_id: tenantId, active: false }),
+  )
+  if (typeof EdgeRuntime !== 'undefined') {
+    EdgeRuntime.waitUntil(cleanup)
   }
+
+  return new Response(zipFileStream.readable, {
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="backup-${tenant.slug}.zip"`,
+    },
+  })
 })

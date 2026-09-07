@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { CreateButton } from '@/components/create-button'
@@ -15,7 +15,7 @@ import {
   useToggleBackupScheduleActive,
   type BackupSchedule,
 } from './api'
-import { AddScheduleDialog } from './add-schedule-dialog'
+import { ScheduleDialog } from './schedule-dialog'
 import { DAY_OF_WEEK_LABELS, formatTimeOfDay } from './labels'
 
 export function BackupScheduleManager({ tenantId }: { tenantId: string }) {
@@ -24,6 +24,7 @@ export function BackupScheduleManager({ tenantId }: { tenantId: string }) {
   const deleteSchedule = useDeleteBackupSchedule(tenantId)
   const { confirm } = useConfirm()
 
+  const [dialogSchedule, setDialogSchedule] = useState<BackupSchedule | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
@@ -103,6 +104,15 @@ export function BackupScheduleManager({ tenantId }: { tenantId: string }) {
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Editar"
+            disabled={row.original._pending}
+            onClick={() => setDialogSchedule(row.original)}
+          >
+            <Pencil className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             aria-label="Excluir"
             disabled={row.original._pending}
             onClick={() => handleDelete(row.original)}
@@ -127,7 +137,17 @@ export function BackupScheduleManager({ tenantId }: { tenantId: string }) {
         />
       )}
 
-      <AddScheduleDialog open={createOpen} onOpenChange={setCreateOpen} tenantId={tenantId} />
+      <ScheduleDialog
+        open={createOpen || dialogSchedule !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCreateOpen(false)
+            setDialogSchedule(null)
+          }
+        }}
+        tenantId={tenantId}
+        schedule={dialogSchedule}
+      />
     </div>
   )
 }

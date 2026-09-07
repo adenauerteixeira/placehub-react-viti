@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Download, FileArchive, Loader2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -10,26 +11,52 @@ import { supabase } from '@/lib/supabase'
 
 const BUCKET = 'tenant-backups'
 
+// Backups automáticos grandes sobem em partes (nome.zip.part001, .part002,
+// ...) — o plano Free do Supabase trava upload em 50MB por objeto (ver
+// comentário em supabase/functions/run-scheduled-backups/index.ts). Cada
+// linha da lista representa um backup lógico (todas as partes juntas), não
+// um objeto do bucket.
+type BackupFile = { name: string; size: number }
+type BackupGroup = { name: string; parts: BackupFile[]; totalSize: number }
+
+function groupBackupFiles(files: { name: string; metadata?: { size?: number } }[]): BackupGroup[] {
+  const groups = new Map<string, BackupGroup>()
+  for (const file of files) {
+    const name = file.name.replace(/\.part\d{3}$/, '')
+    const size = file.metadata?.size ?? 0
+    const group = groups.get(name) ?? { name, parts: [], totalSize: 0 }
+    group.parts.push({ name: file.name, size })
+    group.totalSize += size
+    groups.set(name, group)
+  }
+  for (const group of groups.values()) {
+    group.parts.sort((a, b) => a.name.localeCompare(b.name))
+  }
+  return [...groups.values()].sort((a, b) => b.name.localeCompare(a.name))
+}
+
 function useRecentBackups(tenantId: string) {
   return useQuery({
     queryKey: ['recent-backups', tenantId],
-    queryFn: async () => {
+    queryFn: async (): Promise<BackupGroup[]> => {
       const { data, error } = await supabase.storage
         .from(BUCKET)
         .list(tenantId, { sortBy: { column: 'name', order: 'desc' } })
 
       if (error) throw error
-      return data
+      return groupBackupFiles(data ?? [])
     },
   })
 }
 
-function useDeleteBackupFile(tenantId: string) {
+function useDeleteBackup(tenantId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (name: string) => {
-      const { error } = await supabase.storage.from(BUCKET).remove([`${tenantId}/${name}`])
+    mutationFn: async (group: BackupGroup) => {
+      const { error } = await supabase.storage
+        .from(BUCKET)
+        .remove(group.parts.map((part) => `${tenantId}/${part.name}`))
       if (error) throw error
     },
     onSuccess: () => {
@@ -45,26 +72,39 @@ function formatSize(bytes: number | undefined) {
 }
 
 export function RecentBackupsList({ tenantId }: { tenantId: string }) {
-  const { data: files, isLoading, isError, refetch } = useRecentBackups(tenantId)
-  const deleteFile = useDeleteBackupFile(tenantId)
+  const { data: groups, isLoading, isError, refetch } = useRecentBackups(tenantId)
+  const deleteBackup = useDeleteBackup(tenantId)
   const { confirm } = useConfirm()
+  const [downloadingName, setDownloadingName] = useState<string | null>(null)
 
-  async function handleDownload(name: string) {
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrl(`${tenantId}/${name}`, 60)
+  async function handleDownload(group: BackupGroup) {
+    setDownloadingName(group.name)
+    try {
+      const blobParts: Blob[] = []
+      for (const part of group.parts) {
+        const { data, error } = await supabase.storage.from(BUCKET).download(`${tenantId}/${part.name}`)
+        if (error || !data) {
+          toast.error('Não foi possível baixar o backup', { description: errorMessage(error) })
+          return
+        }
+        blobParts.push(data)
+      }
 
-    if (error || !data) {
-      toast.error('Não foi possível gerar o link de download', { description: errorMessage(error) })
-      return
+      const blob = new Blob(blobParts, { type: 'application/zip' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = group.name
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setDownloadingName(null)
     }
-
-    window.open(data.signedUrl, '_blank')
   }
 
-  async function handleDelete(name: string) {
+  async function handleDelete(group: BackupGroup) {
     const confirmed = await confirm({
-      title: `Excluir "${name}"?`,
+      title: `Excluir "${group.name}"?`,
       description: 'Essa ação não pode ser desfeita.',
       confirmLabel: 'Excluir',
       variant: 'destructive',
@@ -72,7 +112,7 @@ export function RecentBackupsList({ tenantId }: { tenantId: string }) {
     if (!confirmed) return
 
     try {
-      await deleteFile.mutateAsync(name)
+      await deleteBackup.mutateAsync(group)
       toast.success('Backup excluído.')
     } catch (error) {
       toast.error('Não foi possível excluir', { description: errorMessage(error) })
@@ -92,7 +132,7 @@ export function RecentBackupsList({ tenantId }: { tenantId: string }) {
     return <ErrorState title="Não foi possível carregar os backups automáticos." onRetry={() => refetch()} />
   }
 
-  if (!files || files.length === 0) {
+  if (!groups || groups.length === 0) {
     return (
       <EmptyState
         icon={FileArchive}
@@ -104,22 +144,32 @@ export function RecentBackupsList({ tenantId }: { tenantId: string }) {
 
   return (
     <div className="flex flex-col gap-2">
-      {files.map((file) => (
-        <div key={file.name} className="flex items-center gap-3 rounded-lg border p-2">
+      {groups.map((group) => (
+        <div key={group.name} className="flex items-center gap-3 rounded-lg border p-2">
           <FileArchive className="text-muted-foreground size-4 shrink-0" />
-          <span className="flex-1 truncate text-sm">{file.name}</span>
-          <span className="text-muted-foreground text-xs">{formatSize(file.metadata?.size)}</span>
-          <Button variant="ghost" size="icon" aria-label="Baixar" onClick={() => handleDownload(file.name)}>
-            <Download className="size-4" />
+          <span className="flex-1 truncate text-sm">{group.name}</span>
+          <span className="text-muted-foreground text-xs">{formatSize(group.totalSize)}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Baixar"
+            disabled={downloadingName === group.name}
+            onClick={() => handleDownload(group)}
+          >
+            {downloadingName === group.name ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Download className="size-4" />
+            )}
           </Button>
           <Button
             variant="ghost"
             size="icon"
             aria-label="Excluir"
-            disabled={deleteFile.isPending}
-            onClick={() => handleDelete(file.name)}
+            disabled={deleteBackup.isPending}
+            onClick={() => handleDelete(group)}
           >
-            {deleteFile.isPending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+            {deleteBackup.isPending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
           </Button>
         </div>
       ))}
