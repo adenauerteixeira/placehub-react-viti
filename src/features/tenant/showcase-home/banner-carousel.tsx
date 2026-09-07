@@ -284,18 +284,18 @@ export function BannerCarousel({
           variant="outline"
           size="icon-sm"
           className={cn(
-            'absolute z-10 rounded-full opacity-40 transition-opacity hover:opacity-90',
+            'absolute z-20 rounded-full opacity-40 transition-opacity hover:opacity-90',
             !controlsAtBottom && 'top-2 right-2',
           )}
           style={
-            // 'bottom': 5px do rodapé/20px da direita do ANÚNCIO (a <section>
+            // 'bottom': 5px do rodapé/5px da direita do ANÚNCIO (a <section>
             // do slide) — só que esse botão mora aqui fora, no wrapper do
             // carrossel, deslocado do slide pelo padding configurável (acima)
             // + os 4px de pb-1 da rolagem por baixo. Ver o comentário do selo
             // em promo-slide.tsx.
             controlsAtBottom
               ? {
-                  right: 20 + tenant.public_hero_slide_padding_right,
+                  right: 5 + tenant.public_hero_slide_padding_right,
                   bottom: 5 + tenant.public_hero_slide_padding_bottom + 4,
                 }
               : undefined

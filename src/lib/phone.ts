@@ -12,3 +12,12 @@ export function formatPhone(value: string): string {
   }
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`
 }
+
+/** Formata como (XX) X-XXXX-XXXX (celular) ou (XX) XXXX-XXXX (fixo) — usado
+ * em exibições estáticas (ex: rodapé institucional), diferente da máscara
+ * progressiva de `formatPhone` usada em campos de digitação. */
+export function formatPhoneDisplay(value: string): string {
+  const digits = onlyDigits(value).slice(0, 11)
+  if (digits.length <= 10) return formatPhone(digits)
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+}

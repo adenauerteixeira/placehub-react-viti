@@ -1,11 +1,21 @@
 import { Link } from 'react-router-dom'
 import { Mail, MapPin, Phone } from 'lucide-react'
+import { formatPhoneDisplay } from '@/lib/phone'
+import { formatZipCode } from '@/lib/viacep'
 import type { Tenant } from '@/features/tenants/api'
 
 /** Rodapé institucional da Premium — substitui o `AppFooter` fixo e estreito
  * do dashboard (não usado nessa variante) por um rodapé maior, em fluxo
  * normal de página, com colunas de contato e navegação. */
 export function PremiumFooter({ tenant }: { tenant: Tenant }) {
+  const addressLines = [
+    tenant.address,
+    [tenant.neighborhood, [tenant.city, tenant.state].filter(Boolean).join(' - ')]
+      .filter(Boolean)
+      .join(', '),
+    tenant.zip_code && `CEP ${formatZipCode(tenant.zip_code)}`,
+  ].filter(Boolean) as string[]
+
   return (
     <footer className="bg-muted/30 border-t">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 py-12 sm:grid-cols-3">
@@ -21,7 +31,7 @@ export function PremiumFooter({ tenant }: { tenant: Tenant }) {
           <span className="font-medium">Contato</span>
           {tenant.phone && (
             <span className="text-muted-foreground flex items-center gap-2">
-              <Phone className="size-4" /> {tenant.phone}
+              <Phone className="size-4" /> {formatPhoneDisplay(tenant.phone)}
             </span>
           )}
           {tenant.email && (
@@ -29,9 +39,14 @@ export function PremiumFooter({ tenant }: { tenant: Tenant }) {
               <Mail className="size-4" /> {tenant.email}
             </span>
           )}
-          {tenant.address && (
+          {addressLines.length > 0 && (
             <span className="text-muted-foreground flex items-start gap-2">
-              <MapPin className="mt-0.5 size-4 shrink-0" /> {tenant.address}
+              <MapPin className="mt-0.5 size-4 shrink-0" />
+              <span className="flex flex-col">
+                {addressLines.map((line) => (
+                  <span key={line}>{line}</span>
+                ))}
+              </span>
             </span>
           )}
         </div>

@@ -91,14 +91,14 @@ export function PromoSlide({
           className={cn(
             'absolute',
             // 'bottom': alinhado por especificação (5px do rodapé do anúncio,
-            // 20px de margem direita) com o botão de pausa do carrossel — que
+            // 5px de margem direita) com o botão de pausa do carrossel — que
             // mora fora daqui (BannerCarousel) e recalcula sua própria
             // posição a partir do padding configurável do slide (Identidade
             // Visual > Banner). Aqui dentro é direto, sem esse ajuste, porque
-            // esta <section> é o próprio anúncio. 68px = 20 (margem do botão)
+            // esta <section> é o próprio anúncio. 53px = 5 (margem do botão)
             // + 28 (largura do botão, size-7) + 20 (gap entre os dois) —
             // âncora pela direita evita depender da largura variável do selo.
-            badgePosition === 'bottom' ? 'right-[68px] bottom-[5px]' : 'top-4 right-4',
+            badgePosition === 'bottom' ? 'right-[53px] bottom-[5px]' : 'top-4 right-4',
           )}
         >
           {badge}

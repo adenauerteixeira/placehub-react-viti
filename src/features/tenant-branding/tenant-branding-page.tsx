@@ -79,11 +79,9 @@ function colorsFromTenant(tenant: Tenant): TenantColorsInput {
     public_header_display_name: tenant.public_header_display_name ?? '',
     public_header_show_logo: tenant.public_header_show_logo,
     public_header_show_name: tenant.public_header_show_name,
-    public_header_show_address: tenant.public_header_show_address,
     public_header_show_creci: tenant.public_header_show_creci,
     public_header_name_light_color: tenant.public_header_name_light_color,
     public_header_name_dark_color: tenant.public_header_name_dark_color,
-    public_header_address_background_color: tenant.public_header_address_background_color,
   }
 }
 
@@ -339,9 +337,9 @@ export function TenantBrandingPage() {
             <CardHeader>
               <CardTitle>Dados institucionais</CardTitle>
               <CardDescription>
-                Nome, endereço e CRECI Jurídico exibidos no cabeçalho da home pública (Clássica,
-                Animada e Vitrine). Cada informação só aparece se o campo estiver preenchido e o
-                switch correspondente estiver ligado.
+                Nome e CRECI Jurídico exibidos no cabeçalho da home pública; endereço aparece só no
+                rodapé. Cada informação só aparece se o campo estiver preenchido e o switch
+                correspondente estiver ligado.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-6">
@@ -377,10 +375,7 @@ export function TenantBrandingPage() {
 
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
-                  <FieldLabel
-                    htmlFor="tenant-address"
-                    hint="Exibido em destaque reduzido no cabeçalho, junto com bairro/cidade/CEP/telefone."
-                  >
+                  <FieldLabel htmlFor="tenant-address" hint="Exibido no rodapé da página pública, junto com bairro/cidade/CEP.">
                     Rua
                   </FieldLabel>
                   <Input
@@ -453,7 +448,7 @@ export function TenantBrandingPage() {
                 <div className="flex flex-col gap-1.5">
                   <FieldLabel
                     htmlFor="tenant-creci-juridico"
-                    hint="CRECI da pessoa jurídica (imobiliária) — aparece por último, depois do endereço, com o número em negrito."
+                    hint="CRECI da pessoa jurídica (imobiliária) — aparece numa linha abaixo do nome, no cabeçalho."
                   >
                     CRECI Jurídico
                   </FieldLabel>
@@ -465,13 +460,6 @@ export function TenantBrandingPage() {
                   />
                 </div>
               </div>
-
-              <ColorField
-                label="Cor de fundo do endereço"
-                value={colors.public_header_address_background_color}
-                onChange={(v) => set('public_header_address_background_color', v)}
-                eyedropper
-              />
 
               <div className="flex flex-col gap-3 border-t pt-4">
                 <FieldLabel hint="Decide o que aparece no cabeçalho da home pública — independente dessas informações estarem preenchidas em outras telas do sistema.">
@@ -491,13 +479,6 @@ export function TenantBrandingPage() {
                       onCheckedChange={(c) => set('public_header_show_name', c)}
                     />
                     Nome
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <Switch
-                      checked={colors.public_header_show_address}
-                      onCheckedChange={(c) => set('public_header_show_address', c)}
-                    />
-                    Endereço
                   </label>
                   <label className="flex items-center gap-2 text-sm">
                     <Switch

@@ -7,6 +7,13 @@ export type ViaCepResult = {
   state: string
 }
 
+/** Formata progressivamente como 99999-999. */
+export function formatZipCode(value: string): string {
+  const digits = onlyDigits(value).slice(0, 8)
+  if (digits.length <= 5) return digits
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`
+}
+
 /** ViaCEP (viacep.com.br) — API pública gratuita, sem chave, pra
  * preencher endereço a partir do CEP. Retorna null se o CEP não existir
  * ou a consulta falhar (a UI deve deixar o preenchimento manual). */

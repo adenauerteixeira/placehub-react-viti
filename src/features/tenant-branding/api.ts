@@ -83,11 +83,9 @@ export type TenantColorsInput = {
   public_header_display_name: string
   public_header_show_logo: boolean
   public_header_show_name: boolean
-  public_header_show_address: boolean
   public_header_show_creci: boolean
   public_header_name_light_color: string
   public_header_name_dark_color: string
-  public_header_address_background_color: string
 }
 
 export function useUpdateTenantColors(tenantId: string) {
