@@ -47,6 +47,7 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
     hasPermission(profile, 'owners') && { to: '/owners', label: 'Proprietários' },
     isAdmin && { to: '/users', label: 'Usuários' },
     isAdmin && { to: '/branding', label: 'Identidade visual' },
+    isAdmin && { to: '/backup', label: 'Backup e restauração' },
     isAdmin && { to: '/resetar-dados', label: 'Resetar dados' },
     isAdmin && { to: '/changelog', label: 'Changelog' },
   ].filter((item): item is { to: string; label: string } => !!item)

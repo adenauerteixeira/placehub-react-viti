@@ -38,6 +38,8 @@ import { PremiumBrokersListPage } from '@/features/tenant/premium-home/premium-b
 import { PremiumBrokerDetailPage } from '@/features/tenant/premium-home/premium-broker-detail-page'
 import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
 import { TrainingPage } from '@/features/tenant/training-page'
+import { BackupPage } from '@/features/tenant/backup-page'
+import { MaintenanceOverlay } from '@/features/tenant/maintenance-overlay'
 import { ResetDataPage } from '@/features/tenant/reset-data-page'
 import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useTenant, usePublicTenant } from '@/features/tenants/api'
@@ -94,6 +96,14 @@ function TenantApp({ slug }: { slug: string }) {
           element={
             <RequireTenantAdmin>
               <TenantUsersPage />
+            </RequireTenantAdmin>
+          }
+        />
+        <Route
+          path="/backup"
+          element={
+            <RequireTenantAdmin>
+              <BackupPage />
             </RequireTenantAdmin>
           }
         />
@@ -420,7 +430,12 @@ function TenantProtectedShell({ slug }: { slug: string }) {
     )
   }
 
-  return <TenantLayout tenant={tenant} profile={profile} />
+  return (
+    <>
+      <MaintenanceOverlay tenantId={tenant.id} />
+      <TenantLayout tenant={tenant} profile={profile} />
+    </>
+  )
 }
 
 function PlatformApp() {
