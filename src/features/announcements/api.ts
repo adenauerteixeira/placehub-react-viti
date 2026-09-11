@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type PageRequest, type PageResult, searchableTerm } from '@/lib/pagination'
 import { supabase } from '@/lib/supabase'
 
 const BUCKET = 'catalog-media'
@@ -106,6 +107,39 @@ export function useAnnouncements(tenantId: string | null | undefined) {
 
       if (error) throw error
       return data
+    },
+  })
+}
+
+export type AnnouncementSort = 'created_at' | 'title' | 'price' | 'status'
+
+/** Listagem interna escalável: traz somente a página pedida e a contagem
+ * total, mantendo a RLS como fonte de verdade do escopo do usuário. */
+export function useAnnouncementsPage(
+  tenantId: string | null | undefined,
+  request: PageRequest<AnnouncementSort> & { status?: AnnouncementStatus },
+) {
+  return useQuery({
+    queryKey: ['announcements-page', tenantId, request],
+    enabled: !!tenantId,
+    queryFn: async (): Promise<PageResult<Announcement>> => {
+      let query = supabase
+        .from('announcements')
+        .select(ANNOUNCEMENT_COLUMNS, { count: 'exact' })
+        .eq('tenant_id', tenantId!)
+
+      if (request.status) query = query.eq('status', request.status)
+      const term = searchableTerm(request.search)
+      if (term) {
+        query = query.or(`title.ilike.%${term}%,reference_code.ilike.%${term}%,city.ilike.%${term}%`)
+      }
+
+      const from = request.page * request.pageSize
+      const { data, count, error } = await query
+        .order(request.sortBy, { ascending: request.ascending })
+        .range(from, from + request.pageSize - 1)
+      if (error) throw error
+      return { data: data ?? [], total: count ?? 0 }
     },
   })
 }

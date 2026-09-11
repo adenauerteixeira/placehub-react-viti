@@ -18,8 +18,22 @@ const BUCKET = 'tenant-backups'
 // um objeto do bucket.
 type BackupFile = { name: string; size: number }
 type BackupGroup = { name: string; parts: BackupFile[]; totalSize: number }
+type SaveFileHandle = {
+  createWritable: () => Promise<{
+    write: (data: Blob) => Promise<void>
+    close: () => Promise<void>
+    abort?: () => Promise<void>
+  }>
+}
 
-function groupBackupFiles(files: { name: string; metadata?: { size?: number } }[]): BackupGroup[] {
+type SaveFileWindow = Window & {
+  showSaveFilePicker?: (options: {
+    suggestedName: string
+    types: { description: string; accept: Record<string, string[]> }[]
+  }) => Promise<SaveFileHandle>
+}
+
+function groupBackupFiles(files: { name: string; metadata?: { size?: number } | null }[]): BackupGroup[] {
   const groups = new Map<string, BackupGroup>()
   for (const file of files) {
     const name = file.name.replace(/\.part\d{3}$/, '')
@@ -71,6 +85,10 @@ function formatSize(bytes: number | undefined) {
   return mb >= 1 ? `${mb.toFixed(1)} MB` : `${(bytes / 1024).toFixed(0)} KB`
 }
 
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError'
+}
+
 export function RecentBackupsList({ tenantId }: { tenantId: string }) {
   const { data: groups, isLoading, isError, refetch } = useRecentBackups(tenantId)
   const deleteBackup = useDeleteBackup(tenantId)
@@ -80,6 +98,31 @@ export function RecentBackupsList({ tenantId }: { tenantId: string }) {
   async function handleDownload(group: BackupGroup) {
     setDownloadingName(group.name)
     try {
+      // Chromium permite gravar uma parte por vez no disco. Assim, um backup
+      // de 500 MB não precisa existir inteiro como Blob/ArrayBuffer na RAM do
+      // navegador; no fallback, mantemos o comportamento compatível atual.
+      const filePicker = (window as SaveFileWindow).showSaveFilePicker
+      if (filePicker) {
+        const fileHandle = await filePicker({
+          suggestedName: group.name,
+          types: [{ description: 'Backup ZIP', accept: { 'application/zip': ['.zip'] } }],
+        })
+        const writable = await fileHandle.createWritable()
+        try {
+          for (const part of group.parts) {
+            const { data, error } = await supabase.storage.from(BUCKET).download(`${tenantId}/${part.name}`)
+            if (error || !data) throw error ?? new Error('parte do backup ausente')
+            await writable.write(data)
+          }
+          await writable.close()
+          toast.success('Backup salvo.')
+          return
+        } catch (error) {
+          await writable.abort?.()
+          throw error
+        }
+      }
+
       const blobParts: Blob[] = []
       for (const part of group.parts) {
         const { data, error } = await supabase.storage.from(BUCKET).download(`${tenantId}/${part.name}`)
@@ -96,7 +139,14 @@ export function RecentBackupsList({ tenantId }: { tenantId: string }) {
       a.href = url
       a.download = group.name
       a.click()
-      URL.revokeObjectURL(url)
+      // O navegador pode iniciar o download depois do click; revogar no mesmo
+      // tick falha intermitentemente em alguns browsers.
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
+      toast.success('Download iniciado.')
+    } catch (error) {
+      if (!isAbortError(error)) {
+        toast.error('Não foi possível baixar o backup', { description: errorMessage(error) })
+      }
     } finally {
       setDownloadingName(null)
     }

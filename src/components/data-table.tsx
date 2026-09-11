@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { flexRender } from '@tanstack/react-table'
 import {
@@ -26,14 +26,16 @@ export type DataTableColumn<TData extends RowData, TValue = any> = LegacyColumnD
  * recente; a camada legacy é mantida oficialmente e cobre exatamente o que
  * listagens client-side precisam (sort/filter/pagination), sem o risco de
  * lidar com uma arquitetura experimental numa tarefa de UI de baixo risco.
- * Os dados já vêm inteiros do Supabase (sem paginação no servidor), então
- * ordenar/filtrar/paginar em memória é apropriado — não é o gargalo aqui. */
+ * Para listagens remotas, a busca é atrasada brevemente para não gerar uma
+ * consulta ao Supabase a cada tecla digitada. */
 export function DataTable<TData extends RowData>({
   columns,
   data,
   searchPlaceholder = 'Buscar...',
   pageSize = 10,
   toolbarEnd,
+  ariaLabel = 'Tabela de resultados',
+  remote,
 }: {
   columns: DataTableColumn<TData>[]
   data: TData[]
@@ -41,7 +43,34 @@ export function DataTable<TData extends RowData>({
   pageSize?: number
   /** Conteúdo extra (ex.: botão "Novo X") alinhado à direita, na mesma linha da busca. */
   toolbarEnd?: React.ReactNode
+  /** Nome anunciado por leitor de tela para diferenciar tabelas na página. */
+  ariaLabel?: string
+  /** Quando os dados já vêm paginados do servidor, evita filtrar/ordenar só
+   * a página visível e delega busca/navegação ao pai. */
+  remote?: {
+    pageIndex: number
+    totalRows: number
+    search: string
+    onPageChange: (page: number) => void
+    onSearchChange: (search: string) => void
+  }
 }) {
+  const [remoteSearchInput, setRemoteSearchInput] = useState(remote?.search ?? '')
+  const searchTimeout = useRef<number | undefined>(undefined)
+
+  useEffect(() => () => window.clearTimeout(searchTimeout.current), [])
+
+  function changeSearch(value: string) {
+    if (!remote) {
+      table.setGlobalFilter(value)
+      return
+    }
+
+    setRemoteSearchInput(value)
+    window.clearTimeout(searchTimeout.current)
+    searchTimeout.current = window.setTimeout(() => remote.onSearchChange(value), 300)
+  }
+
   const table = useLegacyTable({
     data,
     columns,
@@ -54,10 +83,11 @@ export function DataTable<TData extends RowData>({
   })
 
   const state = table.getState()
-  const rows = table.getRowModel().rows
-  const totalRows = table.getFilteredRowModel().rows.length
-  const from = totalRows === 0 ? 0 : state.pagination.pageIndex * state.pagination.pageSize + 1
-  const to = Math.min(totalRows, (state.pagination.pageIndex + 1) * state.pagination.pageSize)
+  const rows = remote ? table.getCoreRowModel().rows : table.getRowModel().rows
+  const totalRows = remote ? remote.totalRows : table.getFilteredRowModel().rows.length
+  const pageIndex = remote?.pageIndex ?? state.pagination.pageIndex
+  const from = totalRows === 0 ? 0 : pageIndex * state.pagination.pageSize + 1
+  const to = remote ? Math.min(totalRows, from + rows.length - 1) : Math.min(totalRows, (pageIndex + 1) * state.pagination.pageSize)
   const searchId = useId()
 
   return (
@@ -72,6 +102,8 @@ export function DataTable<TData extends RowData>({
         <form
           autoComplete="off"
           onSubmit={(e) => e.preventDefault()}
+          role="search"
+          aria-label={`Buscar em ${ariaLabel}`}
           className="relative max-w-sm flex-1"
         >
           <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
@@ -82,8 +114,8 @@ export function DataTable<TData extends RowData>({
             autoComplete="off"
             data-1p-ignore
             data-lpignore="true"
-            value={state.globalFilter ?? ''}
-            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            value={remote ? remoteSearchInput : state.globalFilter ?? ''}
+            onChange={(e) => changeSearch(e.target.value)}
             placeholder={searchPlaceholder}
             className="pl-8"
           />
@@ -91,20 +123,27 @@ export function DataTable<TData extends RowData>({
         {toolbarEnd}
       </div>
 
+      <div className="overflow-x-auto rounded-md">
       <Table>
+        <caption className="sr-only">{ariaLabel}</caption>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
-                const sortable = header.column.getCanSort()
+                const sortable = !remote && header.column.getCanSort()
                 const sorted = header.column.getIsSorted()
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    scope="col"
+                    aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none'}
+                  >
                     {header.isPlaceholder ? null : sortable ? (
                       <button
                         type="button"
                         onClick={header.column.getToggleSortingHandler()}
-                        className="hover:text-foreground -mx-2 flex items-center gap-1 rounded px-2 py-1 transition-colors"
+                        aria-label={`Ordenar por ${String(header.column.columnDef.header)}`}
+                        className="hover:text-foreground focus-visible:ring-ring -mx-2 flex items-center gap-1 rounded px-2 py-1 transition-colors focus-visible:ring-2"
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {sorted === 'asc' && <ArrowUp className="size-3.5" />}
@@ -142,19 +181,20 @@ export function DataTable<TData extends RowData>({
           ))}
         </TableBody>
       </Table>
+      </div>
 
       {totalRows > 0 && (
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">
             {from}–{to} de {totalRows}
           </span>
-          {table.getPageCount() > 1 && (
-            <div className="flex items-center gap-1">
+          {(remote ? totalRows > state.pagination.pageSize : table.getPageCount() > 1) && (
+            <nav className="flex items-center gap-1" aria-label={`Paginação de ${ariaLabel}`}>
               <Button
                 variant="outline"
                 size="icon-sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => remote ? remote.onPageChange(pageIndex - 1) : table.previousPage()}
+                disabled={remote ? pageIndex === 0 : !table.getCanPreviousPage()}
                 aria-label="Página anterior"
               >
                 <ChevronLeft className="size-4" />
@@ -162,13 +202,13 @@ export function DataTable<TData extends RowData>({
               <Button
                 variant="outline"
                 size="icon-sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                onClick={() => remote ? remote.onPageChange(pageIndex + 1) : table.nextPage()}
+                disabled={remote ? to >= totalRows : !table.getCanNextPage()}
                 aria-label="Próxima página"
               >
                 <ChevronRight className="size-4" />
               </Button>
-            </div>
+            </nav>
           )}
         </div>
       )}

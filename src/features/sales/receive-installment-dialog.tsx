@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -25,8 +25,6 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-const emptyValues: FormValues = { payment_method: '', payer_name: '' }
-
 export function ReceiveInstallmentDialog({
   open,
   onOpenChange,
@@ -40,33 +38,6 @@ export function ReceiveInstallmentDialog({
   saleId: string
   tenantId: string
 }) {
-  const receive = useReceiveInstallment(saleId, tenantId)
-  const [receiptFile, setReceiptFile] = useState<File | null>(null)
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: emptyValues })
-
-  useEffect(() => {
-    if (open) {
-      reset(emptyValues)
-      setReceiptFile(null)
-    }
-  }, [open, reset])
-
-  async function onSubmit(values: FormValues) {
-    try {
-      await receive.mutateAsync({ id: installment.id, ...values, receiptFile })
-      toast.success('Parcela recebida.')
-      onOpenChange(false)
-    } catch (error) {
-      toast.error('Não foi possível marcar como recebida', { description: errorMessage(error) })
-    }
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -79,7 +50,47 @@ export function ReceiveInstallmentDialog({
             Valor: {installment.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </DialogDescription>
         </DialogHeader>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+        {open && <ReceiveInstallmentForm installment={installment} saleId={saleId} tenantId={tenantId} onClose={() => onOpenChange(false)} />}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ReceiveInstallmentForm({
+  installment,
+  saleId,
+  tenantId,
+  onClose,
+}: {
+  installment: SaleEntryInstallment
+  saleId: string
+  tenantId: string
+  onClose: () => void
+}) {
+  const receive = useReceiveInstallment(saleId, tenantId)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { payment_method: '', payer_name: '' },
+  })
+
+  async function onSubmit(values: FormValues) {
+    try {
+      await receive.mutateAsync({ id: installment.id, ...values, receiptFile })
+      toast.success('Parcela recebida.')
+      onClose()
+    } catch (error) {
+      toast.error('Não foi possível marcar como recebida', { description: errorMessage(error) })
+    }
+  }
+
+  return (
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <Field
             label="Forma de pagamento"
             htmlFor="receive-payment-method"
@@ -110,17 +121,15 @@ export function ReceiveInstallmentDialog({
             />
           </Field>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={receive.isPending}>
-              {receive.isPending && <Loader2 className="animate-spin" />}
-              Confirmar recebimento
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={receive.isPending}>
+          {receive.isPending && <Loader2 className="animate-spin" />}
+          Confirmar recebimento
+        </Button>
+      </DialogFooter>
+    </form>
   )
 }

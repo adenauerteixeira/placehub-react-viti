@@ -52,6 +52,124 @@ const INSERT_ORDER = [
 const STORAGE_BUCKETS = ['catalog-media', 'sale-documents'] as const
 
 const BATCH_SIZE = 500
+const MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
+const MAX_ARCHIVE_ENTRIES = 5_000
+const MAX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
+
+type RestoreTable = (typeof INSERT_ORDER)[number]
+type RestoreData = Record<RestoreTable, unknown[]>
+type RestoreFile = { bucketId: (typeof STORAGE_BUCKETS)[number]; relativePath: string; bytes: Uint8Array }
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function archiveError(message: string): Error {
+  return new Error(`arquivo de backup inválido: ${message}`)
+}
+
+/** Lê e valida TODO o conteúdo que será usado antes de a restauração apagar
+ * qualquer registro. A transação no RPC protege o banco de falhas posteriores;
+ * estes limites protegem a Edge Function de ZIPs maliciosos ou acidentais. */
+async function parseBackupArchive(file: File, tenantId: string): Promise<{ data: RestoreData; files: RestoreFile[] }> {
+  if (file.size === 0 || file.size > MAX_ARCHIVE_BYTES) {
+    throw archiveError('o arquivo deve ter no máximo 50 MB')
+  }
+
+  let zip: JSZip
+  try {
+    zip = await JSZip.loadAsync(await file.arrayBuffer(), { checkCRC32: true, createFolders: false })
+  } catch {
+    throw archiveError('arquivo corrompido')
+  }
+
+  const entries = Object.values(zip.files).filter((entry) => !entry.dir)
+  if (entries.length === 0 || entries.length > MAX_ARCHIVE_ENTRIES) {
+    throw archiveError('quantidade de arquivos fora do limite permitido')
+  }
+
+  const manifestFile = zip.file('manifest.json')
+  if (!manifestFile) throw archiveError('manifest.json ausente')
+
+  let manifest: Record<string, unknown>
+  try {
+    const text = await manifestFile.async('string')
+    if (text.length > 1024 * 1024) throw archiveError('manifesto grande demais')
+    const parsed: unknown = JSON.parse(text)
+    if (!isRecord(parsed)) throw archiveError('manifesto corrompido')
+    manifest = parsed
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('arquivo de backup inválido:')) throw error
+    throw archiveError('manifesto corrompido')
+  }
+
+  if (manifest.version !== 1 || manifest.tenant_id !== tenantId) {
+    throw archiveError('não pertence a esta imobiliária ou usa uma versão incompatível')
+  }
+  if (!Array.isArray(manifest.tables) || INSERT_ORDER.some((table) => !manifest.tables.includes(table))) {
+    throw archiveError('manifesto não contém todas as tabelas obrigatórias')
+  }
+
+  let uncompressedBytes = 0
+  const consume = (bytes: number) => {
+    uncompressedBytes += bytes
+    if (uncompressedBytes > MAX_UNCOMPRESSED_BYTES) {
+      throw archiveError('conteúdo descompactado acima do limite de 100 MB')
+    }
+  }
+
+  const data = {} as RestoreData
+  for (const table of INSERT_ORDER) {
+    const dataFile = zip.file(`data/${table}.json`)
+    if (!dataFile) throw archiveError(`dados de ${table} ausentes`)
+
+    let text: string
+    try {
+      text = await dataFile.async('string')
+    } catch {
+      throw archiveError(`dados de ${table} corrompidos`)
+    }
+    consume(new TextEncoder().encode(text).byteLength)
+
+    let rows: unknown
+    try {
+      rows = JSON.parse(text)
+    } catch {
+      throw archiveError(`dados de ${table} não são JSON válido`)
+    }
+    if (!Array.isArray(rows)) throw archiveError(`dados de ${table} devem ser uma lista`)
+    data[table] = rows
+  }
+
+  for (const table of INSERT_ORDER) {
+    if (table === 'announcement_amenities') continue
+    if (data[table].some((row) => !isRecord(row) || row.tenant_id !== tenantId)) {
+      throw archiveError(`dados de ${table} não pertencem a esta imobiliária`)
+    }
+  }
+
+  const announcementIds = new Set(
+    data.announcements.filter(isRecord).map((row) => row.id).filter((id): id is string => typeof id === 'string'),
+  )
+  if (data.announcement_amenities.some((row) => !isRecord(row) || !announcementIds.has(String(row.announcement_id)))) {
+    throw archiveError('amenidades referenciam anúncios inexistentes')
+  }
+
+  const files: RestoreFile[] = []
+  for (const entry of entries) {
+    if (!entry.name.startsWith('files/')) continue
+    const [, bucketId, ...path] = entry.name.split('/')
+    const relativePath = path.join('/')
+    if (!STORAGE_BUCKETS.includes(bucketId as (typeof STORAGE_BUCKETS)[number]) || !relativePath || relativePath.includes('..') || relativePath.includes('\\')) {
+      throw archiveError(`caminho de arquivo inválido: ${entry.name}`)
+    }
+    const bytes = await entry.async('uint8array')
+    consume(bytes.byteLength)
+    files.push({ bucketId: bucketId as (typeof STORAGE_BUCKETS)[number], relativePath, bytes })
+  }
+
+  return { data, files }
+}
 
 async function listAllFiles(
   bucket: ReturnType<ReturnType<typeof createClient>['storage']['from']>,
@@ -150,27 +268,11 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'senha incorreta' }, 401)
   }
 
-  let zip: JSZip
+  let backup: { data: RestoreData; files: RestoreFile[] }
   try {
-    zip = await JSZip.loadAsync(await file.arrayBuffer())
-  } catch {
-    return json({ error: 'arquivo de backup inválido ou corrompido' }, 400)
-  }
-
-  const manifestFile = zip.file('manifest.json')
-  if (!manifestFile) {
-    return json({ error: 'arquivo de backup inválido: manifest.json ausente' }, 400)
-  }
-
-  let manifest: { tenant_id?: string }
-  try {
-    manifest = JSON.parse(await manifestFile.async('string'))
-  } catch {
-    return json({ error: 'arquivo de backup inválido: manifest.json corrompido' }, 400)
-  }
-
-  if (manifest.tenant_id !== tenantId) {
-    return json({ error: 'este backup pertence a outra imobiliária' }, 400)
+    backup = await parseBackupArchive(file, tenantId)
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : 'arquivo de backup inválido' }, 400)
   }
 
   // A partir daqui a operação é destrutiva de verdade — trava a tela de
@@ -186,58 +288,42 @@ Deno.serve(async (req: Request) => {
   })
 
   try {
-    const { error: wipeError } = await adminClient.rpc('restore_tenant_data_wipe', {
+    // A função SQL recebe o conjunto já validado e faz wipe + inserts em UMA
+    // transação. Se uma FK, trigger ou dado inesperado falhar, o Postgres
+    // desfaz inclusive o wipe — nunca fica um tenant parcialmente apagado.
+    const { error: restoreError } = await adminClient.rpc('restore_tenant_data', {
       p_tenant_id: tenantId,
+      p_data: backup.data,
     })
-    if (wipeError) {
-      return json({ error: `falha ao limpar dados atuais: ${wipeError.message}` }, 400)
+    if (restoreError) {
+      return json({ error: `falha ao restaurar dados: ${restoreError.message}` }, 400)
     }
 
-    for (const table of INSERT_ORDER) {
-      const dataFile = zip.file(`data/${table}.json`)
-      if (!dataFile) continue
-
-      let rows: unknown[]
-      try {
-        rows = JSON.parse(await dataFile.async('string'))
-      } catch {
-        return json({ error: `dados de ${table} corrompidos no arquivo de backup` }, 400)
-      }
-      if (!Array.isArray(rows) || rows.length === 0) continue
-
-      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-        const batch = rows.slice(i, i + BATCH_SIZE)
-        const { error: insertError } = await adminClient.from(table).insert(batch)
-        if (insertError) {
-          return json(
-            { error: `falha ao restaurar ${table}: ${insertError.message}` },
-            400,
-          )
-        }
-      }
-    }
-
+    // Arquivos não participam de transação no Storage. Só removemos mídia
+    // antiga depois que todos os uploads novos e a transação de banco deram
+    // certo; uma falha preserva os objetos existentes para uma nova tentativa.
     for (const bucketId of STORAGE_BUCKETS) {
       const bucket = adminClient.storage.from(bucketId)
-
-      const existing = await listAllFiles(bucket, tenantId)
-      for (let i = 0; i < existing.length; i += BATCH_SIZE) {
-        await bucket.remove(existing.slice(i, i + BATCH_SIZE))
-      }
-
-      const prefix = `files/${bucketId}/`
-      const entries = Object.values(zip.files).filter((f) => !f.dir && f.name.startsWith(prefix))
-      for (const entry of entries) {
-        const relativePath = entry.name.slice(prefix.length)
-        const bytes = await entry.async('uint8array')
-        const { error: uploadError } = await bucket.upload(`${tenantId}/${relativePath}`, bytes, {
+      const restored = backup.files.filter((file) => file.bucketId === bucketId)
+      for (const file of restored) {
+        const { error: uploadError } = await bucket.upload(`${tenantId}/${file.relativePath}`, file.bytes, {
           upsert: true,
         })
         if (uploadError) {
           return json(
-            { error: `falha ao restaurar arquivo ${relativePath}: ${uploadError.message}` },
+            { error: `dados restaurados, mas falhou ao restaurar arquivo ${file.relativePath}: ${uploadError.message}` },
             400,
           )
+        }
+      }
+
+      const restoredPaths = new Set(restored.map((file) => `${tenantId}/${file.relativePath}`))
+      const existing = await listAllFiles(bucket, tenantId)
+      const stale = existing.filter((path) => !restoredPaths.has(path))
+      for (let i = 0; i < stale.length; i += BATCH_SIZE) {
+        const { error: removeError } = await bucket.remove(stale.slice(i, i + BATCH_SIZE))
+        if (removeError) {
+          return json({ error: `dados restaurados, mas falhou ao limpar mídia antiga: ${removeError.message}` }, 400)
         }
       }
     }

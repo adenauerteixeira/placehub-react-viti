@@ -25,7 +25,7 @@ estado atual do trabalho (onde paramos) em [CONTINUITY.md](./CONTINUITY.md).
 - **Backend:** Supabase (Postgres + Auth + Storage + Edge Functions), com Row Level Security
   para isolamento entre tenants.
 - **E-mail transacional:** Resend.
-- **Deploy:** Vercel.
+- **Deploy:** Vercel; monitoramento opt-in de erros com GlitchTip via SDK Sentry.
 
 ## Rodando localmente
 
@@ -43,6 +43,7 @@ Outros scripts:
 ```bash
 npm run build     # type-check (tsc -b) + build de produção
 npm run lint       # oxlint
+npm run test:unit  # regras puras, sem acessar o Supabase remoto
 npm run preview    # serve o build de produção localmente
 ```
 

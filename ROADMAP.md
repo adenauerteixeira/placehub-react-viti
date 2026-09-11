@@ -19,9 +19,9 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
 - [x] Domínio raiz da plataforma com wildcard apontando para a Vercel — **não é `placehub.app`**
       (já estava registrado por terceiros): é **`placehubapp.com.br`**, apex + `*.placehubapp.com.br`
       (2026-08-29). Ver ARCHITECTURE.md — "Deploy" pros detalhes de DNS/certificado.
-- [ ] CI (GitHub Actions): lint + typecheck + build em cada push/PR — o build da Vercel já roda
-      `tsc -b && vite build` a cada push (bloqueia deploy com erro de tipo), mas não é GitHub
-      Actions nem roda lint; falta isso rodar em PR antes do merge, não só no deploy.
+- [x] CI (GitHub Actions): auditoria de dependências de produção, lint e build em cada push/PR
+      para `trunk` (`.github/workflows/ci.yml`). Testes de integração continuam fora do CI porque
+      escrevem no Supabase real.
 - [x] Conta Resend criada e domínio de envio verificado (`casah.imb.br`, ver Fase 5 abaixo).
 
 ## Fase 1 — Plataforma, autenticação e tenants
@@ -201,10 +201,12 @@ Fase 5 completa — os 4 e-mails transacionais funcionando ponta a ponta contra 
       no dropdown "Administração"), renderizando o próprio CHANGELOG.md do repositório via
       `?raw` import + `react-markdown` — decisão do usuário: reaproveitar o arquivo técnico
       existente em vez de manter um changelog separado curado pra usuário final.
-- [ ] Monitoramento de erros no front (a decidir: Sentry ou equivalente) — **adiado a pedido do
-      usuário (2026-08-27)**: não é bloqueante, precisa de conta/serviço externo novo (GlitchTip
-      foi a escolha quando/se retomado — compatível com o SDK `@sentry/react`, só muda o DSN).
-- [ ] Revisão de acessibilidade (foco, contraste, navegação por teclado) nos temas claro/escuro.
+- [x] Monitoramento de erros no front com GlitchTip (`@sentry/react`) — inicialização opt-in por
+      `VITE_GLITCHTIP_DSN`, sem PII e sem carregar o SDK quando a DSN está ausente. DSN configurada
+      na Vercel para production/preview/development (2026-09-11).
+- [x] Acessibilidade prioritária: `ErrorBoundary`, diálogo de manutenção com foco preso/semântica
+      modal, tabela com caption/ARIA e paginação navegável por teclado. Revisão visual completa de
+      contraste em todos os temas continua uma melhoria futura.
 - [ ] Domínio próprio por tenant (`custom_domain → tenant_id`), como evolução do roteamento
       por subdomínio — **ainda não é uma feature self-serve no banco.** O que existe hoje
       (2026-08/09-01) é uma configuração *manual*: `casah.imb.br` apontado direto no projeto da

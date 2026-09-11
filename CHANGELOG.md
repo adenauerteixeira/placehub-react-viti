@@ -5,6 +5,23 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Confiabilidade, segurança e observabilidade, 2026-09-11)
+
+- **Restauração de backup transacional e validada** — migration
+  `20260910120000_harden_backup_restore_and_schedule.sql` aplicada no Supabase real; valida ZIP,
+  manifest, CRC, tamanho/quantidade de entradas e tenant antes de restaurar. O RPC
+  `restore_tenant_data` executa a troca dos dados em uma única transação; agendamentos usam claim
+  atômico por dia/São Paulo para evitar backup concorrente.
+- **Observabilidade opt-in** — `AppErrorBoundary` recupera falhas de render e envia exceções ao
+  GlitchTip somente quando `VITE_GLITCHTIP_DSN` existe; sem DSN não há telemetria. A DSN foi
+  configurada na Vercel para production, preview e development.
+- **Performance e acessibilidade** — rotas pesadas carregadas sob demanda, tabelas de anúncios,
+  leads e vendas paginadas no Supabase com busca atrasada, download de backup com streaming quando
+  disponível, e melhorias de foco/ARIA em manutenção e tabelas.
+- **Qualidade** — CI de lint/build/auditoria de produção, testes unitários para paginação e ágio
+  (`npm run test:unit`), e cabeçalhos de segurança na Vercel. Build de produção publicado com
+  sucesso em 2026-09-11.
+
 ### Adicionado (Intro animada na home Premium, 2026-09-07)
 
 - **Animação de abertura por tenant** (`tenants.home_intro_enabled`/`home_intro_svg_path`/
@@ -1254,4 +1271,3 @@ funcionando de ponta a ponta contra o Supabase real.
 - Conteúdo das páginas ficava alinhado à esquerda em telas largas (`max-w-*` sem `mx-auto`, sem
   wrapper centralizando o `<main>`) — corrigido centralizando via `AppShell` (ver seção
   "Adicionado" acima) e adicionando `mx-auto` nos cartões estreitos que ainda não usavam.
-

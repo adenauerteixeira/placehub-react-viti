@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type PageRequest, type PageResult, searchableTerm } from '@/lib/pagination'
 import { supabase } from '@/lib/supabase'
 
 const BUCKET = 'sale-documents'
@@ -68,6 +69,24 @@ export function useSales(tenantId: string | null | undefined) {
 
       if (error) throw error
       return data
+    },
+  })
+}
+
+export type SaleSort = 'created_at' | 'sold_at' | 'amount' | 'status'
+
+export function useSalesPage(tenantId: string | null | undefined, request: PageRequest<SaleSort>) {
+  return useQuery({
+    queryKey: ['sales-page', tenantId, request],
+    enabled: !!tenantId,
+    queryFn: async (): Promise<PageResult<Sale>> => {
+      let query = supabase.from('sales').select(SALE_COLUMNS, { count: 'exact' }).eq('tenant_id', tenantId!)
+      const term = searchableTerm(request.search)
+      if (term) query = query.or(`notes.ilike.%${term}%,payment_notes.ilike.%${term}%`)
+      const from = request.page * request.pageSize
+      const { data, count, error } = await query.order(request.sortBy, { ascending: request.ascending }).range(from, from + request.pageSize - 1)
+      if (error) throw error
+      return { data: data ?? [], total: count ?? 0 }
     },
   })
 }

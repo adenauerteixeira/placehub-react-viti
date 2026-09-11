@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Calculator } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CurrencyInput } from '@/components/currency-input'
@@ -14,6 +14,7 @@ import { FieldLabel } from '@/components/field-label'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import type { AgioCalculation } from './api'
+import { calculateAgioSummary, initializeAgioCalculation } from './agio-calculation'
 
 function formatPrice(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -29,46 +30,6 @@ function todayISO() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 }
 
-function parseISODate(iso: string) {
-  const [year, month, day] = iso.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
-
-function clampDayInMonth(year: number, month: number, day: number) {
-  const lastDay = new Date(year, month + 1, 0).getDate()
-  return Math.min(day, lastDay)
-}
-
-/** Conta quantos vencimentos (dia fixo do mês) caíram entre a data de
- * referência (exclusive) e hoje (inclusive), avançando mês a mês — cobre
- * qualquer intervalo, não só "mesmo ano". Meses sem esse dia (ex: 31 em
- * fevereiro) usam o último dia do mês. */
-function countElapsedInstallments(referenceISO: string, dueDay: number) {
-  const reference = parseISODate(referenceISO)
-  const today = parseISODate(todayISO())
-  let cursorYear = reference.getFullYear()
-  let cursorMonth = reference.getMonth()
-  let count = 0
-  let lastDueISO = referenceISO
-
-  for (let guard = 0; guard < 1200; guard++) {
-    const day = clampDayInMonth(cursorYear, cursorMonth, dueDay)
-    const dueDate = new Date(cursorYear, cursorMonth, day)
-    if (dueDate > today) break
-    if (dueDate > reference) {
-      count++
-      lastDueISO = `${cursorYear}-${String(cursorMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    }
-    cursorMonth++
-    if (cursorMonth > 11) {
-      cursorMonth = 0
-      cursorYear++
-    }
-  }
-
-  return { count, lastDueISO }
-}
-
 const emptyData: AgioCalculation = {
   valorOriginal: null,
   valorPago: null,
@@ -80,6 +41,22 @@ const emptyData: AgioCalculation = {
   valorPrestacao: null,
   diaVencimento: null,
   dataReferencia: null,
+}
+
+type CalculatorState = { form: AgioCalculation; updateNotice: string | null }
+type DialogState = CalculatorState & { isOpen: boolean; source: AgioCalculation | null }
+
+function initialCalculation(data: AgioCalculation | null): CalculatorState {
+  const form = data ?? emptyData
+  const initialized = initializeAgioCalculation(form)
+  const overdue = initialized.overdueInstallments
+
+  return {
+    form: initialized.form,
+    updateNotice: overdue
+      ? `${overdue.count} parcela${overdue.count > 1 ? 's' : ''} de ${formatPrice(overdue.amount)} venceu${overdue.count > 1 ? 'ram' : ''} desde ${formatDateBR(overdue.referenceDate)} — valores atualizados abaixo.`
+      : null,
+  }
 }
 
 /** Calculadora de ágio pra imóveis em cessão (financiamento bancário ou direto
@@ -100,35 +77,23 @@ export function AgioCalculatorDialog({
   data: AgioCalculation | null
   onApply: (data: AgioCalculation, suggestedPrice: number) => void
 }) {
-  const [form, setForm] = useState<AgioCalculation>(data ?? emptyData)
-  const [updateNotice, setUpdateNotice] = useState<string | null>(null)
+  const [state, setState] = useState<DialogState>(() => ({
+    isOpen: open,
+    source: data,
+    ...initialCalculation(data),
+  }))
 
-  useEffect(() => {
-    if (!open) return
-    const initial = data ?? emptyData
-    setUpdateNotice(null)
+  if (open && (!state.isOpen || state.source !== data)) {
+    setState({ isOpen: true, source: data, ...initialCalculation(data) })
+  } else if (!open && state.isOpen) {
+    setState((previous) => ({ ...previous, isOpen: false }))
+  }
 
-    if (initial.valorPrestacao && initial.diaVencimento && initial.dataReferencia) {
-      const { count, lastDueISO } = countElapsedInstallments(
-        initial.dataReferencia,
-        initial.diaVencimento,
-      )
-      if (count > 0) {
-        const pago = (initial.valorPago ?? 0) + count * initial.valorPrestacao
-        const saldo = Math.max(0, (initial.saldoDevedor ?? 0) - count * initial.valorPrestacao)
-        setForm({ ...initial, valorPago: pago, saldoDevedor: saldo, dataReferencia: lastDueISO })
-        setUpdateNotice(
-          `${count} parcela${count > 1 ? 's' : ''} de ${formatPrice(initial.valorPrestacao)} venceu${count > 1 ? 'ram' : ''} desde ${formatDateBR(initial.dataReferencia)} — valores atualizados abaixo.`,
-        )
-        return
-      }
-    }
-    setForm(initial)
-  }, [open, data])
+  const { form, updateNotice } = state
 
   function set<K extends keyof AgioCalculation>(key: K, value: AgioCalculation[K]) {
-    setForm((f) => {
-      const next = { ...f, [key]: value }
+    setState((previous) => {
+      const next = { ...previous.form, [key]: value }
       if (
         (key === 'valorPrestacao' || key === 'diaVencimento') &&
         next.valorPrestacao &&
@@ -137,29 +102,16 @@ export function AgioCalculatorDialog({
       ) {
         next.dataReferencia = todayISO()
       }
-      return next
+      return { ...previous, form: next }
     })
   }
 
-  useEffect(() => {
-    const taxaNumber = Number(form.taxaTransferencia.replace(',', '.'))
-    if (!taxaNumber || !form.valorMercado) return
-    const calculado = Math.round(form.valorMercado * (taxaNumber / 100) * 100) / 100
-    setForm((f) => (f.custosTransferencia === calculado ? f : { ...f, custosTransferencia: calculado }))
-  }, [form.taxaTransferencia, form.valorMercado])
-
-  const margemNumber = Number(form.margem.replace(',', '.')) || 0
-  const valorizacao =
-    form.valorMercado != null && form.valorOriginal != null
-      ? Math.max(0, form.valorMercado - form.valorOriginal)
-      : 0
-  const base = Math.max(0, (form.valorPago ?? 0) + valorizacao - (form.custosTransferencia ?? 0))
-  const agioSugerido = base * (1 + margemNumber / 100)
-  const valorTotalTransacao = agioSugerido + (form.saldoDevedor ?? 0)
+  const { custosTransferencia, valorizacao, base, agioSugerido, valorTotalTransacao } =
+    calculateAgioSummary(form)
   const hasInput = form.valorPago != null && form.valorPago > 0
 
   function handleApply() {
-    onApply(form, Math.round(agioSugerido * 100) / 100)
+    onApply({ ...form, custosTransferencia }, Math.round(agioSugerido * 100) / 100)
     onOpenChange(false)
   }
 
@@ -234,7 +186,7 @@ export function AgioCalculatorDialog({
                   </span>
                 </div>
                 <CurrencyInput
-                  value={form.custosTransferencia}
+                  value={custosTransferencia}
                   onChange={(v) => set('custosTransferencia', v)}
                 />
               </div>

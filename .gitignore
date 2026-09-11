@@ -23,8 +23,9 @@ test-results
 playwright-report
 blob-report
 
-# Claude Code local-only settings
-.claude/settings.local.json
+# Ferramentas locais (podem conter preferências, caches ou credenciais).
+.claude/
+.sf/
 
 # Editor directories and files
 .vscode/*

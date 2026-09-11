@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type PageRequest, type PageResult, searchableTerm } from '@/lib/pagination'
 import { supabase } from '@/lib/supabase'
 
 export type LeadSource = 'manual' | 'whatsapp' | 'portal' | 'phone' | 'email' | 'other'
@@ -36,6 +37,24 @@ export function useLeads(tenantId: string | null | undefined) {
 
       if (error) throw error
       return data
+    },
+  })
+}
+
+export type LeadSort = 'created_at' | 'name' | 'status'
+
+export function useLeadsPage(tenantId: string | null | undefined, request: PageRequest<LeadSort>) {
+  return useQuery({
+    queryKey: ['leads-page', tenantId, request],
+    enabled: !!tenantId,
+    queryFn: async (): Promise<PageResult<Lead>> => {
+      let query = supabase.from('leads').select(LEAD_COLUMNS, { count: 'exact' }).eq('tenant_id', tenantId!)
+      const term = searchableTerm(request.search)
+      if (term) query = query.or(`name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%`)
+      const from = request.page * request.pageSize
+      const { data, count, error } = await query.order(request.sortBy, { ascending: request.ascending }).range(from, from + request.pageSize - 1)
+      if (error) throw error
+      return { data: data ?? [], total: count ?? 0 }
     },
   })
 }

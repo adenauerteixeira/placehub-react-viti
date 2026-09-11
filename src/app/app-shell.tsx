@@ -1,52 +1,57 @@
+import { lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { FullscreenMessage, FullscreenSpinner } from '@/components/fullscreen-state'
 import { NotFoundPage } from '@/components/not-found-page'
 import { useAuth } from '@/features/auth/auth-context'
-import { LoginPage } from '@/features/auth/login-page'
 import { hasPermission, useProfile } from '@/features/auth/use-profile'
-import { AnnouncementFormPage } from '@/features/announcements/announcement-form-page'
-import { AnnouncementsListPage } from '@/features/announcements/announcements-list-page'
-import { BrokersListPage } from '@/features/brokers/brokers-list-page'
-import { ChangelogPage } from '@/features/changelog/changelog-page'
-import { DevelopmentsListPage } from '@/features/developments/developments-list-page'
-import { CommissionDetailPage } from '@/features/commissions/commission-detail-page'
-import { CommissionsListPage } from '@/features/commissions/commissions-list-page'
-import { LeadDetailPage } from '@/features/leads/lead-detail-page'
-import { LeadsListPage } from '@/features/leads/leads-list-page'
-import { NegotiationDetailPage } from '@/features/negotiations/negotiation-detail-page'
-import { NegotiationsListPage } from '@/features/negotiations/negotiations-list-page'
-import { OwnersListPage } from '@/features/owners/owners-list-page'
-import { ReservationsListPage } from '@/features/reservations/reservations-list-page'
-import { SaleDetailPage } from '@/features/sales/sale-detail-page'
-import { SalesListPage } from '@/features/sales/sales-list-page'
-import { PartnersListPage } from '@/features/partners/partners-list-page'
-import { PlatformBrandingPage } from '@/features/platform-branding/platform-branding-page'
 import { usePlatformFavicon } from '@/features/platform-branding/use-platform-favicon'
 import { usePlatformSettings } from '@/features/platform-branding/api'
 import { PlatformLayout } from '@/features/platform/platform-layout'
-import { ReportsPage } from '@/features/reports/reports-page'
-import { TenantsListPage } from '@/features/platform/tenants-list-page'
-import { PublicAnnouncementDetailPage } from '@/features/tenant/public-announcement-detail-page'
-import { PublicBrokerDetailPage } from '@/features/tenant/public-broker-detail-page'
-import { PublicBrokersListPage } from '@/features/tenant/public-brokers-list-page'
-import { AnimatedTenantHomePage } from '@/features/tenant/animated-home/animated-home-page'
-import { PublicTenantHomePage } from '@/features/tenant/public-home-page'
-import { ShowcaseTenantHomePage } from '@/features/tenant/showcase-home/showcase-home-page'
-import { PremiumTenantHomePage } from '@/features/tenant/premium-home/premium-home-page'
-import { PremiumAnnouncementDetailPage } from '@/features/tenant/premium-home/premium-announcement-detail-page'
-import { PremiumBrokersListPage } from '@/features/tenant/premium-home/premium-brokers-list-page'
-import { PremiumBrokerDetailPage } from '@/features/tenant/premium-home/premium-broker-detail-page'
-import { TenantDashboardPage } from '@/features/tenant/tenant-dashboard-page'
-import { TrainingPage } from '@/features/tenant/training-page'
-import { BackupPage } from '@/features/tenant/backup-page'
 import { MaintenanceOverlay } from '@/features/tenant/maintenance-overlay'
-import { ResetDataPage } from '@/features/tenant/reset-data-page'
 import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { useTenant, usePublicTenant } from '@/features/tenants/api'
-import { TenantBrandingPage } from '@/features/tenant-branding/tenant-branding-page'
-import { TenantUsersPage } from '@/features/tenant-users/tenant-users-page'
 import { platformUrl, resolveSubdomainContext, tenantUrl } from '@/lib/subdomain'
 import { useRedirectOnce } from '@/lib/use-redirect-once'
+
+// Páginas só são baixadas quando a rota realmente precisa delas. Isso evita
+// que um visitante do portal público carregue administração, relatórios e
+// bibliotecas pesadas como Recharts/GSAP logo na primeira visita.
+const LoginPage = lazy(async () => ({ default: (await import('@/features/auth/login-page')).LoginPage }))
+const AnnouncementFormPage = lazy(async () => ({ default: (await import('@/features/announcements/announcement-form-page')).AnnouncementFormPage }))
+const AnnouncementsListPage = lazy(async () => ({ default: (await import('@/features/announcements/announcements-list-page')).AnnouncementsListPage }))
+const BrokersListPage = lazy(async () => ({ default: (await import('@/features/brokers/brokers-list-page')).BrokersListPage }))
+const ChangelogPage = lazy(async () => ({ default: (await import('@/features/changelog/changelog-page')).ChangelogPage }))
+const DevelopmentsListPage = lazy(async () => ({ default: (await import('@/features/developments/developments-list-page')).DevelopmentsListPage }))
+const CommissionDetailPage = lazy(async () => ({ default: (await import('@/features/commissions/commission-detail-page')).CommissionDetailPage }))
+const CommissionsListPage = lazy(async () => ({ default: (await import('@/features/commissions/commissions-list-page')).CommissionsListPage }))
+const LeadDetailPage = lazy(async () => ({ default: (await import('@/features/leads/lead-detail-page')).LeadDetailPage }))
+const LeadsListPage = lazy(async () => ({ default: (await import('@/features/leads/leads-list-page')).LeadsListPage }))
+const NegotiationDetailPage = lazy(async () => ({ default: (await import('@/features/negotiations/negotiation-detail-page')).NegotiationDetailPage }))
+const NegotiationsListPage = lazy(async () => ({ default: (await import('@/features/negotiations/negotiations-list-page')).NegotiationsListPage }))
+const OwnersListPage = lazy(async () => ({ default: (await import('@/features/owners/owners-list-page')).OwnersListPage }))
+const ReservationsListPage = lazy(async () => ({ default: (await import('@/features/reservations/reservations-list-page')).ReservationsListPage }))
+const SaleDetailPage = lazy(async () => ({ default: (await import('@/features/sales/sale-detail-page')).SaleDetailPage }))
+const SalesListPage = lazy(async () => ({ default: (await import('@/features/sales/sales-list-page')).SalesListPage }))
+const PartnersListPage = lazy(async () => ({ default: (await import('@/features/partners/partners-list-page')).PartnersListPage }))
+const PlatformBrandingPage = lazy(async () => ({ default: (await import('@/features/platform-branding/platform-branding-page')).PlatformBrandingPage }))
+const ReportsPage = lazy(async () => ({ default: (await import('@/features/reports/reports-page')).ReportsPage }))
+const TenantsListPage = lazy(async () => ({ default: (await import('@/features/platform/tenants-list-page')).TenantsListPage }))
+const PublicAnnouncementDetailPage = lazy(async () => ({ default: (await import('@/features/tenant/public-announcement-detail-page')).PublicAnnouncementDetailPage }))
+const PublicBrokerDetailPage = lazy(async () => ({ default: (await import('@/features/tenant/public-broker-detail-page')).PublicBrokerDetailPage }))
+const PublicBrokersListPage = lazy(async () => ({ default: (await import('@/features/tenant/public-brokers-list-page')).PublicBrokersListPage }))
+const AnimatedTenantHomePage = lazy(async () => ({ default: (await import('@/features/tenant/animated-home/animated-home-page')).AnimatedTenantHomePage }))
+const PublicTenantHomePage = lazy(async () => ({ default: (await import('@/features/tenant/public-home-page')).PublicTenantHomePage }))
+const ShowcaseTenantHomePage = lazy(async () => ({ default: (await import('@/features/tenant/showcase-home/showcase-home-page')).ShowcaseTenantHomePage }))
+const PremiumTenantHomePage = lazy(async () => ({ default: (await import('@/features/tenant/premium-home/premium-home-page')).PremiumTenantHomePage }))
+const PremiumAnnouncementDetailPage = lazy(async () => ({ default: (await import('@/features/tenant/premium-home/premium-announcement-detail-page')).PremiumAnnouncementDetailPage }))
+const PremiumBrokersListPage = lazy(async () => ({ default: (await import('@/features/tenant/premium-home/premium-brokers-list-page')).PremiumBrokersListPage }))
+const PremiumBrokerDetailPage = lazy(async () => ({ default: (await import('@/features/tenant/premium-home/premium-broker-detail-page')).PremiumBrokerDetailPage }))
+const TenantDashboardPage = lazy(async () => ({ default: (await import('@/features/tenant/tenant-dashboard-page')).TenantDashboardPage }))
+const TrainingPage = lazy(async () => ({ default: (await import('@/features/tenant/training-page')).TrainingPage }))
+const BackupPage = lazy(async () => ({ default: (await import('@/features/tenant/backup-page')).BackupPage }))
+const ResetDataPage = lazy(async () => ({ default: (await import('@/features/tenant/reset-data-page')).ResetDataPage }))
+const TenantBrandingPage = lazy(async () => ({ default: (await import('@/features/tenant-branding/tenant-branding-page')).TenantBrandingPage }))
+const TenantUsersPage = lazy(async () => ({ default: (await import('@/features/tenant-users/tenant-users-page')).TenantUsersPage }))
 
 // A home de cada contexto é pública (portal de anúncios no tenant, nada no
 // apex); login é uma rota própria (/login), não o "portão" do app inteiro —

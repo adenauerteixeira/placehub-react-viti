@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CalendarPlus, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -14,7 +14,8 @@ import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage } from '@/lib/errors'
 import { ReserveDialog } from '@/features/reservations/reserve-dialog'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useAnnouncements, useDeleteAnnouncement, type Announcement, type AnnouncementStatus } from './api'
+import { useAnnouncementsPage, useDeleteAnnouncement, type Announcement, type AnnouncementStatus } from './api'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import { ANNOUNCEMENT_STATUS_LABELS, ANNOUNCEMENT_STATUS_VARIANT, PROPERTY_TYPE_LABELS } from './labels'
 
 const ALL = '__all__'
@@ -22,9 +23,14 @@ const ALL = '__all__'
 export function AnnouncementsListPage() {
   const { tenant } = useTenantOutletContext()
   const navigate = useNavigate()
-  const { data: announcements, isLoading, isError, refetch } = useAnnouncements(tenant.id)
   const deleteAnnouncement = useDeleteAnnouncement(tenant.id)
   const [statusFilter, setStatusFilter] = useState(ALL)
+  const [page, setPage] = useState(0)
+  const [search, setSearch] = useState('')
+  const { data: announcementPage, isLoading, isError, refetch } = useAnnouncementsPage(tenant.id, {
+    page, pageSize: DEFAULT_PAGE_SIZE, search, sortBy: 'created_at', ascending: false,
+    status: statusFilter === ALL ? undefined : statusFilter as AnnouncementStatus,
+  })
   const [reserving, setReserving] = useState<string | null>(null)
   const { confirm } = useConfirm()
 
@@ -44,12 +50,6 @@ export function AnnouncementsListPage() {
       toast.error('Não foi possível excluir', { description: errorMessage(error) })
     }
   }
-
-  const filtered = useMemo(() => {
-    if (!announcements) return []
-    if (statusFilter === ALL) return announcements
-    return announcements.filter((a) => a.status === statusFilter)
-  }, [announcements, statusFilter])
 
   const columns: DataTableColumn<Announcement>[] = [
     {
@@ -136,7 +136,7 @@ export function AnnouncementsListPage() {
       <CardHeader>
         <CardTitle>Anúncios</CardTitle>
         <CardAction className="flex items-center gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(0) }}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -163,10 +163,10 @@ export function AnnouncementsListPage() {
           <ErrorState title="Não foi possível carregar os anúncios." onRetry={() => refetch()} />
         )}
 
-        {filtered.length === 0 && !isLoading && <EmptyState title="Nenhum anúncio encontrado." />}
+        {announcementPage?.total === 0 && !isLoading && <EmptyState title="Nenhum anúncio encontrado." />}
 
-        {filtered.length > 0 && (
-          <DataTable columns={columns} data={filtered} searchPlaceholder="Buscar por título..." />
+        {announcementPage && announcementPage.total > 0 && (
+          <DataTable columns={columns} data={announcementPage.data} searchPlaceholder="Buscar por título, referência ou cidade..." remote={{ pageIndex: page, totalRows: announcementPage.total, search, onPageChange: setPage, onSearchChange: (value) => { setSearch(value); setPage(0) } }} />
         )}
       </CardContent>
 

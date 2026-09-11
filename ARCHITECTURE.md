@@ -244,6 +244,18 @@ siga o mesmo padrão (componentes/tipos de `data-table.tsx`) em vez de partir pr
 direto, a menos que haja um motivo concreto pra migrar (nesse caso, migrar todas de uma vez, não
 misturar as duas APIs no projeto).
 
+## Operação e qualidade (2026-09-11)
+
+- **CI:** `.github/workflows/ci.yml` executa `npm ci`, auditoria de dependências de produção,
+  `npm run lint` e `npm run build` em push/PR para `trunk`. Testes de integração não entram no
+  workflow porque usam o projeto Supabase real e criam dados de QA.
+- **Monitoramento:** `src/lib/monitoring.ts` inicializa GlitchTip/Sentry apenas quando
+  `VITE_GLITCHTIP_DSN` está configurada. O SDK é importado sob demanda, erros de render são
+  capturados em `AppErrorBoundary` e PII não é enviada por padrão.
+- **Listagens escaláveis:** `DataTable` aceita o modo `remote`; anúncios, leads e vendas usam
+  `count` + `range` do Supabase, com busca sanitizada e atraso de 300 ms. Ordenação remota deve
+  ser adicionada junto da UI correspondente, nunca ordenando apenas a página visível.
+
 ## O que este documento não cobre
 
 Decisões de UI específicas de cada tela e o detalhamento de cada regra de negócio vivem no

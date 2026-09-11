@@ -8,6 +8,7 @@ import { AuthProvider } from '@/features/auth/auth-context'
 import { ConfirmProvider } from '@/hooks/use-confirm'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { initMonitoring } from '@/lib/monitoring'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,6 +18,8 @@ const queryClient = new QueryClient({
     },
   },
 })
+
+initMonitoring()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

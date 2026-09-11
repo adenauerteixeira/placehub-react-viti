@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +10,8 @@ import { TableSkeleton } from '@/components/table-skeleton'
 import { useAnnouncements } from '@/features/announcements/api'
 import { useBrokers } from '@/features/brokers/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useSales, type Sale } from './api'
+import { useSalesPage, type Sale } from './api'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import { SALE_STATUS_LABELS, SALE_STATUS_VARIANT } from './labels'
 
 function formatPrice(value: number) {
@@ -23,7 +25,11 @@ function formatDate(value: string) {
 export function SalesListPage() {
   const navigate = useNavigate()
   const { tenant } = useTenantOutletContext()
-  const { data: sales, isLoading, isError, refetch } = useSales(tenant.id)
+  const [page, setPage] = useState(0)
+  const [search, setSearch] = useState('')
+  const { data: salesPage, isLoading, isError, refetch } = useSalesPage(tenant.id, {
+    page, pageSize: DEFAULT_PAGE_SIZE, search, sortBy: 'created_at', ascending: false,
+  })
   const { data: announcements } = useAnnouncements(tenant.id)
   const { data: brokers } = useBrokers(tenant.id)
 
@@ -95,14 +101,14 @@ export function SalesListPage() {
       <CardContent>
         {isLoading && <TableSkeleton columns={6} />}
         {isError && <ErrorState title="Não foi possível carregar as vendas." onRetry={() => refetch()} />}
-        {sales && sales.length === 0 && (
+        {salesPage?.total === 0 && (
           <EmptyState
             title="Nenhuma venda ainda"
             description="Feche uma venda a partir de uma proposta aceita, no hub da negociação."
           />
         )}
-        {sales && sales.length > 0 && (
-          <DataTable columns={columns} data={sales} searchPlaceholder="Buscar por anúncio, corretor..." />
+        {salesPage && salesPage.total > 0 && (
+          <DataTable columns={columns} data={salesPage.data} searchPlaceholder="Buscar em observações..." remote={{ pageIndex: page, totalRows: salesPage.total, search, onPageChange: setPage, onSearchChange: (value) => { setSearch(value); setPage(0) } }} />
         )}
       </CardContent>
     </Card>

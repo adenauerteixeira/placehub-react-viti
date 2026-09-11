@@ -12,14 +12,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useBrokers } from '@/features/brokers/api'
 import { useTenantOutletContext } from '@/features/tenant/tenant-layout'
 import { AgendaTab } from './agenda-tab'
-import { useLeads, type Lead } from './api'
+import { useLeadsPage, type Lead } from './api'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import { LeadFormDialog } from './lead-form-dialog'
 import { LEAD_SOURCE_LABELS, LEAD_STATUS_LABELS, LEAD_STATUS_VARIANT } from './labels'
 
 export function LeadsListPage() {
   const navigate = useNavigate()
   const { tenant } = useTenantOutletContext()
-  const { data: leads, isLoading, isError, refetch } = useLeads(tenant.id)
+  const [page, setPage] = useState(0)
+  const [search, setSearch] = useState('')
+  const { data: leadsPage, isLoading, isError, refetch } = useLeadsPage(tenant.id, {
+    page, pageSize: DEFAULT_PAGE_SIZE, search, sortBy: 'created_at', ascending: false,
+  })
   const { data: brokers } = useBrokers(tenant.id)
   const [createOpen, setCreateOpen] = useState(false)
 
@@ -99,9 +104,9 @@ export function LeadsListPage() {
             {isError && (
               <ErrorState title="Não foi possível carregar os leads." onRetry={() => refetch()} />
             )}
-            {leads && leads.length === 0 && <EmptyState title="Nenhum lead cadastrado ainda." />}
-            {leads && leads.length > 0 && (
-              <DataTable columns={columns} data={leads} searchPlaceholder="Buscar por nome, contato..." />
+            {leadsPage?.total === 0 && <EmptyState title="Nenhum lead cadastrado ainda." />}
+            {leadsPage && leadsPage.total > 0 && (
+              <DataTable columns={columns} data={leadsPage.data} searchPlaceholder="Buscar por nome, contato..." remote={{ pageIndex: page, totalRows: leadsPage.total, search, onPageChange: setPage, onSearchChange: (value) => { setSearch(value); setPage(0) } }} />
             )}
           </TabsContent>
 

@@ -348,7 +348,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: schedules, error: schedulesError } = await adminClient
     .from('tenant_backup_schedules')
-    .select('id, tenant_id, time_of_day, last_run_at, tenants(slug, name)')
+    .select('id, tenant_id, time_of_day, last_run_date, tenants(slug, name)')
     .eq('active', true)
     .eq('day_of_week', dayOfWeek)
 
@@ -360,9 +360,8 @@ Deno.serve(async (req: Request) => {
     const timeOfDay = String(schedule.time_of_day).slice(0, 5) // "HH:mm:ss" -> "HH:mm"
     const scheduledMinutes = timeToMinutes(timeOfDay)
     const withinWindow = nowMinutes - scheduledMinutes >= 0 && nowMinutes - scheduledMinutes < 5
-    const lastRunAt = schedule.last_run_at as string | null
-    const alreadyRanToday = lastRunAt && lastRunAt.slice(0, 10) >= dateKey
-    return withinWindow && !alreadyRanToday
+    const lastRunDate = schedule.last_run_date as string | null
+    return withinWindow && lastRunDate !== dateKey
   })
 
   // Processa sequencialmente e só responde no fim — testado com
@@ -380,6 +379,19 @@ Deno.serve(async (req: Request) => {
     const tenantId = schedule.tenant_id as string
     const tenant = schedule.tenants as { slug: string; name: string } | null
     if (!tenant) continue
+
+    // Reserva o agendamento antes do trabalho pesado. O cron roda a cada
+    // cinco minutos e uma execução pode durar mais que uma janela; sem este
+    // claim atômico, dois ticks geravam backups duplicados do mesmo tenant.
+    const { data: claimed, error: claimError } = await adminClient.rpc('claim_tenant_backup_schedule', {
+      p_schedule_id: schedule.id,
+      p_run_date: dateKey,
+    })
+    if (claimError) {
+      errors.push(`${tenantId}: não foi possível reservar o agendamento: ${claimError.message}`)
+      continue
+    }
+    if (!claimed) continue
 
     await adminClient.from('tenant_maintenance_state').upsert({
       tenant_id: tenantId,
@@ -421,10 +433,12 @@ Deno.serve(async (req: Request) => {
         await bucket.remove(toRemove)
       }
 
-      await adminClient
-        .from('tenant_backup_schedules')
-        .update({ last_run_at: new Date().toISOString() })
-        .eq('id', schedule.id)
+      const { error: finishError } = await adminClient.rpc('finish_tenant_backup_schedule', {
+        p_schedule_id: schedule.id,
+        p_run_date: dateKey,
+        p_succeeded: true,
+      })
+      if (finishError) throw new Error(`falha ao concluir agendamento: ${finishError.message}`)
 
       ran.push(tenantId)
     } catch (error) {
@@ -432,6 +446,14 @@ Deno.serve(async (req: Request) => {
       console.error(`backup agendado falhou pro tenant ${tenantId}:`, error)
       errors.push(`${tenantId}: ${message}`)
     } finally {
+      // Libera a reserva também no erro; uma próxima janela pode tentar de
+      // novo. O p_run_date impede que uma execução antiga solte a reserva de
+      // uma execução mais nova.
+      await adminClient.rpc('finish_tenant_backup_schedule', {
+        p_schedule_id: schedule.id,
+        p_run_date: dateKey,
+        p_succeeded: false,
+      })
       await adminClient
         .from('tenant_maintenance_state')
         .upsert({ tenant_id: tenantId, active: false })

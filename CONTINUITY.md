@@ -5,7 +5,23 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-09-03
+## Estado atual — 2026-09-11
+
+- **Rodada de confiabilidade, segurança e observabilidade concluída e publicada.** Migration
+  `20260910120000_harden_backup_restore_and_schedule.sql` aplicada no Supabase remoto; Edge
+  Functions `restore-tenant-data` e `run-scheduled-backups` publicadas. A restauração agora
+  valida o ZIP/manifest/tenant antes de executar um RPC transacional, e backups agendados usam
+  claim atômico por data no fuso de São Paulo.
+- **Vercel pronta e deployment de produção `READY`.** `VITE_GLITCHTIP_DSN` existe como Config em
+  production/preview/development; o monitoramento só inicia se a variável estiver configurada,
+  sem enviar PII. CI em `.github/workflows/ci.yml` roda auditoria de produção, lint e build em
+  pushes/PRs para `trunk`.
+- **Validações locais desta rodada:** `npx tsc -b --force`, `npm run build` e `npm run test:unit`
+  (8 testes) aprovados. Não rodar `npm run test`/E2E sem intenção explícita: os testes de
+  integração usam o Supabase real e criam dados de QA.
+- **Pendências reais:** observar um backup agendado e a expiração automática de funil em produção;
+  revisão completa de contraste; paginação remota nas demais listagens de alto volume; domínio
+  próprio self-service por tenant. Não há migration nem Edge Function local pendente.
 
 - **Aba "Banner" em Identidade Visual — edição completa da Vitrine (2026-09-03).** Nova aba
   separada de "Página pública", reunindo Banner Próprio + anúncios de patrocinadores numa única

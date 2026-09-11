@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -16,31 +16,23 @@ function systemTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+function subscribeSystemTheme(onStoreChange: () => void) {
+  const media = window.matchMedia('(prefers-color-scheme: dark)')
+  media.addEventListener('change', onStoreChange)
+  return () => media.removeEventListener('change', onStoreChange)
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? 'system',
   )
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() =>
-    theme === 'system' ? systemTheme() : theme,
-  )
+  const systemResolvedTheme = useSyncExternalStore(subscribeSystemTheme, systemTheme, () => 'light' as const)
+  const resolvedTheme = theme === 'system' ? systemResolvedTheme : theme
 
   useEffect(() => {
     const root = document.documentElement
-    const applied = theme === 'system' ? systemTheme() : theme
-    root.classList.toggle('dark', applied === 'dark')
-    setResolvedTheme(applied)
-
-    if (theme !== 'system') return
-
-    const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const onChange = () => {
-      const next = systemTheme()
-      root.classList.toggle('dark', next === 'dark')
-      setResolvedTheme(next)
-    }
-    media.addEventListener('change', onChange)
-    return () => media.removeEventListener('change', onChange)
-  }, [theme])
+    root.classList.toggle('dark', resolvedTheme === 'dark')
+  }, [resolvedTheme])
 
   const value = useMemo<ThemeProviderState>(
     () => ({

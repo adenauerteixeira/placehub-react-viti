@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -26,10 +26,12 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-const emptyValues: FormValues = {
-  paid_at: new Date().toISOString().slice(0, 10),
+function emptyValues(): FormValues {
+  return {
+    paid_at: new Date().toISOString().slice(0, 10),
   payment_method: '',
   payment_notes: '',
+  }
 }
 
 export function RegisterBrokerPaymentDialog({
@@ -43,38 +45,6 @@ export function RegisterBrokerPaymentDialog({
   installment: CommissionInstallment
   tenantId: string
 }) {
-  const registerPayment = useRegisterBrokerPayment(tenantId)
-  const [receiptFile, setReceiptFile] = useState<File | null>(null)
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: emptyValues })
-
-  useEffect(() => {
-    if (open) {
-      reset(emptyValues)
-      setReceiptFile(null)
-    }
-  }, [open, reset])
-
-  async function onSubmit(values: FormValues) {
-    try {
-      await registerPayment.mutateAsync({
-        id: installment.id,
-        commission_id: installment.commission_id,
-        ...values,
-        receiptFile,
-      })
-      toast.success('Repasse registrado. O corretor vai precisar confirmar o recebimento.')
-      onOpenChange(false)
-    } catch (error) {
-      toast.error('Não foi possível registrar o repasse', { description: errorMessage(error) })
-    }
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -87,7 +57,47 @@ export function RegisterBrokerPaymentDialog({
             Parcela {installment.number} — {installment.broker_amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </DialogDescription>
         </DialogHeader>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+        {open && <RegisterBrokerPaymentForm installment={installment} tenantId={tenantId} onClose={() => onOpenChange(false)} />}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function RegisterBrokerPaymentForm({
+  installment,
+  tenantId,
+  onClose,
+}: {
+  installment: CommissionInstallment
+  tenantId: string
+  onClose: () => void
+}) {
+  const registerPayment = useRegisterBrokerPayment(tenantId)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: emptyValues() })
+
+  async function onSubmit(values: FormValues) {
+    try {
+      await registerPayment.mutateAsync({
+        id: installment.id,
+        commission_id: installment.commission_id,
+        ...values,
+        receiptFile,
+      })
+      toast.success('Repasse registrado. O corretor vai precisar confirmar o recebimento.')
+      onClose()
+    } catch (error) {
+      toast.error('Não foi possível registrar o repasse', { description: errorMessage(error) })
+    }
+  }
+
+  return (
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
           <Field label="Data do repasse" htmlFor="broker-payment-date" error={errors.paid_at?.message}>
             <Input id="broker-payment-date" type="date" {...register('paid_at')} aria-invalid={!!errors.paid_at} />
           </Field>
@@ -114,17 +124,15 @@ export function RegisterBrokerPaymentDialog({
             />
           </Field>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={registerPayment.isPending}>
-              {registerPayment.isPending && <Loader2 className="animate-spin" />}
-              Registrar repasse
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={registerPayment.isPending}>
+          {registerPayment.isPending && <Loader2 className="animate-spin" />}
+          Registrar repasse
+        </Button>
+      </DialogFooter>
+    </form>
   )
 }
