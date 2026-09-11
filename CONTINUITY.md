@@ -7,6 +7,20 @@
 
 ## Estado atual — 2026-09-11
 
+- **Polimento de UI/mobile concluído e publicado diretamente na Vercel para validação física.**
+  Ajustados cursor de ação para links/botões/abas, superfícies do shell/cards/botões, dashboard e
+  cards públicos; o ícone do alternador de tema agora representa o tema que será ativado. Menus
+  Comercial/Administração exibem título contextual na página de destino. A exclusão de anúncios
+  invalida a query paginada, atualizando a lista sem F5. No editor de anúncios, o contêiner pai e
+  os cards respeitam a largura do viewport; campos ficam em uma coluna abaixo de 640 px e as abas
+  têm rolagem horizontal com setas visíveis no mobile. A versão foi publicada via Vercel CLI, sem
+  push ao GitHub, em `https://casah.placehubapp.com.br` (deploy técnico
+  `placehub-golkryc9v-place-hub1.vercel.app`). Para novas validações físicas, esse é o ambiente de
+  homologação oficial. Branch local de continuidade: `sessao-2026-09-11-ui-mobile`.
+- **Estado de Git deste encerramento:** o commit local `2f2e5d5` contém as mudanças de UI e não foi
+  enviado ao remoto. O próximo passo é reposicionar o `trunk` local no commit anterior depois que
+  esta documentação for registrada na branch de continuidade; não fazer push sem autorização
+  explícita na sessão.
 - **Rodada de confiabilidade, segurança e observabilidade concluída e publicada.** Migration
   `20260910120000_harden_backup_restore_and_schedule.sql` aplicada no Supabase remoto; Edge
   Functions `restore-tenant-data` e `run-scheduled-backups` publicadas. A restauração agora
