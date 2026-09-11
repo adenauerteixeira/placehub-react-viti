@@ -361,11 +361,11 @@ export function AnnouncementFormPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-6">
       <Link to="/announcements" className="text-muted-foreground hover:text-foreground w-fit text-sm">
         ← Voltar
       </Link>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold">{isEdit ? 'Editar anúncio' : 'Novo anúncio'}</h1>
           {announcement && (
@@ -375,7 +375,7 @@ export function AnnouncementFormPage() {
           )}
         </div>
         {announcement && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={announcement.status} onValueChange={(v) => handleStatusChange(v as AnnouncementStatus)}>
               <SelectTrigger className="w-40">
                 <SelectValue />
@@ -395,9 +395,9 @@ export function AnnouncementFormPage() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Tabs defaultValue="basic">
-          <TabsList>
+      <form className="announcement-form min-w-0" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <Tabs defaultValue="basic" className="announcement-tabs min-w-0">
+          <TabsList aria-label="Seções do anúncio" scrollControls>
             <TabsTrigger value="basic">Dados básicos</TabsTrigger>
             <TabsTrigger value="address">Endereço</TabsTrigger>
             <TabsTrigger value="features">Características</TabsTrigger>
@@ -428,8 +428,8 @@ export function AnnouncementFormPage() {
                   <Input id="ann-subtitle" {...register('subtitle')} />
                 </Field>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid grid-cols-[2fr_1fr] gap-4">
+                <div className="announcement-fields-grid grid gap-4 lg:grid-cols-2">
+                  <div className="announcement-fields-grid grid gap-4 sm:grid-cols-[2fr_1fr]">
                     <Field
                       label="Tipo de imóvel"
                       htmlFor="ann-property-type"
@@ -485,7 +485,7 @@ export function AnnouncementFormPage() {
                       </div>
                     </Field>
                   </div>
-                  <div className="grid grid-cols-[3fr_2fr] gap-4">
+                  <div className="announcement-fields-grid grid gap-4 sm:grid-cols-[3fr_2fr]">
                     <Field label="Transação" htmlFor="ann-transaction-type" hint="Se o imóvel é pra vender ou alugar.">
                       {watch('is_assignment') ? (
                         <div className="border-input bg-input/30 text-muted-foreground flex h-8 items-center rounded-lg border px-2.5 text-sm">
@@ -519,7 +519,7 @@ export function AnnouncementFormPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="announcement-fields-grid grid gap-4 sm:grid-cols-2">
                   <Field
                     label="Preço"
                     htmlFor="ann-price"
@@ -593,7 +593,7 @@ export function AnnouncementFormPage() {
                   <Input id="ann-video" {...register('video_url')} />
                 </Field>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="announcement-fields-grid grid gap-4 sm:grid-cols-2">
                   <Field
                     label="Empreendimento"
                     htmlFor="ann-development"
@@ -723,7 +723,7 @@ export function AnnouncementFormPage() {
                     label="Responsável interno"
                     htmlFor="ann-responsible"
                     hint="Quem gerencia este registro internamente — controla quem pode ver/editar quando o corretor não tem acesso total."
-                    className="col-span-2"
+                    className="sm:col-span-2"
                   >
                     <Select
                       value={watch('responsible_profile_id')}
@@ -753,7 +753,7 @@ export function AnnouncementFormPage() {
 
           <TabsContent value="address">
             <Card>
-              <CardContent className="grid grid-cols-2 gap-4 pt-6">
+              <CardContent className="announcement-fields-grid grid gap-4 pt-6 sm:grid-cols-2">
                 <Field
                   label="CEP"
                   htmlFor="ann-zip"
@@ -803,7 +803,7 @@ export function AnnouncementFormPage() {
 
           <TabsContent value="features">
             <Card>
-              <CardContent className="grid grid-cols-3 gap-4 pt-6">
+              <CardContent className="announcement-fields-grid grid gap-4 pt-6 min-[480px]:grid-cols-2 lg:grid-cols-3">
                 <Field label="Quartos" htmlFor="ann-bedrooms">
                   <Input id="ann-bedrooms" type="number" {...register('bedrooms')} />
                 </Field>

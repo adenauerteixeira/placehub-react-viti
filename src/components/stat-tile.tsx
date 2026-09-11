@@ -43,8 +43,8 @@ export function StatTile({
   const content = (
     <Card
       className={cn(
-        'shadow-sm ring-border/60 transition-shadow',
-        to && 'hover:shadow-md',
+        'relative overflow-hidden shadow-sm ring-border/60 transition-all duration-200',
+        to && 'hover:-translate-y-0.5 hover:shadow-md',
         className
       )}
       size={size === 'sm' ? 'sm' : 'default'}
@@ -58,7 +58,7 @@ export function StatTile({
               ACCENT_CLASSES[accent]
             )}
           >
-            <Icon className={size === 'sm' ? 'size-4' : 'size-5'} />
+            <Icon className={size === 'sm' ? 'size-4' : 'size-5'} strokeWidth={2.2} />
           </div>
         )}
         <div className="flex min-w-0 flex-col">

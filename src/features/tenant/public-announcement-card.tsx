@@ -18,11 +18,11 @@ export function PublicAnnouncementCard({
   const hasPromo = announcement.promotion && announcement.promotional_price != null
 
   return (
-    <Link to={`/anuncios/${announcement.slug}`}>
-      <Card className="h-full overflow-hidden pt-0 transition-shadow hover:shadow-md">
+    <Link to={`/anuncios/${announcement.slug}`} className="group block h-full">
+      <Card className="h-full overflow-hidden pt-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
         <div className="bg-muted relative aspect-video w-full overflow-hidden">
           {coverUrl ? (
-            <img src={coverUrl} alt={announcement.title} className="size-full object-cover" />
+            <img src={coverUrl} alt={announcement.title} className="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
           ) : (
             <div className="text-muted-foreground flex size-full items-center justify-center text-xs">
               Sem foto
@@ -38,7 +38,7 @@ export function PublicAnnouncementCard({
             {PROPERTY_TYPE_LABELS[announcement.property_type]}
             {announcement.is_assignment && ' · Cessão'}
           </p>
-          <h3 className="line-clamp-2 leading-snug font-medium">{announcement.title}</h3>
+          <h3 className="line-clamp-2 leading-snug font-semibold group-hover:text-primary transition-colors">{announcement.title}</h3>
           <p className="text-muted-foreground text-sm">
             {[announcement.neighborhood, announcement.city].filter(Boolean).join(' · ') || '—'}
           </p>

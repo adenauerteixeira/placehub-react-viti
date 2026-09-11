@@ -4,16 +4,18 @@ import { useTheme } from '@/lib/theme-provider'
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
+  const nextTheme = resolvedTheme === 'dark' ? 'claro' : 'escuro'
 
   return (
     <Button
       variant="ghost"
       size="icon"
       className="text-foreground"
-      aria-label="Alternar tema"
+      aria-label={`Ativar tema ${nextTheme}`}
+      title={`Ativar tema ${nextTheme}`}
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
     >
-      {resolvedTheme === 'dark' ? <Moon className="size-4" /> : <Sun className="size-4" />}
+      {resolvedTheme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
     </Button>
   )
 }

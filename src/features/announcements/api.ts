@@ -388,9 +388,12 @@ export function useCreateAnnouncement(tenantId: string) {
       if (error) throw error
       return data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements', tenantId] })
-    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['announcements', tenantId] }),
+        queryClient.invalidateQueries({ queryKey: ['announcements-page', tenantId] }),
+        queryClient.invalidateQueries({ queryKey: ['public-announcements', tenantId] }),
+      ]),
   })
 }
 
@@ -418,10 +421,14 @@ export function useUpdateAnnouncement(tenantId: string) {
       if (error) throw error
       return data
     },
-    onSuccess: (announcement) => {
-      queryClient.invalidateQueries({ queryKey: ['announcements', tenantId] })
-      queryClient.invalidateQueries({ queryKey: ['announcement', announcement.id] })
-    },
+    onSuccess: (announcement) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['announcements', tenantId] }),
+        queryClient.invalidateQueries({ queryKey: ['announcements-page', tenantId] }),
+        queryClient.invalidateQueries({ queryKey: ['announcement', announcement.id] }),
+        queryClient.invalidateQueries({ queryKey: ['public-announcements', tenantId] }),
+        queryClient.invalidateQueries({ queryKey: ['public-announcement', tenantId] }),
+      ]),
   })
 }
 
@@ -442,9 +449,13 @@ export function useDeleteAnnouncement(tenantId: string) {
       const { error } = await supabase.from('announcements').delete().eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements', tenantId] })
-    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['announcements', tenantId] }),
+        queryClient.invalidateQueries({ queryKey: ['announcements-page', tenantId] }),
+        queryClient.invalidateQueries({ queryKey: ['public-announcements', tenantId] }),
+        queryClient.invalidateQueries({ queryKey: ['public-announcement', tenantId] }),
+      ]),
   })
 }
 

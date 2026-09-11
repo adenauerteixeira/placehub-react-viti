@@ -16,6 +16,24 @@ import type { Tenant } from '@/features/tenants/api'
 
 export type TenantOutletContext = { tenant: Tenant; profile: Profile }
 
+const TENANT_PAGE_TITLES = [
+  { path: '/leads', title: 'Leads', section: 'Comercial' },
+  { path: '/reservations', title: 'Reservas', section: 'Comercial' },
+  { path: '/negotiations', title: 'Negociações', section: 'Comercial' },
+  { path: '/sales', title: 'Vendas', section: 'Comercial' },
+  { path: '/commissions', title: 'Comissões', section: 'Comercial' },
+  { path: '/reports', title: 'Relatórios', section: 'Comercial' },
+  { path: '/developments', title: 'Empreendimentos', section: 'Administração' },
+  { path: '/partners', title: 'Parceiros', section: 'Administração' },
+  { path: '/brokers', title: 'Corretores', section: 'Administração' },
+  { path: '/owners', title: 'Proprietários', section: 'Administração' },
+  { path: '/users', title: 'Usuários', section: 'Administração' },
+  { path: '/branding', title: 'Identidade visual', section: 'Administração' },
+  { path: '/backup', title: 'Backup e restauração', section: 'Administração' },
+  { path: '/resetar-dados', title: 'Resetar dados', section: 'Administração' },
+  { path: '/changelog', title: 'Changelog', section: 'Administração' },
+] as const
+
 export function useTenantOutletContext() {
   return useOutletContext<TenantOutletContext>()
 }
@@ -30,6 +48,9 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
   useTenantTitle(tenant.name)
 
   const isAdmin = profile.role === 'tenant_admin'
+  const page = TENANT_PAGE_TITLES.find(
+    (item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`),
+  )
 
   const commercialItems = [
     hasPermission(profile, 'leads') && { to: '/leads', label: 'Leads' },
@@ -113,7 +134,15 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
         </AppFooter>
       }
     >
-      <Outlet context={{ tenant, profile } satisfies TenantOutletContext} />
+      <div className="flex min-w-0 flex-col gap-6">
+        {page && (
+          <div className="mx-auto w-full max-w-6xl">
+            <p className="text-primary text-xs font-bold tracking-[0.16em] uppercase">{page.section}</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{page.title}</h1>
+          </div>
+        )}
+        <Outlet context={{ tenant, profile } satisfies TenantOutletContext} />
+      </div>
     </AppShell>
   )
 }

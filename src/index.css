@@ -75,7 +75,7 @@
     --chart-3: oklch(0.55 0.14 70);
     --chart-4: oklch(0.5 0.15 300);
     --chart-5: oklch(0.55 0.15 20);
-    --radius: 0.875rem;
+    --radius: 1rem;
     --sidebar: oklch(1 0 0);
     --sidebar-foreground: oklch(0.18 0.01 260);
     --sidebar-primary: oklch(0.5 0.15 250);
@@ -126,10 +126,36 @@
     }
   body {
     @apply bg-background text-foreground;
+    min-width: 320px;
+    background-image:
+      radial-gradient(circle at 0% 0%, color-mix(in oklch, var(--primary) 7%, transparent), transparent 26rem),
+      radial-gradient(circle at 100% 0%, color-mix(in oklch, var(--accent) 10%, transparent), transparent 24rem);
+    background-attachment: fixed;
     }
   html {
     @apply font-sans;
     }
+}
+
+/* Superfícies com leve profundidade, bordas discretas e foco de teclado
+   perceptível. O tema de cada imobiliária continua prevalecendo pelos tokens. */
+::selection {
+  background: color-mix(in oklch, var(--primary) 22%, transparent);
+}
+
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Todo elemento que dispara uma ação deixa isso explícito para quem navega
+   com mouse. Em interfaces touch esse detalhe é naturalmente ignorado. */
+@media (hover: hover) {
+  a[href],
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }
 
 /* Fundo em xadrez pra deixar visível se uma imagem tem transparência real
@@ -181,6 +207,42 @@
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Editor de anúncios: há muitas combinações de campos. Em telefones a
+   prioridade é leitura e preenchimento, por isso cada campo ocupa uma linha;
+   as colunas voltam apenas quando existe espaço real. As abas mantêm uma
+   área de rolagem própria, sem ampliar a página inteira. */
+@media (max-width: 639px) {
+  .announcement-form,
+  .announcement-tabs,
+  .announcement-tabs [data-slot="tabs-list"],
+  .announcement-form [data-slot="tabs-content"] {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .announcement-tabs [data-slot="tabs-list"] {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    justify-content: flex-start;
+    scrollbar-gutter: stable;
+  }
+
+  .announcement-tabs [data-slot="tabs-trigger"] {
+    flex: 0 0 auto;
+  }
+
+  .announcement-form .announcement-fields-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .announcement-form [data-slot="card"] {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 /* Impressão de relatórios (window.print()): o AppShell usa header/footer

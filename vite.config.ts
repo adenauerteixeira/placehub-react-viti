@@ -5,6 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // A Vercel informa o SHA do commit no ambiente de build. Exibi-lo no app
+  // permite confirmar, inclusive no celular, qual publicação está aberta.
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local'),
+  },
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
