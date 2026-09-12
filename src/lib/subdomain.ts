@@ -17,7 +17,12 @@ export function resolveSubdomainContext(
 ): SubdomainContext {
   // A confirmação de que o hostname pertence a um tenant vem da consulta
   // pública por `custom_domain`, não de uma lista hardcoded de domínios.
-  if (hostname !== 'localhost' && hostname !== PLATFORM_ROOT_DOMAIN && !hostname.endsWith(`.${PLATFORM_ROOT_DOMAIN}`)) {
+  const isPlatformHost =
+    hostname === 'localhost'
+    || hostname.endsWith('.localhost')
+    || hostname === PLATFORM_ROOT_DOMAIN
+    || hostname.endsWith(`.${PLATFORM_ROOT_DOMAIN}`)
+  if (!isPlatformHost) {
     return { kind: 'custom-domain', hostname: hostname.toLowerCase() }
   }
   const label = subdomainLabel(hostname)
