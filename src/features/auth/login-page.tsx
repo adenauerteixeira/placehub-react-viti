@@ -140,7 +140,7 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
         <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:linear-gradient(115deg,transparent_25%,rgba(255,255,255,0.06)_25.1%,transparent_25.3%,transparent_57%,rgba(255,255,255,0.035)_57.1%,transparent_57.3%)] [background-size:44rem_44rem]" />
         <div className="relative mx-auto grid w-full max-w-5xl items-center gap-12 lg:grid-cols-[1fr_minmax(22rem,26rem)]">
           <div className="hidden max-w-lg flex-col lg:flex">
-            <div className="mb-7 flex size-14 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-primary-foreground shadow-2xl shadow-black/20">
+              <div className="mb-7 flex size-14 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-white/90 shadow-2xl shadow-black/20">
               <Building2 className="size-7" aria-hidden="true" />
             </div>
             <p className="mb-3 text-xs font-bold tracking-[0.18em] text-primary-foreground/70 uppercase">{contextLabel}</p>
@@ -159,7 +159,7 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
           </div>
           <div className="mx-auto w-full max-w-[26rem] lg:mx-0">
             <div className="mb-7 flex flex-col lg:hidden">
-              <div className="mb-4 flex size-10 items-center justify-center rounded-xl border border-white/12 bg-white/8 text-primary-foreground shadow-xl shadow-black/20">
+              <div className="mb-4 flex size-10 items-center justify-center rounded-xl border border-white/12 bg-white/8 text-white/90 shadow-xl shadow-black/20">
                 <Building2 className="size-5" aria-hidden="true" />
               </div>
               <p className="mb-2 text-[10px] font-bold tracking-[0.18em] text-primary-foreground/70 uppercase">{contextLabel}</p>
