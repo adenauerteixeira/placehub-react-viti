@@ -121,8 +121,8 @@ export function TenantFormDialog({
           <DialogTitle>{isEdit ? 'Editar imobiliária' : 'Nova imobiliária'}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? 'Dados básicos da imobiliária. O subdomínio não pode ser alterado.'
-              : 'O subdomínio não pode ser alterado depois de criado.'}
+              ? 'Dados básicos e configurações de domínio. O subdomínio não pode ser alterado.'
+              : 'Cadastre os dados essenciais primeiro. O domínio próprio pode ser configurado depois, ao editar a imobiliária.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -162,22 +162,24 @@ export function TenantFormDialog({
             />
           </Field>
 
-          <Field
-            label="Domínio próprio"
-            htmlFor="tenant-custom-domain"
-            hint="Opcional. Primeiro adicione este domínio ao projeto na Vercel e aponte o DNS; depois informe somente o hostname aqui."
-            error={errors.customDomain?.message}
-          >
-            <Input
-              id="tenant-custom-domain"
-              placeholder="imobiliaria.com.br"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              {...register('customDomain')}
-              aria-invalid={!!errors.customDomain}
-            />
-          </Field>
+          {isEdit && (
+            <Field
+              label="Domínio próprio"
+              htmlFor="tenant-custom-domain"
+              hint="Adicione antes o domínio ao projeto na Vercel e aponte o DNS; depois informe somente o hostname aqui."
+              error={errors.customDomain?.message}
+            >
+              <Input
+                id="tenant-custom-domain"
+                placeholder="imobiliaria.com.br"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                {...register('customDomain')}
+                aria-invalid={!!errors.customDomain}
+              />
+            </Field>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
