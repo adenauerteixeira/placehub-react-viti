@@ -26,6 +26,10 @@
 - **Versão e detalhes de interação:** `VERSION.md` é injetado na compilação e aparece após o nome
   e e-mail no menu do usuário, tanto no console quanto nos tenants. Links, botões e ações de menu
   usam cursor pointer; elementos desabilitados não o usam.
+- **Experiência de login atualizada:** plataforma e tenants compartilham a composição de acesso
+  imersiva, mas preservam texto e identidade próprios. A tela responde aos temas claro/escuro e,
+  no mobile, exibe o contexto institucional acima do formulário. A versão técnica deixou de ser
+  mostrada no rodapé.
 - **Publicação verificada:** o primeiro deployment do `trunk` falhou por um campo ausente na
   seleção de tenants; `public_hero_overlay_opacity` foi incluído em `TENANT_COLUMNS`, validado com
   `tsc -b --force` e `npm run build`, e o deployment seguinte foi promovido. Não há pendência de

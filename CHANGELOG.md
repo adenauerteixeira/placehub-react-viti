@@ -33,6 +33,14 @@ formato AAAA-MM-DD.
 - A seleção de tenants passou a incluir `public_hero_overlay_opacity`, alinhando o dado retornado
   ao tipo `Tenant` e permitindo a compilação completa na Vercel.
 
+### Alterado (Experiência de acesso, 2026-09-12)
+
+- **Logins da plataforma e dos tenants** — receberam uma composição imersiva comum, com contexto
+  institucional, card de acesso destacado e versões próprias para os temas claro e escuro. Em
+  telas pequenas, o contexto aparece acima do formulário com a mesma hierarquia visual.
+- **Rodapé** — a marcação técnica antiga de versão foi removida; a versão do aplicativo permanece
+  disponível apenas no menu do usuário.
+
 ### Alterado (Polimento de UI e responsividade mobile, 2026-09-11)
 
 - **Sistema visual e navegação** — shell, cards, botões, indicadores e cards públicos ganharam

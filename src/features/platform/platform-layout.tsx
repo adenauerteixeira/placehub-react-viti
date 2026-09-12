@@ -58,7 +58,7 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
           </div>
         </>
       }
-      footer={<AppFooter showVersion={false}>PlaceHub</AppFooter>}
+      footer={<AppFooter>PlaceHub</AppFooter>}
     >
       <div className="flex flex-col gap-4">
         {isSecondaryPage && (
