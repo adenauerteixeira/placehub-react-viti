@@ -68,15 +68,6 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
       )}
     >
       <CardHeader>
-        <div className="mb-5 border-b border-slate-200 pb-5 lg:hidden">
-          <div className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-slate-500 uppercase">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Building2 className="size-4" aria-hidden="true" />
-            </span>
-            {contextLabel}
-          </div>
-          <p className="text-lg leading-snug font-semibold tracking-tight text-slate-950">{contextTitle}</p>
-        </div>
         <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
           <ShieldCheck className="size-5" aria-hidden="true" />
         </div>
@@ -166,7 +157,16 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
               ))}
             </ul>
           </div>
-          <div className="mx-auto w-full max-w-[26rem] lg:mx-0">{card}</div>
+          <div className="mx-auto w-full max-w-[26rem] lg:mx-0">
+            <div className="mb-7 flex flex-col lg:hidden">
+              <div className="mb-4 flex size-10 items-center justify-center rounded-xl border border-white/12 bg-white/8 text-primary-foreground shadow-xl shadow-black/20">
+                <Building2 className="size-5" aria-hidden="true" />
+              </div>
+              <p className="mb-2 text-[10px] font-bold tracking-[0.18em] text-primary-foreground/70 uppercase">{contextLabel}</p>
+              <h1 className="text-2xl leading-tight font-semibold tracking-tight text-white">{contextTitle}</h1>
+            </div>
+            {card}
+          </div>
         </div>
       </section>
     </AppShell>
