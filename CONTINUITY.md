@@ -5,8 +5,48 @@
 > o histórico da conversa. Histórico detalhado do que foi feito fica no
 > [CHANGELOG.md](./CHANGELOG.md) — aqui é só o estado atual e os próximos passos.
 
-## Estado atual — 2026-09-11
+## Estado atual — 2026-09-12
 
+- **Branch de entrega atual:** `fase-8-dominios-proprios`, com commits locais ainda não enviados
+  ao remoto. Não há alteração pendente no diretório de trabalho após o registro desta
+  documentação.
+- **Domínios próprios self-service concluídos no código e no Supabase remoto.** A migration
+  `20260912100000_add_tenant_domain_provisioning.sql` está aplicada, os secrets da Vercel estão
+  configurados no Supabase e a Edge Function `manage-tenant-domain` está ativa. O console orienta
+  o DNS, registra o domínio na Vercel e acompanha sua verificação. Não remover automaticamente um
+  domínio já registrado foi uma decisão deliberada de segurança.
+- **Perfil e avatar do usuário concluídos.** A migration
+  `20260912110000_add_profile_avatars.sql` está aplicada: `user-avatars` é privado, limitado a
+  PNG/JPEG/WebP de até 2 MB e protegido para o próprio usuário. A exibição usa URL assinada; o
+  menu oferece “Alterar foto”.
+- **Gestão de usuários da plataforma parcialmente publicada.** A tela permite editar o próprio
+  nome e prepara a listagem/convite de superadministradores. A Edge Function
+  `create-platform-user` existe no repositório, mas ainda **não foi publicada** no Supabase;
+  portanto convites de novos superadministradores não devem ser usados em produção até esse
+  deploy explícito.
+- **Versão e detalhes de interação:** `VERSION.md` é injetado na compilação e aparece após o nome
+  e e-mail no menu do usuário, tanto no console quanto nos tenants. Links, botões e ações de menu
+  usam cursor pointer; elementos desabilitados não o usam.
+- **Próximo passo externo:** definir o destino da publicação. O branch pode ser enviado ao remoto
+  sem promover produção; para produção, é necessário publicar `create-platform-user` no Supabase
+  e promover o frontend pela rotina da Vercel após integração em `trunk`.
+
+## Histórico anterior — 2026-09-11
+
+- **Polimento de UI/mobile concluído e publicado diretamente na Vercel para validação física.**
+  Ajustados cursor de ação para links/botões/abas, superfícies do shell/cards/botões, dashboard e
+  cards públicos; o ícone do alternador de tema agora representa o tema que será ativado. Menus
+  Comercial/Administração exibem título contextual na página de destino. A exclusão de anúncios
+  invalida a query paginada, atualizando a lista sem F5. No editor de anúncios, o contêiner pai e
+  os cards respeitam a largura do viewport; campos ficam em uma coluna abaixo de 640 px e as abas
+  têm rolagem horizontal com setas visíveis no mobile. A versão foi publicada via Vercel CLI, sem
+  push ao GitHub, em `https://casah.placehubapp.com.br` (deploy técnico
+  `placehub-golkryc9v-place-hub1.vercel.app`). Para novas validações físicas, esse é o ambiente de
+  homologação oficial. Branch local de continuidade: `sessao-2026-09-11-ui-mobile`.
+- **Estado de Git deste encerramento:** o commit local `2f2e5d5` contém as mudanças de UI e não foi
+  enviado ao remoto. O próximo passo é reposicionar o `trunk` local no commit anterior depois que
+  esta documentação for registrada na branch de continuidade; não fazer push sem autorização
+  explícita na sessão.
 - **Rodada de confiabilidade, segurança e observabilidade concluída e publicada.** Migration
   `20260910120000_harden_backup_restore_and_schedule.sql` aplicada no Supabase remoto; Edge
   Functions `restore-tenant-data` e `run-scheduled-backups` publicadas. A restauração agora

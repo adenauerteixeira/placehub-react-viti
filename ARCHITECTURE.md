@@ -26,15 +26,17 @@ dessas decisões.
   fica em `app.{domínio raiz}`. O domínio apex redireciona (client-side) para `app.`. O domínio
   raiz da plataforma é **`placehubapp.com.br`** (não `placehub.app` — já estava registrado por
   terceiros quando chegou a hora do primeiro deploy real; ver "Deploy" abaixo). Um tenant também
-  pode ter **domínio próprio** servindo o mesmo deployment — hoje só `casah.imb.br`, configurado
-  manualmente (ver ROADMAP.md, item "Domínio próprio por tenant", pro que falta pra virar
-  self-serve).
+  pode ter **domínio próprio** servindo o mesmo deployment. O vínculo é persistido em
+  `tenants.custom_domain`; o console da plataforma chama a Edge Function
+  `manage-tenant-domain`, que registra o domínio no projeto da Vercel e devolve os registros DNS
+  e o estado de verificação. A configuração dos registros no provedor DNS continua sob
+  responsabilidade de quem administra o domínio.
 - A resolução de qual tenant está sendo servido é **client-side**: lê-se
   `window.location.hostname`, extrai o primeiro label e busca o tenant no Supabase. Não há
   Edge Middleware — a SPA é estática na Vercel, com domínio wildcard apontando para o mesmo
-  deployment. Essa resolução é **agnóstica de qual domínio raiz está em jogo** — funciona igual
-  pra `placehubapp.com.br` e pra `imb.br`, sem hardcoded pra um específico (ver
-  `src/lib/hostname.ts`, `rootDomain()`/`subdomainLabel()`).
+  deployment. Para domínios próprios, a busca usa o hostname completo em `custom_domain`; para os
+  subdomínios gerenciados, usa o `slug`. Assim, não há dependência de uma lista hardcoded de
+  domínios raiz (ver `src/lib/hostname.ts`).
 - **Home pública vs. área logada**: a home do tenant (`/`) é **pública** — portal de anúncios
   (catálogo real chega na Fase 2; por enquanto é um placeholder), sem exigir login, com um botão
   "Entrar" levando para `/login`. A plataforma não tem conteúdo público (mesmo comportamento do
@@ -112,9 +114,10 @@ da plataforma, singleton, leitura pública, escrita só `super_admin`).
   challenge ACME `dns-01` — não dá certo via `http-01`, que é o único que funciona com DNS de
   terceiro). Variáveis `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` configuradas em
   Production/Preview/Development na Vercel (não só `.env.local`).
-- **Domínio próprio do tenant Casah:** `casah.imb.br`, atrelado ao mesmo projeto Vercel. Mesmo
-  motivo do wildcard acima se aplicou aqui também — precisou apontar o domínio inteiro pra Vercel
-  (não só um registro A) pra funcionar de verdade com HTTPS.
+- **Domínios próprios de tenants:** são registrados no mesmo projeto Vercel pela Edge Function
+  `manage-tenant-domain`, autenticada por token de serviço mantido apenas nos secrets do Supabase.
+  A resposta da Vercel é salva no tenant para orientar a criação dos registros DNS e permitir nova
+  verificação pelo console. `casah.imb.br` é o domínio de referência já vinculado ao projeto.
 - **Gotcha de registrador:** o painel "DNS simples" do registro.br (inclusive o modo "avançado" da
   própria interface deles) rejeita `*` como nome de registro pra wildcard, mesmo sendo uma entrada
   de DNS totalmente válida — não tem workaround pela interface deles. Resolvido apontando os

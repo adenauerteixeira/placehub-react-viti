@@ -9,10 +9,12 @@ export type Profile = {
   tenant_id: string | null
   role: ProfileRole
   full_name: string | null
+  avatar_path: string | null
   email: string
   phone: string | null
   creci: string | null
   is_active: boolean
+  updated_at: string
   permissions: string[]
 }
 
@@ -26,7 +28,7 @@ export function useProfile() {
       const { data, error } = await supabase
         .from('profiles')
         .select(
-          'id, tenant_id, role, full_name, email, phone, creci, is_active, profile_permissions(permission_key)',
+          'id, tenant_id, role, full_name, avatar_path, email, phone, creci, is_active, updated_at, profile_permissions(permission_key)',
         )
         .eq('id', user!.id)
         .single()

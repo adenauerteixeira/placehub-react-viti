@@ -9,7 +9,7 @@ import { usePlatformSettings } from '@/features/platform-branding/api'
 import { PlatformLayout } from '@/features/platform/platform-layout'
 import { MaintenanceOverlay } from '@/features/tenant/maintenance-overlay'
 import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useTenant, usePublicTenant } from '@/features/tenants/api'
+import { useTenant, usePublicTenant, usePublicTenantByDomain } from '@/features/tenants/api'
 import { platformUrl, resolveSubdomainContext, tenantUrl } from '@/lib/subdomain'
 import { useRedirectOnce } from '@/lib/use-redirect-once'
 
@@ -34,6 +34,7 @@ const SaleDetailPage = lazy(async () => ({ default: (await import('@/features/sa
 const SalesListPage = lazy(async () => ({ default: (await import('@/features/sales/sales-list-page')).SalesListPage }))
 const PartnersListPage = lazy(async () => ({ default: (await import('@/features/partners/partners-list-page')).PartnersListPage }))
 const PlatformBrandingPage = lazy(async () => ({ default: (await import('@/features/platform-branding/platform-branding-page')).PlatformBrandingPage }))
+const PlatformUsersPage = lazy(async () => ({ default: (await import('@/features/platform-users/platform-users-page')).PlatformUsersPage }))
 const ReportsPage = lazy(async () => ({ default: (await import('@/features/reports/reports-page')).ReportsPage }))
 const TenantsListPage = lazy(async () => ({ default: (await import('@/features/platform/tenants-list-page')).TenantsListPage }))
 const PublicAnnouncementDetailPage = lazy(async () => ({ default: (await import('@/features/tenant/public-announcement-detail-page')).PublicAnnouncementDetailPage }))
@@ -64,8 +65,25 @@ export function AppShell() {
   const context = resolveSubdomainContext()
 
   if (context.kind === 'tenant') return <TenantApp slug={context.slug} />
+  if (context.kind === 'custom-domain') return <CustomDomainApp hostname={context.hostname} />
   if (context.kind === 'platform') return <PlatformApp />
   return <ApexRedirect />
+}
+
+function CustomDomainApp({ hostname }: { hostname: string }) {
+  const { data: tenant, isLoading, isError } = usePublicTenantByDomain(hostname)
+
+  if (isLoading) return <FullscreenSpinner />
+  if (isError || !tenant) {
+    return (
+      <FullscreenMessage
+        title="Imobiliária não encontrada"
+        description="Este domínio ainda não está vinculado a uma imobiliária ativa."
+      />
+    )
+  }
+
+  return <TenantApp slug={tenant.slug} />
 }
 
 function ApexRedirect() {
@@ -455,6 +473,7 @@ function PlatformApp() {
         <Route path="/" element={<Navigate to="/tenants" replace />} />
         <Route path="/tenants" element={<TenantsListPage />} />
         <Route path="/branding" element={<PlatformBrandingPage />} />
+        <Route path="/platform-users" element={<PlatformUsersPage />} />
         <Route path="/changelog" element={<ChangelogPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

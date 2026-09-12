@@ -155,7 +155,7 @@ export function TenantBrandingPage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <Tabs defaultValue="logos">
-        <TabsList>
+        <TabsList scrollControls>
           <TabsTrigger value="logos">Logos e imagens</TabsTrigger>
           <TabsTrigger value="colors">Cores</TabsTrigger>
           <TabsTrigger value="public">Página pública</TabsTrigger>
@@ -1029,4 +1029,3 @@ function BrandingThemeSection<K extends LightColorKey | DarkColorKey>({
     </Card>
   )
 }
-

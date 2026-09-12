@@ -13,10 +13,12 @@ import {
 import {
   Banknote,
   Building2,
+  CalendarDays,
   Coins,
   Handshake,
   Percent,
   ReceiptText,
+  Sparkles,
   Target,
   UserCheck,
   Users,
@@ -80,30 +82,42 @@ export function TenantDashboardPage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">
-          Bem-vindo{profile.full_name ? `, ${profile.full_name}` : ''}
-        </h1>
-        <div className="flex flex-wrap items-center gap-2">
-          {PERIOD_OPTIONS.map((opt) => (
-            <Button
-              key={opt.key}
-              size="sm"
-              variant={periodKey === opt.key ? 'default' : 'outline'}
-              onClick={() => setPeriodKey(opt.key)}
-            >
-              {opt.label}
-            </Button>
-          ))}
-          {periodKey === 'custom' && (
-            <>
-              <Input type="date" className="w-36" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
-              <Input type="date" className="w-36" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
-            </>
-          )}
+      <section className="relative overflow-hidden rounded-2xl border border-border/70 bg-card px-5 py-5 shadow-sm sm:px-6">
+        <div className="pointer-events-none absolute -top-20 -right-16 size-52 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <p className="text-primary mb-1 flex items-center gap-1.5 text-xs font-bold tracking-[0.16em] uppercase">
+              <Sparkles className="size-3.5" /> Visão geral
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Olá{profile.full_name ? `, ${profile.full_name}` : ''}
+            </h1>
+            <p className="text-muted-foreground mt-1.5 text-sm">Acompanhe o ritmo comercial e as prioridades do seu time.</p>
+          </div>
+          <div className="flex flex-col gap-2 xl:items-end">
+            <div className="flex flex-wrap gap-1.5 rounded-xl border bg-background/65 p-1.5">
+              {PERIOD_OPTIONS.map((opt) => (
+                <Button
+                  key={opt.key}
+                  size="sm"
+                  variant={periodKey === opt.key ? 'default' : 'ghost'}
+                  onClick={() => setPeriodKey(opt.key)}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
+            {periodKey === 'custom' ? (
+              <div className="flex flex-wrap gap-2">
+                <Input aria-label="Data inicial" type="date" className="w-36 bg-background" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
+                <Input aria-label="Data final" type="date" className="w-36 bg-background" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
+              </div>
+            ) : (
+              <p className="text-muted-foreground flex items-center gap-1.5 text-xs"><CalendarDays className="size-3.5" /> {period.label}</p>
+            )}
+          </div>
         </div>
-      </div>
-      <p className="text-muted-foreground text-sm">Período: {period.label}</p>
+      </section>
 
       {metricsLoading && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -124,7 +138,7 @@ export function TenantDashboardPage() {
       {metrics && (isBroker ? <BrokerOverview metrics={metrics} /> : <ManagementOverview metrics={metrics} tenantId={tenant.id} profile={profile} />)}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="h-full">
           <CardHeader>
             <CardTitle className="text-base">Próximos contatos</CardTitle>
           </CardHeader>
@@ -143,7 +157,7 @@ export function TenantDashboardPage() {
                     <Link
                       key={item.id}
                       to={`/negotiations/${item.id}`}
-                      className="hover:bg-accent flex items-center justify-between rounded-lg px-2 py-1 text-sm"
+                      className="hover:bg-accent/70 flex items-center justify-between rounded-lg px-2 py-2 text-sm transition-colors"
                     >
                       <span>{leadName(item.lead_id)}</span>
                       <span className="text-muted-foreground text-xs">{formatDateTime(item.next_contact_at)}</span>
@@ -158,7 +172,7 @@ export function TenantDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="h-full">
           <CardHeader>
             <CardTitle className="text-base">Atividades recentes</CardTitle>
           </CardHeader>
@@ -169,7 +183,7 @@ export function TenantDashboardPage() {
               <ul className="flex flex-col gap-2">
                 {activities.map((activity, idx) => (
                   <li key={idx}>
-                    <Link to={activity.route} className="hover:bg-accent flex flex-col rounded-lg px-2 py-1">
+                    <Link to={activity.route} className="hover:bg-accent/70 flex flex-col rounded-lg px-2 py-2 transition-colors">
                       <span className="text-sm font-medium">{activity.title}</span>
                       <span className="text-muted-foreground text-xs">
                         {activity.description} · {formatDateTime(activity.when)}

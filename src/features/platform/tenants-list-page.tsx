@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Pencil, UserPlus } from 'lucide-react'
+import { Building2, CircleCheckBig, CircleX, Pencil, Plus, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { CreateButton } from '@/components/create-button'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
@@ -13,21 +13,14 @@ import { TableSkeleton } from '@/components/table-skeleton'
 import { LinkAdminDialog } from '@/features/tenants/link-admin-dialog'
 import { TenantFormDialog } from '@/features/tenants/tenant-form-dialog'
 import { useTenantAdmins, useTenants, useToggleTenantActive, type Tenant } from '@/features/tenants/api'
-import {
-  usePlatformBackgroundBorder,
-  usePlatformBackgroundUrl,
-} from '@/features/platform-branding/use-platform-brand-assets'
-import { useTheme } from '@/lib/theme-provider'
-import { cn } from '@/lib/utils'
+import { useConfirm } from '@/hooks/use-confirm'
+import { StatTile } from '@/components/stat-tile'
 
 export function TenantsListPage() {
   const { data: tenants, isLoading, isError, refetch } = useTenants()
   const { data: tenantAdmins } = useTenantAdmins()
   const toggleActive = useToggleTenantActive()
-  const { resolvedTheme } = useTheme()
-  const dark = resolvedTheme === 'dark'
-  const backgroundUrl = usePlatformBackgroundUrl(dark)
-  const showBackgroundBorder = usePlatformBackgroundBorder(dark)
+  const { confirm } = useConfirm()
 
   const adminEmailsByTenant = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -45,6 +38,15 @@ export function TenantsListPage() {
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
   async function handleToggleActive(tenant: Tenant, active: boolean) {
+    if (!active) {
+      const confirmed = await confirm({
+        title: 'Desativar imobiliária?',
+        description: `${tenant.name} deixará de estar acessível para usuários e visitantes até ser ativada novamente.`,
+        confirmLabel: 'Desativar',
+        variant: 'destructive',
+      })
+      if (!confirmed) return
+    }
     setPendingIds((prev) => new Set(prev).add(tenant.id))
     try {
       await toggleActive.mutateAsync({ id: tenant.id, active })
@@ -63,6 +65,8 @@ export function TenantsListPage() {
   }
 
   const tenantsWithPending = tenants?.map((t) => ({ ...t, _pending: pendingIds.has(t.id) }))
+  const activeTenants = tenants?.filter((tenant) => tenant.active).length ?? 0
+  const inactiveTenants = tenants?.length ? tenants.length - activeTenants : 0
 
   const columns: DataTableColumn<Tenant & { _pending: boolean }>[] = [
     {
@@ -74,6 +78,11 @@ export function TenantsListPage() {
       accessorKey: 'slug',
       header: 'Subdomínio',
       cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    },
+    {
+      accessorKey: 'custom_domain',
+      header: 'Domínio próprio',
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.custom_domain ?? '—'}</span>,
     },
     {
       id: 'admins',
@@ -140,24 +149,28 @@ export function TenantsListPage() {
   ]
 
   return (
-    <div className="flex flex-col gap-4">
-      {backgroundUrl && (
-        <div
-          className={cn('w-1/3 min-w-48 overflow-hidden rounded-xl', showBackgroundBorder && 'border')}
-        >
-          <img src={backgroundUrl} alt="" className="block h-auto w-full" />
+    <div className="flex flex-col gap-6">
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Imobiliárias</h1>
+          <p className="text-muted-foreground mt-1.5 text-sm">
+            Gerencie os ambientes e acessos da plataforma.
+          </p>
         </div>
+        <CreateButton label="Nova imobiliária" size="default" onClick={() => setCreateOpen(true)}>
+          <Plus /> Nova imobiliária
+        </CreateButton>
+      </section>
+      {tenants && (
+        <section className="grid grid-cols-3 gap-2.5 sm:gap-3" aria-label="Resumo das imobiliárias">
+          <StatTile label="Imobiliárias" value={tenants.length} icon={Building2} accent="chart-1" size="sm" />
+          <StatTile label="Ativas" value={activeTenants} icon={CircleCheckBig} accent="chart-2" size="sm" />
+          <StatTile label="Inativas" value={inactiveTenants} icon={CircleX} accent="chart-4" size="sm" />
+        </section>
       )}
-
       <Card>
-        <CardHeader>
-          <CardTitle>Imobiliárias</CardTitle>
-          <CardAction>
-            <CreateButton label="Nova imobiliária" onClick={() => setCreateOpen(true)} />
-          </CardAction>
-        </CardHeader>
-        <CardContent>
-          {isLoading && <TableSkeleton columns={6} />}
+        <CardContent className="pt-4">
+          {isLoading && <TableSkeleton columns={7} />}
 
           {isError && (
             <ErrorState title="Não foi possível carregar as imobiliárias." onRetry={() => refetch()} />

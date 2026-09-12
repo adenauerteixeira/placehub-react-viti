@@ -5,6 +5,42 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Console da plataforma, domínios e perfil, 2026-09-12)
+
+- **Domínios próprios autogerenciados** — cadastro e edição de imobiliárias agora orientam a
+  vinculação do domínio em etapas, mostram os registros DNS retornados pela Vercel e permitem
+  consultar o estado de verificação. A Edge Function `manage-tenant-domain` registra o domínio no
+  projeto correto sem expor credenciais ao navegador.
+- **Perfil do administrador** — o menu do usuário permite informar nome e definir/remover avatar.
+  As imagens ficam no bucket privado `user-avatars`, com políticas por usuário e URLs assinadas
+  para exibição.
+- **Console mais legível** — indicadores de imobiliárias ficam em uma única linha, a navegação
+  destaca a área ativa, páginas internas têm retorno explícito e o cadastro de imobiliária foi
+  separado em etapas de dados e domínio.
+- **Versão do aplicativo** — `VERSION.md` passa a ser a fonte única da versão compilada; ela é
+  exibida no menu do usuário do console e dos tenants.
+
+### Alterado (Interações consistentes, 2026-09-12)
+
+- Links, botões, abas, opções e ações de menus exibem cursor de ação ao passar o mouse. Controles
+  desabilitados preservam o cursor padrão para não sugerir uma ação indisponível.
+
+### Alterado (Polimento de UI e responsividade mobile, 2026-09-11)
+
+- **Sistema visual e navegação** — shell, cards, botões, indicadores e cards públicos ganharam
+  superfícies, profundidade e estados de interação mais consistentes; ações com mouse exibem
+  cursor apropriado. O ícone do alternador de tema passou a indicar o tema que será ativado.
+  Destinos dos menus Comercial/Administração exibem título e contexto da seção.
+- **Abas e formulários em telas pequenas** — listas de abas agora têm rolagem horizontal e, no
+  editor de anúncios, controles explícitos de avançar/voltar. O wrapper da rota, formulário e
+  cards respeitam a largura disponível; os grids do editor colapsam para uma coluna abaixo de
+  640 px, evitando corte lateral.
+- **Dados e publicação de anúncios** — criar, editar ou excluir invalida também a cache da
+  listagem paginada e das consultas públicas, removendo a necessidade de recarregar a página após
+  uma exclusão.
+- **Homologação móvel** — deploy direto pela Vercel (sem push ao GitHub) publicado em
+  `casah.placehubapp.com.br` para teste em dispositivo físico.
+
 ### Adicionado (Confiabilidade, segurança e observabilidade, 2026-09-11)
 
 - **Restauração de backup transacional e validada** — migration

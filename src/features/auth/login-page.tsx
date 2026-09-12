@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AppFooter, AppShell } from '@/components/app-shell'
-import { PlatformPageLabel } from '@/components/platform-page-label'
 import { useTheme } from '@/lib/theme-provider'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -63,16 +62,12 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
   const card = (
     <Card
       className={cn(
-        'mx-auto w-full max-w-sm',
-        !tenantSlug &&
-          'border-white/40 bg-white/40 shadow-2xl ring-1 ring-white/40 backdrop-blur-xl dark:border-white/10 dark:bg-black/40 dark:ring-white/10',
+        'w-full max-w-md border-border/60 bg-background/92 shadow-2xl backdrop-blur-xl',
       )}
     >
       <CardHeader>
         <CardTitle>Entrar</CardTitle>
-        {!tenantSlug && (
-          <CardDescription>Área restrita da administração da plataforma PlaceHub.</CardDescription>
-        )}
+        {!tenantSlug && <CardDescription>Acesse o console da plataforma.</CardDescription>}
       </CardHeader>
       <CardContent>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -126,31 +121,40 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
                 <Link to="/">Anúncios</Link>
               </Button>
             )}
-            {!tenantSlug && <PlatformPageLabel page="Login" />}
             <ThemeToggle />
           </div>
         </>
       }
-      footer={<AppFooter>{tenant ? `${tenant.name} · Plataforma PlaceHub` : 'Plataforma PlaceHub'}</AppFooter>}
+      footer={<AppFooter showVersion={!!tenant}>{tenant ? `${tenant.name} · Plataforma PlaceHub` : 'PlaceHub'}</AppFooter>}
     >
       {tenantSlug ? (
         card
       ) : (
         <div
           className={cn(
-            'relative flex min-h-[28rem] w-full items-center justify-center overflow-hidden rounded-2xl sm:min-h-[32rem]',
+            'relative flex min-h-[25rem] w-full items-center overflow-hidden rounded-2xl px-5 py-8 sm:min-h-[30rem] sm:px-10 lg:px-14',
             (!heroImageUrl || heroBorder) && 'border',
           )}
         >
           {heroImageUrl ? (
-            <img src={heroImageUrl} alt="" className="absolute inset-0 size-full object-contain" />
+            <img src={heroImageUrl} alt="" className="absolute inset-0 size-full object-cover" />
           ) : (
             <div
               className="absolute inset-0"
               style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}
             />
           )}
-          <div className="relative z-10 px-4">{card}</div>
+          {heroImageUrl && <div className="absolute inset-0 bg-primary/72" />}
+          <div className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between gap-12">
+            <div className="hidden max-w-md text-primary-foreground lg:block">
+              <p className="mb-3 text-xs font-bold tracking-[0.18em] uppercase opacity-80">Console PlaceHub</p>
+              <h1 className="text-4xl font-semibold tracking-tight">Administre sua plataforma com clareza.</h1>
+              <p className="mt-4 text-base leading-relaxed opacity-90">
+                Organize imobiliárias, identidades visuais e acessos em um só lugar.
+              </p>
+            </div>
+            <div className="ml-auto w-full max-w-md">{card}</div>
+          </div>
         </div>
       )}
     </AppShell>
