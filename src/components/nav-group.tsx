@@ -14,10 +14,12 @@ export function NavGroup({
   label,
   items,
   active,
+  activeClassName,
 }: {
   label: string
   items: { to: string; label: string }[]
   active: boolean
+  activeClassName?: string
 }) {
   if (items.length === 0) return null
 
@@ -28,7 +30,7 @@ export function NavGroup({
           type="button"
           className={cn(
             'text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors focus:outline-none',
-            active && 'text-foreground font-medium',
+            active && (activeClassName ?? 'text-foreground font-medium'),
           )}
         >
           {label}

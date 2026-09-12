@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Pencil, Plus, UserPlus } from 'lucide-react'
+import { Building2, CircleCheckBig, CircleX, Pencil, Plus, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { CreateButton } from '@/components/create-button'
 import { DataTable, type DataTableColumn } from '@/components/data-table'
 import { EmptyState, ErrorState } from '@/components/list-state'
@@ -14,6 +14,7 @@ import { LinkAdminDialog } from '@/features/tenants/link-admin-dialog'
 import { TenantFormDialog } from '@/features/tenants/tenant-form-dialog'
 import { useTenantAdmins, useTenants, useToggleTenantActive, type Tenant } from '@/features/tenants/api'
 import { useConfirm } from '@/hooks/use-confirm'
+import { StatTile } from '@/components/stat-tile'
 
 export function TenantsListPage() {
   const { data: tenants, isLoading, isError, refetch } = useTenants()
@@ -64,6 +65,8 @@ export function TenantsListPage() {
   }
 
   const tenantsWithPending = tenants?.map((t) => ({ ...t, _pending: pendingIds.has(t.id) }))
+  const activeTenants = tenants?.filter((tenant) => tenant.active).length ?? 0
+  const inactiveTenants = tenants?.length ? tenants.length - activeTenants : 0
 
   const columns: DataTableColumn<Tenant & { _pending: boolean }>[] = [
     {
@@ -158,13 +161,14 @@ export function TenantsListPage() {
           <Plus /> Nova imobiliária
         </CreateButton>
       </section>
+      {tenants && (
+        <section className="grid gap-3 sm:grid-cols-3" aria-label="Resumo das imobiliárias">
+          <StatTile label="Imobiliárias" value={tenants.length} icon={Building2} accent="chart-1" size="sm" />
+          <StatTile label="Ativas" value={activeTenants} icon={CircleCheckBig} accent="chart-2" size="sm" />
+          <StatTile label="Inativas" value={inactiveTenants} icon={CircleX} accent="chart-4" size="sm" />
+        </section>
+      )}
       <Card>
-        <CardHeader className="hidden">
-          <CardTitle>Imobiliárias</CardTitle>
-          <CardAction>
-            <CreateButton label="Nova imobiliária" onClick={() => setCreateOpen(true)} />
-          </CardAction>
-        </CardHeader>
         <CardContent className="pt-4">
           {isLoading && <TableSkeleton columns={7} />}
 

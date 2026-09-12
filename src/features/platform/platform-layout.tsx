@@ -47,6 +47,7 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
                 label="Configurações"
                 items={adminItems}
                 active={adminItems.some((item) => location.pathname.startsWith(item.to))}
+                activeClassName="bg-accent text-accent-foreground rounded-md font-medium"
               />
             </nav>
           </div>
@@ -79,8 +80,8 @@ function PlatformNavLink({ to, children }: { to: string; children: React.ReactNo
       to={to}
       className={({ isActive }) =>
         cn(
-          'text-muted-foreground hover:text-foreground transition-colors',
-          isActive && 'text-foreground font-medium',
+          'text-muted-foreground hover:text-foreground rounded-md px-2.5 py-1.5 transition-colors',
+          isActive && 'bg-accent text-accent-foreground font-medium',
         )
       }
     >
