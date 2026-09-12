@@ -68,6 +68,15 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
       )}
     >
       <CardHeader>
+        <div className="mb-5 border-b border-slate-200 pb-5 lg:hidden">
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-slate-500 uppercase">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Building2 className="size-4" aria-hidden="true" />
+            </span>
+            {contextLabel}
+          </div>
+          <p className="text-lg leading-snug font-semibold tracking-tight text-slate-950">{contextTitle}</p>
+        </div>
         <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
           <ShieldCheck className="size-5" aria-hidden="true" />
         </div>
@@ -126,7 +135,7 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
                 <Link to="/">Anúncios</Link>
               </Button>
             )}
-            <ThemeToggle />
+            <ThemeToggle className="!text-white hover:!bg-white/10" />
           </div>
         </>
       }
