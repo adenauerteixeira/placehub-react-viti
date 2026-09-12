@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AppFooter, AppShell } from '@/components/app-shell'
 import { MobileNav, type MobileNavEntry } from '@/components/mobile-nav'
@@ -15,6 +16,7 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
   const { resolvedTheme } = useTheme()
   const logoUrl = usePlatformLogoUrl(resolvedTheme === 'dark')
   const location = useLocation()
+  const isSecondaryPage = location.pathname !== '/tenants'
   const adminItems = [
     { to: '/branding', label: 'Identidade Visual' },
     { to: '/changelog', label: 'Changelog' },
@@ -56,7 +58,17 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
       }
       footer={<AppFooter showVersion={false}>PlaceHub</AppFooter>}
     >
-      <Outlet />
+      <div className="flex flex-col gap-4">
+        {isSecondaryPage && (
+          <NavLink
+            to="/tenants"
+            className="text-muted-foreground hover:text-foreground flex w-fit items-center gap-1.5 text-sm transition-colors"
+          >
+            <ArrowLeft className="size-4" /> Voltar para Imobiliárias
+          </NavLink>
+        )}
+        <Outlet />
+      </div>
     </AppShell>
   )
 }
