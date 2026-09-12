@@ -43,7 +43,7 @@ export function StatTile({
   const content = (
     <Card
       className={cn(
-        'relative overflow-hidden shadow-sm ring-border/60 transition-all duration-200',
+        'relative overflow-hidden shadow-sm ring-border/60 transition-[transform,box-shadow] duration-200',
         to && 'hover:-translate-y-0.5 hover:shadow-md',
         className
       )}
