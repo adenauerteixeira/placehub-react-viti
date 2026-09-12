@@ -153,7 +153,11 @@ button, a, input, select, textarea {
   a[href],
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
-  [role="tab"]:not([aria-disabled="true"]) {
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([data-disabled]),
+  [role="menuitemcheckbox"]:not([data-disabled]),
+  [role="menuitemradio"]:not([data-disabled]),
+  [role="option"]:not([aria-disabled="true"]) {
     cursor: pointer;
   }
 }
