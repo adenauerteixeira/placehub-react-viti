@@ -130,13 +130,13 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
           </div>
         </>
       }
-      style={{ backgroundColor: '#101312' }}
+      style={{ backgroundColor: '#1c2421' }}
       headerClassName="!border-white/10 !bg-transparent !text-white !shadow-none"
       mainClassName="!top-0 !bottom-0"
       footer={<AppFooter className="!border-white/10 !bg-transparent !text-white/55">{tenant ? `${tenant.name} · Plataforma PlaceHub` : 'PlaceHub'}</AppFooter>}
     >
-      <section className="relative flex min-h-full w-full items-center overflow-hidden px-5 py-24 sm:px-10 lg:px-14">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_45%,color-mix(in_oklab,var(--primary)_30%,transparent),transparent_42%),radial-gradient(ellipse_at_84%_14%,color-mix(in_oklab,var(--accent)_20%,transparent),transparent_36%)]" />
+      <section className="relative flex min-h-full w-full items-center overflow-hidden bg-[linear-gradient(135deg,#26312d_0%,#1c2421_52%,#202a27_100%)] px-5 py-24 sm:px-10 lg:px-14">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_45%,color-mix(in_oklab,var(--primary)_34%,transparent),transparent_42%),radial-gradient(ellipse_at_84%_14%,color-mix(in_oklab,var(--accent)_24%,transparent),transparent_36%)]" />
         <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:linear-gradient(115deg,transparent_25%,rgba(255,255,255,0.06)_25.1%,transparent_25.3%,transparent_57%,rgba(255,255,255,0.035)_57.1%,transparent_57.3%)] [background-size:44rem_44rem]" />
         <div className="relative mx-auto grid w-full max-w-5xl items-center gap-12 lg:grid-cols-[1fr_minmax(22rem,26rem)]">
           <div className="hidden max-w-lg flex-col lg:flex">
