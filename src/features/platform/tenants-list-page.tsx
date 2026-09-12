@@ -162,7 +162,7 @@ export function TenantsListPage() {
         </CreateButton>
       </section>
       {tenants && (
-        <section className="grid gap-3 sm:grid-cols-3" aria-label="Resumo das imobiliárias">
+        <section className="grid grid-cols-3 gap-2.5 sm:gap-3" aria-label="Resumo das imobiliárias">
           <StatTile label="Imobiliárias" value={tenants.length} icon={Building2} accent="chart-1" size="sm" />
           <StatTile label="Ativas" value={activeTenants} icon={CircleCheckBig} accent="chart-2" size="sm" />
           <StatTile label="Inativas" value={inactiveTenants} icon={CircleX} accent="chart-4" size="sm" />
