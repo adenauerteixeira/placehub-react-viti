@@ -1,5 +1,11 @@
 # Roadmap
 
+## Atualizacao tecnica (2026-09-11)
+
+- Dominios proprios agora sao vinculados por `tenants.custom_domain`, configurados no console da plataforma e resolvidos pelo hostname completo. O DNS e o certificado ainda devem ser provisionados manualmente na Vercel antes de apontar trafego.
+- O teste de integracao `funnel-expirations.test.ts` cria uma reserva vencida e confirma que o pg_cron a expira e republica o anuncio.
+- O dashboard real foi entregue na Fase 4; o checkbox de placeholder da Fase 1 abaixo e historico desatualizado.
+
 Mapa de fases, não cronograma — sem datas. Cada fase deixa o app utilizável em algum grau;
 não avançamos para a próxima até a atual estar de pé. Ao concluir um item relevante, registre
 em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).

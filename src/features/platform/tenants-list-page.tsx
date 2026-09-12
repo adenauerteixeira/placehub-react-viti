@@ -76,6 +76,11 @@ export function TenantsListPage() {
       cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
     },
     {
+      accessorKey: 'custom_domain',
+      header: 'Domínio próprio',
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.custom_domain ?? '—'}</span>,
+    },
+    {
       id: 'admins',
       accessorFn: (row) => (adminEmailsByTenant.get(row.id) ?? []).join(', ') || '—',
       header: 'Administrador',
@@ -157,7 +162,7 @@ export function TenantsListPage() {
           </CardAction>
         </CardHeader>
         <CardContent>
-          {isLoading && <TableSkeleton columns={6} />}
+          {isLoading && <TableSkeleton columns={7} />}
 
           {isError && (
             <ErrorState title="Não foi possível carregar as imobiliárias." onRetry={() => refetch()} />

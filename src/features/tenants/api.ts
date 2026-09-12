@@ -5,6 +5,7 @@ export type Tenant = {
   id: string
   name: string
   slug: string
+  custom_domain: string | null
   email: string | null
   phone: string | null
   active: boolean
@@ -101,7 +102,7 @@ export type Tenant = {
 }
 
 const TENANT_COLUMNS =
-  'id, name, slug, email, phone, active, address, neighborhood, city, state, zip_code, creci_juridico, public_header_display_name, public_header_show_logo, public_header_show_name, public_header_show_address, public_header_show_creci, public_header_name_light_color, public_header_name_dark_color, public_header_address_background_color, primary_color, secondary_color, accent_color, light_background_color, light_surface_color, light_text_color, light_muted_text_color, light_border_color, dark_primary_color, dark_accent_color, dark_background_color, dark_surface_color, dark_text_color, dark_muted_text_color, dark_border_color, logo_light_background_color, logo_dark_background_color, logo_light_background_transparent, logo_dark_background_transparent, email_logo_path, email_logo_background_color, email_logo_background_transparent, public_hero_enabled, public_home_variant, public_hero_full_width, public_hero_autoplay_seconds, public_hero_autoplay_reverse, public_hero_show_arrows, public_hero_show_border, public_hero_sticky, public_hero_title, public_hero_subtitle, public_hero_subtitle_2, public_hero_link_url, public_hero_link_label, public_hero_own_active, public_hero_image_fit, public_hero_display_seconds, public_hero_image_align, public_hero_background_color, public_hero_title_color, public_hero_subtitle_color, public_hero_subtitle_2_color, public_hero_overlay_color, public_hero_overlay_opacity, public_hero_border_color, public_hero_border_width, public_hero_slide_padding_top, public_hero_slide_padding_right, public_hero_slide_padding_bottom, public_hero_slide_padding_left, animated_hero_show_image, animated_hero_image_path, animated_hero_show_particles, home_intro_enabled, home_intro_svg_path, home_intro_replay, home_intro_duration_seconds, home_intro_backdrop_color, training_enabled, logo_light_path, logo_dark_path, favicon_path, background_image_path, placeholder_image_path, created_at, updated_at'
+  'id, name, slug, custom_domain, email, phone, active, address, neighborhood, city, state, zip_code, creci_juridico, public_header_display_name, public_header_show_logo, public_header_show_name, public_header_show_address, public_header_show_creci, public_header_name_light_color, public_header_name_dark_color, public_header_address_background_color, primary_color, secondary_color, accent_color, light_background_color, light_surface_color, light_text_color, light_muted_text_color, light_border_color, dark_primary_color, dark_accent_color, dark_background_color, dark_surface_color, dark_text_color, dark_muted_text_color, dark_border_color, logo_light_background_color, logo_dark_background_color, logo_light_background_transparent, logo_dark_background_transparent, email_logo_path, email_logo_background_color, email_logo_background_transparent, public_hero_enabled, public_home_variant, public_hero_full_width, public_hero_autoplay_seconds, public_hero_autoplay_reverse, public_hero_show_arrows, public_hero_show_border, public_hero_sticky, public_hero_title, public_hero_subtitle, public_hero_subtitle_2, public_hero_link_url, public_hero_link_label, public_hero_own_active, public_hero_image_fit, public_hero_display_seconds, public_hero_image_align, public_hero_background_color, public_hero_title_color, public_hero_subtitle_color, public_hero_subtitle_2_color, public_hero_overlay_color, public_hero_overlay_opacity, public_hero_border_color, public_hero_border_width, public_hero_slide_padding_top, public_hero_slide_padding_right, public_hero_slide_padding_bottom, public_hero_slide_padding_left, animated_hero_show_image, animated_hero_image_path, animated_hero_show_particles, home_intro_enabled, home_intro_svg_path, home_intro_replay, home_intro_duration_seconds, home_intro_backdrop_color, training_enabled, logo_light_path, logo_dark_path, favicon_path, background_image_path, placeholder_image_path, created_at, updated_at'
 
 export function useTenant(tenantId: string | null | undefined) {
   return useQuery({
@@ -133,6 +134,24 @@ export function usePublicTenant(slug: string | null) {
         .eq('active', true)
         .maybeSingle()
 
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+/** Busca o tenant pelo hostname integral de um domínio próprio. */
+export function usePublicTenantByDomain(hostname: string | null) {
+  return useQuery({
+    queryKey: ['public-tenant-domain', hostname],
+    enabled: !!hostname,
+    queryFn: async (): Promise<Tenant | null> => {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select(TENANT_COLUMNS)
+        .eq('custom_domain', hostname!)
+        .eq('active', true)
+        .maybeSingle()
       if (error) throw error
       return data
     },
@@ -178,6 +197,7 @@ export function useTenantAdmins() {
 export type TenantInput = {
   name: string
   slug: string
+  customDomain: string
   email: string
   phone: string
 }
@@ -193,6 +213,7 @@ export function useCreateTenant() {
         .insert({
           name: input.name,
           slug: input.slug,
+          custom_domain: input.customDomain || null,
           email: input.email || null,
           phone: input.phone || null,
           created_by: userData.user?.id ?? null,
@@ -222,6 +243,7 @@ export function useUpdateTenant() {
         .from('tenants')
         .update({
           name: input.name,
+          custom_domain: input.customDomain || null,
           email: input.email || null,
           phone: input.phone || null,
           updated_by: userData.user?.id ?? null,

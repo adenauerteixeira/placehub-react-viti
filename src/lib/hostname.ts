@@ -22,14 +22,15 @@ const LOCALHOST = 'localhost'
 // registrável — o oposto do que precisamos. Enquanto "domínio próprio por
 // tenant" (ROADMAP.md) for configurado manualmente, esta lista é
 // atualizada à mão a cada novo domínio custom adicionado.
-const KNOWN_ROOT_DOMAINS = ['placehubapp.com.br', 'imb.br']
+const PLATFORM_ROOT_DOMAIN = 'placehubapp.com.br'
 
 export function rootDomain(hostname: string = window.location.hostname): string | undefined {
   if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return undefined // IP literal (ex: 127.0.0.1)
   if (hostname === LOCALHOST || hostname.endsWith(`.${LOCALHOST}`)) return LOCALHOST
 
-  const known = KNOWN_ROOT_DOMAINS.find((root) => hostname === root || hostname.endsWith(`.${root}`))
-  if (known) return known
+  if (hostname === PLATFORM_ROOT_DOMAIN || hostname.endsWith(`.${PLATFORM_ROOT_DOMAIN}`)) {
+    return PLATFORM_ROOT_DOMAIN
+  }
 
   const parts = hostname.split('.')
   return parts.length <= 2 ? hostname : parts.slice(-2).join('.')

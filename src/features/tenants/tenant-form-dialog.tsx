@@ -29,11 +29,17 @@ const schema = z.object({
     .refine((s) => !isReservedSlug(s), 'Esse identificador é reservado pela plataforma.'),
   email: z.union([z.literal(''), z.email('E-mail inválido.')]),
   phone: z.string(),
+  customDomain: z
+    .string()
+    .refine(
+      (value) => !value || /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(value),
+      'Informe apenas o domínio, sem http://, porta ou caminho.',
+    ),
 })
 
 type FormValues = z.infer<typeof schema>
 
-const emptyValues: FormValues = { name: '', slug: '', email: '', phone: '' }
+const emptyValues: FormValues = { name: '', slug: '', email: '', phone: '', customDomain: '' }
 
 export function TenantFormDialog({
   open,
@@ -68,7 +74,7 @@ export function TenantFormDialog({
     setSlugEdited(isEdit)
     reset(
       tenant
-        ? { name: tenant.name, slug: tenant.slug, email: tenant.email ?? '', phone: tenant.phone ?? '' }
+        ? { name: tenant.name, slug: tenant.slug, email: tenant.email ?? '', phone: tenant.phone ?? '', customDomain: tenant.custom_domain ?? '' }
         : emptyValues,
     )
   }, [open, tenant, isEdit, reset])
@@ -88,11 +94,12 @@ export function TenantFormDialog({
 
   async function onSubmit(values: FormValues) {
     try {
+      const normalizedValues = { ...values, customDomain: values.customDomain.trim().toLowerCase() }
       if (isEdit) {
-        await updateTenant.mutateAsync({ id: tenant.id, ...values })
+        await updateTenant.mutateAsync({ id: tenant.id, ...normalizedValues })
         toast.success('Imobiliária atualizada.')
       } else {
-        const created = await createTenant.mutateAsync(values)
+        const created = await createTenant.mutateAsync(normalizedValues)
         toast.success('Imobiliária criada.')
         onCreated?.(created)
       }
@@ -152,6 +159,23 @@ export function TenantFormDialog({
               render={({ field }) => (
                 <PhoneInput id="tenant-phone" value={field.value} onChange={field.onChange} />
               )}
+            />
+          </Field>
+
+          <Field
+            label="Domínio próprio"
+            htmlFor="tenant-custom-domain"
+            hint="Opcional. Primeiro adicione este domínio ao projeto na Vercel e aponte o DNS; depois informe somente o hostname aqui."
+            error={errors.customDomain?.message}
+          >
+            <Input
+              id="tenant-custom-domain"
+              placeholder="imobiliaria.com.br"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              {...register('customDomain')}
+              aria-invalid={!!errors.customDomain}
             />
           </Field>
 

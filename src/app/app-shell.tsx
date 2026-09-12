@@ -9,7 +9,7 @@ import { usePlatformSettings } from '@/features/platform-branding/api'
 import { PlatformLayout } from '@/features/platform/platform-layout'
 import { MaintenanceOverlay } from '@/features/tenant/maintenance-overlay'
 import { TenantLayout, useTenantOutletContext } from '@/features/tenant/tenant-layout'
-import { useTenant, usePublicTenant } from '@/features/tenants/api'
+import { useTenant, usePublicTenant, usePublicTenantByDomain } from '@/features/tenants/api'
 import { platformUrl, resolveSubdomainContext, tenantUrl } from '@/lib/subdomain'
 import { useRedirectOnce } from '@/lib/use-redirect-once'
 
@@ -64,8 +64,25 @@ export function AppShell() {
   const context = resolveSubdomainContext()
 
   if (context.kind === 'tenant') return <TenantApp slug={context.slug} />
+  if (context.kind === 'custom-domain') return <CustomDomainApp hostname={context.hostname} />
   if (context.kind === 'platform') return <PlatformApp />
   return <ApexRedirect />
+}
+
+function CustomDomainApp({ hostname }: { hostname: string }) {
+  const { data: tenant, isLoading, isError } = usePublicTenantByDomain(hostname)
+
+  if (isLoading) return <FullscreenSpinner />
+  if (isError || !tenant) {
+    return (
+      <FullscreenMessage
+        title="Imobiliária não encontrada"
+        description="Este domínio ainda não está vinculado a uma imobiliária ativa."
+      />
+    )
+  }
+
+  return <TenantApp slug={tenant.slug} />
 }
 
 function ApexRedirect() {
