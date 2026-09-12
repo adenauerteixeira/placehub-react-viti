@@ -14,6 +14,9 @@ formato AAAA-MM-DD.
 - **Perfil do administrador** — o menu do usuário permite informar nome e definir/remover avatar.
   As imagens ficam no bucket privado `user-avatars`, com políticas por usuário e URLs assinadas
   para exibição.
+- **Usuários da plataforma** — superadministradores podem consultar os demais administradores,
+  editar o próprio nome e convidar uma nova pessoa pelo console. O convite é processado pela Edge
+  Function `create-platform-user`, que exige um superadministrador autenticado.
 - **Console mais legível** — indicadores de imobiliárias ficam em uma única linha, a navegação
   destaca a área ativa, páginas internas têm retorno explícito e o cadastro de imobiliária foi
   separado em etapas de dados e domínio.

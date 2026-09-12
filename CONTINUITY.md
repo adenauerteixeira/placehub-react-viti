@@ -7,9 +7,9 @@
 
 ## Estado atual — 2026-09-12
 
-- **Branch de entrega atual:** `fase-8-dominios-proprios`, com commits locais ainda não enviados
-  ao remoto. Não há alteração pendente no diretório de trabalho após o registro desta
-  documentação.
+- **Entrega integrada:** `fase-8-dominios-proprios` foi enviada ao remoto e integrada ao `trunk`
+  no commit `1f15b75`. O branch `fase-8-publicacao-status` registra este fechamento sem alterar
+  diretamente o `trunk`.
 - **Domínios próprios self-service concluídos no código e no Supabase remoto.** A migration
   `20260912100000_add_tenant_domain_provisioning.sql` está aplicada, os secrets da Vercel estão
   configurados no Supabase e a Edge Function `manage-tenant-domain` está ativa. O console orienta
@@ -19,17 +19,18 @@
   `20260912110000_add_profile_avatars.sql` está aplicada: `user-avatars` é privado, limitado a
   PNG/JPEG/WebP de até 2 MB e protegido para o próprio usuário. A exibição usa URL assinada; o
   menu oferece “Alterar foto”.
-- **Gestão de usuários da plataforma parcialmente publicada.** A tela permite editar o próprio
-  nome e prepara a listagem/convite de superadministradores. A Edge Function
-  `create-platform-user` existe no repositório, mas ainda **não foi publicada** no Supabase;
-  portanto convites de novos superadministradores não devem ser usados em produção até esse
-  deploy explícito.
+- **Gestão de usuários da plataforma publicada no Supabase.** A tela permite editar o próprio
+  nome, listar superadministradores e convidar outro administrador. A Edge Function
+  `create-platform-user` está ativa na produção (versão 1), protegida por autenticação e pela
+  verificação de papel `super_admin`.
 - **Versão e detalhes de interação:** `VERSION.md` é injetado na compilação e aparece após o nome
   e e-mail no menu do usuário, tanto no console quanto nos tenants. Links, botões e ações de menu
   usam cursor pointer; elementos desabilitados não o usam.
-- **Próximo passo externo:** definir o destino da publicação. O branch pode ser enviado ao remoto
-  sem promover produção; para produção, é necessário publicar `create-platform-user` no Supabase
-  e promover o frontend pela rotina da Vercel após integração em `trunk`.
+- **Pendência externa bloqueante:** o deployment da Vercel acionado pelo `trunk` (`dpl_HxZuk1WdtwwKL41oTPhFHGzJNL9s`)
+  falhou; o site público continua servindo o artefato anterior. O build local `npm run build`
+  passou. O token Vercel disponível em `.env.supabase.local` é rejeitado pela API com
+  `User not found (404)`, portanto é preciso renovar ou fornecer um token com acesso ao projeto
+  antes de consultar os logs e repetir a publicação.
 
 ## Histórico anterior — 2026-09-11
 

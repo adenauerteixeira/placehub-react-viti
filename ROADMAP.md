@@ -49,9 +49,9 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
       chamando a Admin API — substituiu o fluxo manual de SQL. Aplicada e testada ponta a ponta.
 - [x] Perfil do superadministrador — nome editável e avatar privado, gerenciado pelo menu do
       usuário. A foto fica no bucket privado `user-avatars` e é exibida por URL assinada.
-- [ ] Gestão de superadministradores — a tela de usuários da plataforma e o convite estão
-      implementados; falta publicar a Edge Function `create-platform-user` para ativar convites em
-      produção.
+- [x] Gestão de superadministradores — a tela de usuários da plataforma permite listar
+      administradores, editar o próprio nome e convidar outro superadministrador pela Edge Function
+      `create-platform-user`, publicada no Supabase em 2026-09-12.
 - [ ] Dashboard do tenant (vazio/placeholder até a Fase 4 trazer indicadores reais) — feito um
       placeholder mínimo; falta revisar quando a Fase 2+ trouxer conteúdo real.
 - [x] Gestão de usuários do tenant (convite, papéis, permissões por módulo) — restrita a
