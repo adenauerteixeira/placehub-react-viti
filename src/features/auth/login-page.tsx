@@ -143,7 +143,7 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
               <div className="mb-7 flex size-14 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-white/90 shadow-2xl shadow-black/20">
               <Building2 className="size-7" aria-hidden="true" />
             </div>
-            <p className="mb-3 text-xs font-bold tracking-[0.18em] text-primary-foreground/70 uppercase">{contextLabel}</p>
+            <p className="text-primary mb-3 text-xs font-bold tracking-[0.18em] uppercase">{contextLabel}</p>
             <h1 className="text-4xl font-semibold tracking-tight text-white">{contextTitle}</h1>
             <p className="mt-5 max-w-md text-base leading-relaxed text-white/65">{contextDescription}</p>
             <ul className="mt-8 flex flex-col gap-3 text-sm text-white/65">
@@ -162,7 +162,7 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
               <div className="mb-4 flex size-10 items-center justify-center rounded-xl border border-white/12 bg-white/8 text-white/90 shadow-xl shadow-black/20">
                 <Building2 className="size-5" aria-hidden="true" />
               </div>
-              <p className="mb-2 text-[10px] font-bold tracking-[0.18em] text-primary-foreground/70 uppercase">{contextLabel}</p>
+              <p className="text-primary mb-2 text-[10px] font-bold tracking-[0.18em] uppercase">{contextLabel}</p>
               <h1 className="text-2xl leading-tight font-semibold tracking-tight text-white">{contextTitle}</h1>
             </div>
             {card}
