@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from './use-profile'
 
@@ -6,10 +6,16 @@ const BUCKET = 'user-avatars'
 const MAX_SIZE = 2 * 1024 * 1024
 const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
 
-export function profileAvatarUrl(path: string | null, updatedAt: string | null): string | null {
-  if (!path) return null
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
-  return `${data.publicUrl}?v=${updatedAt ? new Date(updatedAt).getTime() : ''}`
+export function useProfileAvatarUrl(path: string | null, updatedAt: string | null) {
+  return useQuery({
+    queryKey: ['profile-avatar-url', path, updatedAt],
+    enabled: !!path,
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path!, 60 * 60)
+      if (error) throw error
+      return data.signedUrl
+    },
+  })
 }
 
 export function useUploadProfileAvatar() {

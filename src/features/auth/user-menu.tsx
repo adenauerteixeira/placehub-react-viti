@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { supabase } from '@/lib/supabase'
 import { useProfile } from './use-profile'
-import { profileAvatarUrl } from './profile-avatar'
+import { useProfileAvatarUrl } from './profile-avatar'
 import { ProfileAvatarDialog } from './profile-avatar-dialog'
 
 function initials(name: string | null, email: string | undefined): string {
@@ -29,7 +29,7 @@ export function UserMenu({ name, email }: { name: string | null; email: string |
   const queryClient = useQueryClient()
   const { data: profile } = useProfile()
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false)
-  const avatarUrl = profileAvatarUrl(profile?.avatar_path ?? null, profile?.updated_at ?? null)
+  const { data: avatarUrl } = useProfileAvatarUrl(profile?.avatar_path ?? null, profile?.updated_at ?? null)
 
   async function handleLogout() {
     await supabase.auth.signOut()

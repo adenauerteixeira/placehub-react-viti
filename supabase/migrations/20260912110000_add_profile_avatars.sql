@@ -1,8 +1,14 @@
 alter table public.profiles add column avatar_path text;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('user-avatars', 'user-avatars', true, 2097152, array['image/png', 'image/jpeg', 'image/webp'])
+values ('user-avatars', 'user-avatars', false, 2097152, array['image/png', 'image/jpeg', 'image/webp'])
 on conflict (id) do nothing;
+
+create policy user_avatars_select_own on storage.objects
+  for select using (
+    bucket_id = 'user-avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 create policy user_avatars_insert_own on storage.objects
   for insert with check (

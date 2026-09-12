@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { errorMessage } from '@/lib/errors'
 import type { Profile } from './use-profile'
-import { profileAvatarUrl, useRemoveProfileAvatar, useUploadProfileAvatar } from './profile-avatar'
+import { useProfileAvatarUrl, useRemoveProfileAvatar, useUploadProfileAvatar } from './profile-avatar'
 
 function initials(profile: Profile): string {
   return (profile.full_name?.trim() || profile.email || '?').split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('')
@@ -16,7 +16,7 @@ export function ProfileAvatarDialog({ open, onOpenChange, profile }: { open: boo
   const inputRef = useRef<HTMLInputElement>(null)
   const upload = useUploadProfileAvatar()
   const remove = useRemoveProfileAvatar()
-  const avatarUrl = profileAvatarUrl(profile.avatar_path, profile.updated_at)
+  const { data: avatarUrl } = useProfileAvatarUrl(profile.avatar_path, profile.updated_at)
   const pending = upload.isPending || remove.isPending
 
   async function selectFile(file: File | undefined) {
