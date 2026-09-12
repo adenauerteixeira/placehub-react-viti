@@ -11,6 +11,12 @@ alter table public.tenants add constraint tenants_custom_domain_status_check che
   custom_domain_status in ('not_configured', 'pending_dns', 'verified', 'error')
 );
 
+-- Domínios cadastrados antes desta integração ainda precisam ser conferidos
+-- pela Vercel, mas já não são uma configuração vazia.
+update public.tenants
+set custom_domain_status = 'pending_dns'
+where custom_domain is not null;
+
 -- A service role é usada exclusivamente pela Edge Function autenticada abaixo.
 -- Clientes continuam limitados ao super_admin pela verificação original.
 create or replace function public.guard_tenant_sensitive_change()
