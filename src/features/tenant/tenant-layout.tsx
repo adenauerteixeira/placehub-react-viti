@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/lib/theme-provider'
 import { AppFooter, AppShell } from '@/components/app-shell'
+import { AppVersionBadge } from '@/components/app-version-badge'
 import { MobileNav, type MobileNavEntry } from '@/components/mobile-nav'
 import { NavGroup } from '@/components/nav-group'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -93,6 +94,7 @@ export function TenantLayout({ tenant, profile }: { tenant: Tenant; profile: Pro
           <div className="flex items-center gap-6">
             <MobileNav entries={mobileEntries} title={tenant.name} />
             <TenantBrand tenant={tenant} dark={dark} />
+            <AppVersionBadge />
             <nav className="hidden items-center gap-4 text-sm md:flex">
               <TenantNavLink to="/dashboard">Painel</TenantNavLink>
               {hasPermission(profile, 'announcements') && (

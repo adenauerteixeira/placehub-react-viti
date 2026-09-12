@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AppFooter, AppShell } from '@/components/app-shell'
+import { AppVersionBadge } from '@/components/app-version-badge'
 import { MobileNav, type MobileNavEntry } from '@/components/mobile-nav'
 import { NavGroup } from '@/components/nav-group'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -39,7 +40,10 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
               ) : (
                 <span className="font-semibold">PlaceHub</span>
               )}
-              <span className="text-muted-foreground border-l pl-2.5 text-sm">Console</span>
+              <div className="text-muted-foreground flex items-center gap-1.5 border-l pl-2.5 text-sm">
+                <span>Console</span>
+                <AppVersionBadge />
+              </div>
             </div>
             <nav className="hidden items-center gap-4 text-sm md:flex">
               <PlatformNavLink to="/tenants">Imobiliárias</PlatformNavLink>
