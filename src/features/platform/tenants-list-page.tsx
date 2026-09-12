@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Pencil, UserPlus } from 'lucide-react'
+import { Pencil, Plus, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,21 +13,13 @@ import { TableSkeleton } from '@/components/table-skeleton'
 import { LinkAdminDialog } from '@/features/tenants/link-admin-dialog'
 import { TenantFormDialog } from '@/features/tenants/tenant-form-dialog'
 import { useTenantAdmins, useTenants, useToggleTenantActive, type Tenant } from '@/features/tenants/api'
-import {
-  usePlatformBackgroundBorder,
-  usePlatformBackgroundUrl,
-} from '@/features/platform-branding/use-platform-brand-assets'
-import { useTheme } from '@/lib/theme-provider'
-import { cn } from '@/lib/utils'
+import { useConfirm } from '@/hooks/use-confirm'
 
 export function TenantsListPage() {
   const { data: tenants, isLoading, isError, refetch } = useTenants()
   const { data: tenantAdmins } = useTenantAdmins()
   const toggleActive = useToggleTenantActive()
-  const { resolvedTheme } = useTheme()
-  const dark = resolvedTheme === 'dark'
-  const backgroundUrl = usePlatformBackgroundUrl(dark)
-  const showBackgroundBorder = usePlatformBackgroundBorder(dark)
+  const { confirm } = useConfirm()
 
   const adminEmailsByTenant = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -45,6 +37,15 @@ export function TenantsListPage() {
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
   async function handleToggleActive(tenant: Tenant, active: boolean) {
+    if (!active) {
+      const confirmed = await confirm({
+        title: 'Desativar imobiliária?',
+        description: `${tenant.name} deixará de estar acessível para usuários e visitantes até ser ativada novamente.`,
+        confirmLabel: 'Desativar',
+        variant: 'destructive',
+      })
+      if (!confirmed) return
+    }
     setPendingIds((prev) => new Set(prev).add(tenant.id))
     try {
       await toggleActive.mutateAsync({ id: tenant.id, active })
@@ -145,23 +146,26 @@ export function TenantsListPage() {
   ]
 
   return (
-    <div className="flex flex-col gap-4">
-      {backgroundUrl && (
-        <div
-          className={cn('w-1/3 min-w-48 overflow-hidden rounded-xl', showBackgroundBorder && 'border')}
-        >
-          <img src={backgroundUrl} alt="" className="block h-auto w-full" />
+    <div className="flex flex-col gap-6">
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Imobiliárias</h1>
+          <p className="text-muted-foreground mt-1.5 text-sm">
+            Gerencie os ambientes e acessos da plataforma.
+          </p>
         </div>
-      )}
-
+        <CreateButton label="Nova imobiliária" size="default" onClick={() => setCreateOpen(true)}>
+          <Plus /> Nova imobiliária
+        </CreateButton>
+      </section>
       <Card>
-        <CardHeader>
+        <CardHeader className="hidden">
           <CardTitle>Imobiliárias</CardTitle>
           <CardAction>
             <CreateButton label="Nova imobiliária" onClick={() => setCreateOpen(true)} />
           </CardAction>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           {isLoading && <TableSkeleton columns={7} />}
 
           {isError && (

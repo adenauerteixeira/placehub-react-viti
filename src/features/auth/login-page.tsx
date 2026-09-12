@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AppFooter, AppShell } from '@/components/app-shell'
-import { PlatformPageLabel } from '@/components/platform-page-label'
 import { useTheme } from '@/lib/theme-provider'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -70,9 +69,7 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
     >
       <CardHeader>
         <CardTitle>Entrar</CardTitle>
-        {!tenantSlug && (
-          <CardDescription>Área restrita da administração da plataforma PlaceHub.</CardDescription>
-        )}
+        {!tenantSlug && <CardDescription>Acesse o console da plataforma.</CardDescription>}
       </CardHeader>
       <CardContent>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -126,19 +123,18 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
                 <Link to="/">Anúncios</Link>
               </Button>
             )}
-            {!tenantSlug && <PlatformPageLabel page="Login" />}
             <ThemeToggle />
           </div>
         </>
       }
-      footer={<AppFooter>{tenant ? `${tenant.name} · Plataforma PlaceHub` : 'Plataforma PlaceHub'}</AppFooter>}
+      footer={<AppFooter showVersion={!!tenant}>{tenant ? `${tenant.name} · Plataforma PlaceHub` : 'PlaceHub'}</AppFooter>}
     >
       {tenantSlug ? (
         card
       ) : (
         <div
           className={cn(
-            'relative flex min-h-[28rem] w-full items-center justify-center overflow-hidden rounded-2xl sm:min-h-[32rem]',
+            'relative flex min-h-[22rem] w-full items-center justify-center overflow-hidden rounded-2xl sm:min-h-[26rem]',
             (!heroImageUrl || heroBorder) && 'border',
           )}
         >

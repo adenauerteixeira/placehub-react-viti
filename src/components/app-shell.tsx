@@ -58,13 +58,15 @@ export function AppShell({
   )
 }
 
-export function AppFooter({ children }: { children?: ReactNode }) {
+export function AppFooter({ children, showVersion = true }: { children?: ReactNode; showVersion?: boolean }) {
   return (
     <footer className="bg-background/82 text-muted-foreground fixed inset-x-0 bottom-0 z-30 flex h-11 items-center justify-center border-t border-border/75 px-4 text-center text-xs backdrop-blur-2xl">
       {children ?? <>© {new Date().getFullYear()} PlaceHub — Conectando imóveis, corretores e oportunidades.</>}
-      <span className="ml-2 shrink-0 text-[10px] opacity-65" title="Versão da publicação">
-        #{__APP_VERSION__}
-      </span>
+      {showVersion && (
+        <span className="ml-2 shrink-0 text-[10px] opacity-65" title="Versão da publicação">
+          #{__APP_VERSION__}
+        </span>
+      )}
     </footer>
   )
 }
