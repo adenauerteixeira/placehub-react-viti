@@ -1,10 +1,15 @@
 # Roadmap
 
-## Atualizacao tecnica (2026-09-11)
+## Atualização técnica (2026-09-12)
 
-- Dominios proprios agora sao vinculados por `tenants.custom_domain`, configurados no console da plataforma e resolvidos pelo hostname completo. O DNS e o certificado ainda devem ser provisionados manualmente na Vercel antes de apontar trafego.
-- O teste de integracao `funnel-expirations.test.ts` cria uma reserva vencida e confirma que o pg_cron a expira e republica o anuncio.
-- O dashboard real foi entregue na Fase 4; o checkbox de placeholder da Fase 1 abaixo e historico desatualizado.
+- Domínios próprios são vinculados por `tenants.custom_domain`, configurados no console da
+  plataforma e resolvidos pelo hostname completo. A Edge Function `manage-tenant-domain` os
+  registra na Vercel, fornece os registros DNS necessários e consulta o estado de verificação.
+- O avatar é privado no bucket `user-avatars`: o usuário só lê e altera sua própria foto por URLs
+  assinadas. A interface de gestão de superadministradores está pronta; a publicação da Edge
+  Function `create-platform-user` ainda é necessária antes de convidar outra pessoa em produção.
+- O teste de integração `funnel-expirations.test.ts` cria uma reserva vencida e confirma que o
+  pg_cron a expira e republica o anúncio.
 
 Mapa de fases, não cronograma — sem datas. Cada fase deixa o app utilizável em algum grau;
 não avançamos para a próxima até a atual estar de pé. Ao concluir um item relevante, registre
@@ -42,6 +47,11 @@ em [CHANGELOG.md](./CHANGELOG.md) e atualize [CONTINUITY.md](./CONTINUITY.md).
       client, protegido por RLS (`tenants_insert`/`tenants_update`, super_admin only).
 - [x] Criação do primeiro `tenant_admin` de cada tenant via Edge Function (`create-tenant-admin`)
       chamando a Admin API — substituiu o fluxo manual de SQL. Aplicada e testada ponta a ponta.
+- [x] Perfil do superadministrador — nome editável e avatar privado, gerenciado pelo menu do
+      usuário. A foto fica no bucket privado `user-avatars` e é exibida por URL assinada.
+- [ ] Gestão de superadministradores — a tela de usuários da plataforma e o convite estão
+      implementados; falta publicar a Edge Function `create-platform-user` para ativar convites em
+      produção.
 - [ ] Dashboard do tenant (vazio/placeholder até a Fase 4 trazer indicadores reais) — feito um
       placeholder mínimo; falta revisar quando a Fase 2+ trouxer conteúdo real.
 - [x] Gestão de usuários do tenant (convite, papéis, permissões por módulo) — restrita a
@@ -213,13 +223,10 @@ Fase 5 completa — os 4 e-mails transacionais funcionando ponta a ponta contra 
 - [x] Acessibilidade prioritária: `ErrorBoundary`, diálogo de manutenção com foco preso/semântica
       modal, tabela com caption/ARIA e paginação navegável por teclado. Revisão visual completa de
       contraste em todos os temas continua uma melhoria futura.
-- [ ] Domínio próprio por tenant (`custom_domain → tenant_id`), como evolução do roteamento
-      por subdomínio — **ainda não é uma feature self-serve no banco.** O que existe hoje
-      (2026-08/09-01) é uma configuração *manual*: `casah.imb.br` apontado direto no projeto da
-      Vercel + `KNOWN_ROOT_DOMAINS` hardcoded em `src/lib/hostname.ts`, feito por fora do produto
-      pra esse tenant específico. Ver ARCHITECTURE.md — "Multi-tenancy" e "Deploy" pro que
-      precisaria virar tela/tabela de verdade (mapa `custom_domain → tenant_id`, automação de DNS
-      na Vercel via API).
+- [x] Domínio próprio por tenant (`custom_domain → tenant_id`) — configurado no console da
+      plataforma, resolvido pelo hostname completo e integrado à Vercel pela Edge Function
+      `manage-tenant-domain`. O operador recebe os registros DNS, configura-os no provedor do
+      domínio e usa o console para acompanhar a verificação/certificado.
 - [x] Identidade Visual da plataforma (favicon, logo claro/escuro, imagem de fundo) — configurável
       pelo super_admin, aplicada no login/console (2026-08-31). Ver bloco próprio no CHANGELOG.
 - [x] Manual do Corretor — PDF (34 páginas, testado ponta a ponta no fluxo real) + página de

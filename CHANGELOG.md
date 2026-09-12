@@ -5,6 +5,26 @@ formato AAAA-MM-DD.
 
 ## [Não lançado]
 
+### Adicionado (Console da plataforma, domínios e perfil, 2026-09-12)
+
+- **Domínios próprios autogerenciados** — cadastro e edição de imobiliárias agora orientam a
+  vinculação do domínio em etapas, mostram os registros DNS retornados pela Vercel e permitem
+  consultar o estado de verificação. A Edge Function `manage-tenant-domain` registra o domínio no
+  projeto correto sem expor credenciais ao navegador.
+- **Perfil do administrador** — o menu do usuário permite informar nome e definir/remover avatar.
+  As imagens ficam no bucket privado `user-avatars`, com políticas por usuário e URLs assinadas
+  para exibição.
+- **Console mais legível** — indicadores de imobiliárias ficam em uma única linha, a navegação
+  destaca a área ativa, páginas internas têm retorno explícito e o cadastro de imobiliária foi
+  separado em etapas de dados e domínio.
+- **Versão do aplicativo** — `VERSION.md` passa a ser a fonte única da versão compilada; ela é
+  exibida no menu do usuário do console e dos tenants.
+
+### Alterado (Interações consistentes, 2026-09-12)
+
+- Links, botões, abas, opções e ações de menus exibem cursor de ação ao passar o mouse. Controles
+  desabilitados preservam o cursor padrão para não sugerir uma ação indisponível.
+
 ### Alterado (Polimento de UI e responsividade mobile, 2026-09-11)
 
 - **Sistema visual e navegação** — shell, cards, botões, indicadores e cards públicos ganharam

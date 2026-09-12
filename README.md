@@ -16,7 +16,9 @@ estado atual do trabalho (onde paramos) em [CONTINUITY.md](./CONTINUITY.md).
 - Tenant de teste (Casah): [casah.placehubapp.com.br](https://casah.placehubapp.com.br) e também
   em domínio próprio, [casah.imb.br](https://casah.imb.br).
 - Deploy automático a cada push em `trunk` (Vercel). Ver [ARCHITECTURE.md](./ARCHITECTURE.md) —
-  "Deploy" pra domínios/DNS e "Multi-tenancy" pro roteamento por subdomínio.
+  "Deploy" pra domínios/DNS e "Multi-tenancy" pro roteamento por subdomínio. Domínios próprios
+  são solicitados pelo console da plataforma; ele informa os registros DNS necessários e acompanha
+  a verificação pela Vercel.
 
 ## Stack
 
