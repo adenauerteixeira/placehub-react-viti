@@ -44,6 +44,10 @@ export function UserMenu({ name, email }: { name: string | null; email: string |
           <span className="text-muted-foreground text-xs font-normal">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem disabled className="cursor-default opacity-100">
+          <span className="text-muted-foreground text-xs">Versão v{__APP_VERSION__}</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="size-4" /> Sair
         </DropdownMenuItem>

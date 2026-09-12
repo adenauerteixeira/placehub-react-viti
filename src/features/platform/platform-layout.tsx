@@ -2,7 +2,6 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AppFooter, AppShell } from '@/components/app-shell'
-import { AppVersionBadge } from '@/components/app-version-badge'
 import { MobileNav, type MobileNavEntry } from '@/components/mobile-nav'
 import { NavGroup } from '@/components/nav-group'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -35,14 +34,11 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
           <div className="flex items-center gap-5">
             <MobileNav entries={mobileEntries} title="PlaceHub" />
             <div className="flex items-center gap-2.5">
-              <div className="relative shrink-0">
-                {logoUrl ? (
-                  <img src={logoUrl} alt="PlaceHub" className="h-7 max-w-32 object-contain" />
-                ) : (
-                  <span className="font-semibold">PlaceHub</span>
-                )}
-                <AppVersionBadge className="absolute -top-1.5 -right-1.5" />
-              </div>
+              {logoUrl ? (
+                <img src={logoUrl} alt="PlaceHub" className="h-7 max-w-32 object-contain" />
+              ) : (
+                <span className="font-semibold">PlaceHub</span>
+              )}
               <span className="text-muted-foreground border-l pl-2.5 text-sm">Console</span>
             </div>
             <nav className="hidden items-center gap-4 text-sm md:flex">
