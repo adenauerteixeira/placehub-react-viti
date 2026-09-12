@@ -35,15 +35,15 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
           <div className="flex items-center gap-5">
             <MobileNav entries={mobileEntries} title="PlaceHub" />
             <div className="flex items-center gap-2.5">
-              {logoUrl ? (
-                <img src={logoUrl} alt="PlaceHub" className="h-7 max-w-32 object-contain" />
-              ) : (
-                <span className="font-semibold">PlaceHub</span>
-              )}
-              <div className="text-muted-foreground flex items-center gap-1.5 border-l pl-2.5 text-sm">
-                <span>Console</span>
-                <AppVersionBadge />
+              <div className="relative shrink-0">
+                {logoUrl ? (
+                  <img src={logoUrl} alt="PlaceHub" className="h-7 max-w-32 object-contain" />
+                ) : (
+                  <span className="font-semibold">PlaceHub</span>
+                )}
+                <AppVersionBadge className="absolute -top-1.5 -right-1.5" />
               </div>
+              <span className="text-muted-foreground border-l pl-2.5 text-sm">Console</span>
             </div>
             <nav className="hidden items-center gap-4 text-sm md:flex">
               <PlatformNavLink to="/tenants">Imobiliárias</PlatformNavLink>

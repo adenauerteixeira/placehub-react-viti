@@ -1,4 +1,5 @@
 import { LogoBadge } from '@/components/app-shell'
+import { AppVersionBadge } from '@/components/app-version-badge'
 import type { Tenant } from '@/features/tenants/api'
 import { brandingAssetUrl } from './api'
 
@@ -56,7 +57,12 @@ export function TenantBrand({
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      {showLogo && logoUrl && <LogoBadge src={logoUrl} alt={tenant.name} background={logoBackground} />}
+      {showLogo && logoUrl && (
+        <div className="relative shrink-0">
+          <LogoBadge src={logoUrl} alt={tenant.name} background={logoBackground} />
+          <AppVersionBadge className="absolute -top-1.5 -right-1.5" />
+        </div>
+      )}
       {showName && (
         <div className="flex min-w-0 flex-col justify-center">
           <span
@@ -72,6 +78,7 @@ export function TenantBrand({
           )}
         </div>
       )}
+      {(!showLogo || !logoUrl) && <AppVersionBadge />}
     </div>
   )
 }
