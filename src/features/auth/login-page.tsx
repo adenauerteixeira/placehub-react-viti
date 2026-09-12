@@ -60,6 +60,25 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
   const contextDescription = isTenantLogin
     ? 'Acompanhe oportunidades, clientes e resultados em um ambiente seguro e feito para sua operação.'
     : 'Organize imobiliárias, identidades visuais e acessos em um só lugar.'
+  const shellBackground = dark ? '#1c2421' : '#f4f8f6'
+  const headerThemeClass = dark
+    ? '!border-white/10 !bg-transparent !text-white !shadow-none'
+    : '!border-border/60 !bg-background/78 !text-foreground !shadow-sm'
+  const footerThemeClass = dark
+    ? '!border-white/10 !bg-transparent !text-white/55'
+    : '!border-border/60 !bg-background/78 !text-muted-foreground'
+  const panelThemeClass = dark
+    ? 'bg-[linear-gradient(135deg,#26312d_0%,#1c2421_52%,#202a27_100%)]'
+    : 'bg-[linear-gradient(135deg,#edf6f1_0%,#f8fbf9_52%,#eef5f2_100%)]'
+  const textureThemeClass = dark
+    ? 'opacity-45 [background-image:linear-gradient(115deg,transparent_25%,rgba(255,255,255,0.06)_25.1%,transparent_25.3%,transparent_57%,rgba(255,255,255,0.035)_57.1%,transparent_57.3%)]'
+    : 'opacity-35 [background-image:linear-gradient(115deg,transparent_25%,rgba(15,23,42,0.05)_25.1%,transparent_25.3%,transparent_57%,rgba(15,23,42,0.03)_57.1%,transparent_57.3%)]'
+  const contextTextClass = dark ? 'text-white' : 'text-foreground'
+  const contextMutedClass = dark ? 'text-white/65' : 'text-muted-foreground'
+  const contextIconClass = dark
+    ? 'border-white/12 bg-white/8 text-white/90 shadow-2xl shadow-black/20'
+    : 'border-primary/15 bg-white/75 text-primary shadow-xl shadow-primary/8'
+  const contextCheckClass = dark ? 'bg-white/10 text-white/90' : 'bg-primary/10 text-primary'
 
   const card = (
     <Card
@@ -126,30 +145,30 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
                 <Link to="/">Anúncios</Link>
               </Button>
             )}
-            <ThemeToggle className="!text-white hover:!bg-white/10" />
+            <ThemeToggle className={dark ? '!text-white hover:!bg-white/10' : '!text-foreground hover:!bg-black/5'} />
           </div>
         </>
       }
-      style={{ backgroundColor: '#1c2421' }}
-      headerClassName="!border-white/10 !bg-transparent !text-white !shadow-none"
+      style={{ backgroundColor: shellBackground }}
+      headerClassName={headerThemeClass}
       mainClassName="!top-0 !bottom-0"
-      footer={<AppFooter className="!border-white/10 !bg-transparent !text-white/55">{tenant ? `${tenant.name} · Plataforma PlaceHub` : 'PlaceHub'}</AppFooter>}
+      footer={<AppFooter className={footerThemeClass}>{tenant ? `${tenant.name} · Plataforma PlaceHub` : 'PlaceHub'}</AppFooter>}
     >
-      <section className="relative flex min-h-full w-full items-center overflow-hidden bg-[linear-gradient(135deg,#26312d_0%,#1c2421_52%,#202a27_100%)] px-5 py-24 sm:px-10 lg:px-14">
+      <section className={cn('relative flex min-h-full w-full items-center overflow-hidden px-5 py-24 sm:px-10 lg:px-14', panelThemeClass)}>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_45%,color-mix(in_oklab,var(--primary)_34%,transparent),transparent_42%),radial-gradient(ellipse_at_84%_14%,color-mix(in_oklab,var(--accent)_24%,transparent),transparent_36%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:linear-gradient(115deg,transparent_25%,rgba(255,255,255,0.06)_25.1%,transparent_25.3%,transparent_57%,rgba(255,255,255,0.035)_57.1%,transparent_57.3%)] [background-size:44rem_44rem]" />
+        <div className={cn('pointer-events-none absolute inset-0 [background-size:44rem_44rem]', textureThemeClass)} />
         <div className="relative mx-auto grid w-full max-w-5xl items-center gap-12 lg:grid-cols-[1fr_minmax(22rem,26rem)]">
           <div className="hidden max-w-lg flex-col lg:flex">
-              <div className="mb-7 flex size-14 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-white/90 shadow-2xl shadow-black/20">
+              <div className={cn('mb-7 flex size-14 items-center justify-center rounded-2xl border', contextIconClass)}>
               <Building2 className="size-7" aria-hidden="true" />
             </div>
             <p className="text-primary mb-3 text-xs font-bold tracking-[0.18em] uppercase">{contextLabel}</p>
-            <h1 className="text-4xl font-semibold tracking-tight text-white">{contextTitle}</h1>
-            <p className="mt-5 max-w-md text-base leading-relaxed text-white/65">{contextDescription}</p>
-            <ul className="mt-8 flex flex-col gap-3 text-sm text-white/65">
+            <h1 className={cn('text-4xl font-semibold tracking-tight', contextTextClass)}>{contextTitle}</h1>
+            <p className={cn('mt-5 max-w-md text-base leading-relaxed', contextMutedClass)}>{contextDescription}</p>
+            <ul className={cn('mt-8 flex flex-col gap-3 text-sm', contextMutedClass)}>
               {['Acesso protegido para sua equipe', 'Informações organizadas em um só lugar'].map((item) => (
                 <li key={item} className="flex items-center gap-2.5">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-white/10 text-primary-foreground">
+                  <span className={cn('flex size-5 items-center justify-center rounded-full', contextCheckClass)}>
                     <Check className="size-3" aria-hidden="true" />
                   </span>
                   {item}
@@ -159,11 +178,11 @@ export function LoginPage({ tenantSlug }: { tenantSlug?: string }) {
           </div>
           <div className="mx-auto w-full max-w-[26rem] lg:mx-0">
             <div className="mb-7 flex flex-col lg:hidden">
-              <div className="mb-4 flex size-10 items-center justify-center rounded-xl border border-white/12 bg-white/8 text-white/90 shadow-xl shadow-black/20">
+              <div className={cn('mb-4 flex size-10 items-center justify-center rounded-xl border', contextIconClass)}>
                 <Building2 className="size-5" aria-hidden="true" />
               </div>
               <p className="text-primary mb-2 text-[10px] font-bold tracking-[0.18em] uppercase">{contextLabel}</p>
-              <h1 className="text-2xl leading-tight font-semibold tracking-tight text-white">{contextTitle}</h1>
+              <h1 className={cn('text-2xl leading-tight font-semibold tracking-tight', contextTextClass)}>{contextTitle}</h1>
             </div>
             {card}
           </div>
