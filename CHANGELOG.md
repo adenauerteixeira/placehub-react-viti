@@ -14,6 +14,9 @@ formato AAAA-MM-DD.
 - **Perfil do administrador** — o menu do usuário permite informar nome e definir/remover avatar.
   As imagens ficam no bucket privado `user-avatars`, com políticas por usuário e URLs assinadas
   para exibição.
+- **Usuários da plataforma** — superadministradores podem consultar os demais administradores,
+  editar o próprio nome e convidar uma nova pessoa pelo console. O convite é processado pela Edge
+  Function `create-platform-user`, que exige um superadministrador autenticado.
 - **Console mais legível** — indicadores de imobiliárias ficam em uma única linha, a navegação
   destaca a área ativa, páginas internas têm retorno explícito e o cadastro de imobiliária foi
   separado em etapas de dados e domínio.
@@ -24,6 +27,11 @@ formato AAAA-MM-DD.
 
 - Links, botões, abas, opções e ações de menus exibem cursor de ação ao passar o mouse. Controles
   desabilitados preservam o cursor padrão para não sugerir uma ação indisponível.
+
+### Corrigido (Build de produção, 2026-09-12)
+
+- A seleção de tenants passou a incluir `public_hero_overlay_opacity`, alinhando o dado retornado
+  ao tipo `Tenant` e permitindo a compilação completa na Vercel.
 
 ### Alterado (Polimento de UI e responsividade mobile, 2026-09-11)
 
