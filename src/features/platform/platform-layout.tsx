@@ -19,6 +19,7 @@ export function PlatformLayout({ profile }: { profile: Profile }) {
   const isSecondaryPage = location.pathname !== '/tenants'
   const adminItems = [
     { to: '/branding', label: 'Identidade Visual' },
+    { to: '/platform-users', label: 'Usuários da plataforma' },
     { to: '/changelog', label: 'Changelog' },
   ]
 

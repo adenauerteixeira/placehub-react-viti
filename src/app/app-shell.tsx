@@ -34,6 +34,7 @@ const SaleDetailPage = lazy(async () => ({ default: (await import('@/features/sa
 const SalesListPage = lazy(async () => ({ default: (await import('@/features/sales/sales-list-page')).SalesListPage }))
 const PartnersListPage = lazy(async () => ({ default: (await import('@/features/partners/partners-list-page')).PartnersListPage }))
 const PlatformBrandingPage = lazy(async () => ({ default: (await import('@/features/platform-branding/platform-branding-page')).PlatformBrandingPage }))
+const PlatformUsersPage = lazy(async () => ({ default: (await import('@/features/platform-users/platform-users-page')).PlatformUsersPage }))
 const ReportsPage = lazy(async () => ({ default: (await import('@/features/reports/reports-page')).ReportsPage }))
 const TenantsListPage = lazy(async () => ({ default: (await import('@/features/platform/tenants-list-page')).TenantsListPage }))
 const PublicAnnouncementDetailPage = lazy(async () => ({ default: (await import('@/features/tenant/public-announcement-detail-page')).PublicAnnouncementDetailPage }))
@@ -472,6 +473,7 @@ function PlatformApp() {
         <Route path="/" element={<Navigate to="/tenants" replace />} />
         <Route path="/tenants" element={<TenantsListPage />} />
         <Route path="/branding" element={<PlatformBrandingPage />} />
+        <Route path="/platform-users" element={<PlatformUsersPage />} />
         <Route path="/changelog" element={<ChangelogPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
